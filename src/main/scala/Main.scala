@@ -1,35 +1,25 @@
-import rx._
-import rx.core.Var
-import rx.ops._
+package brewcontrol
+
+import akka.actor._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 object Main extends App {
 
-  println("Hello")
+  println(s"Hi from ${this.getClass}")
 
-  implicit val scheduler = new AkkaScheduler(akka.actor.ActorSystem())
-  val gpio = new Gpio()
+  val system = akka.actor.ActorSystem()
 
-  val temp = gpio.temperatureSensor("28-031462078cff")
+  val persistActor: ActorRef = system.actorOf(TemperaturePersistActor.props(new TemperatureConnection))
 
-  val timer = Timer(1500 millis)
+  system.scheduler.schedule(5 seconds, 5 seconds, persistActor, TemperaturePersistActor.Persist)
 
-  val o = temp.foreach { t => println(s"temp is now $t")}
-
-  while (true) {
-    println(s"waiting...")
-    Thread.sleep(2000)
-  }
+  println(s"Waiting until termination...")
+  Thread.sleep(15000)
+  system.shutdown()
 }
 
-object RxUtils {
-  def window[T](source: Rx[T], count: Int): Rx[Seq[T]] = {
-    val result = Var(List[T]())
-    source.foreach {
-      v => result() = v :: result().take(count - 1)
-    }
-    result
-  }
-}
+
+
+

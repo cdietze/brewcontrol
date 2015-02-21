@@ -7,5 +7,8 @@ lazy val root = (project in file(".")).
 
     libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.9",
     libraryDependencies += "com.lihaoyi" %% "scalarx" % "0.2.7",
-    libraryDependencies += "com.pi4j" % "pi4j-core" % "1.0-SNAPSHOT"
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.3.0" % "test",
+    libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test",
+
+    testFrameworks += new TestFramework("utest.runner.Framework")
   )
