@@ -5,6 +5,7 @@ lazy val root = (project in file(".")).
     scalaVersion := "2.11.5",
     resolvers += Resolver.mavenLocal,
 
-    libraryDependencies += "com.pi4j" % "pi4j-core" % "1.0-SNAPSHOT",
-    libraryDependencies += "com.lihaoyi" %% "scalarx" % "0.2.7"
+    libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.9",
+    libraryDependencies += "com.lihaoyi" %% "scalarx" % "0.2.7",
+    libraryDependencies += "com.pi4j" % "pi4j-core" % "1.0-SNAPSHOT"
   )

@@ -1,37 +1,35 @@
-import com.pi4j.io.gpio.event.{GpioPinDigitalStateChangeEvent, GpioPinListenerDigital}
-import com.pi4j.io.gpio.{GpioFactory, PinPullResistance, RaspiPin}
 import rx._
 import rx.core.Var
+import rx.ops._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object Main extends App {
 
   println("Hello")
 
-  val gpio = GpioFactory.getInstance()
+  implicit val scheduler = new AkkaScheduler(akka.actor.ActorSystem())
+  val gpio = new Gpio()
 
-  val rxInput0 = inputPinRx(0)
+  val temp = gpio.temperatureSensor("28-031462078cff")
 
-  val msg = Rx {
-    s"The heat is ${if (rxInput0()) "on" else "off"}"
-  }
+  val timer = Timer(1500 millis)
 
-  val o = Obs(msg) {
-    println(msg())
-  }
+  val o = temp.foreach { t => println(s"temp is now $t")}
 
   while (true) {
     println(s"waiting...")
     Thread.sleep(2000)
   }
+}
 
-  def inputPinRx(pinNumber: Int): Rx[Boolean] = {
-    val result = Var(false)
-    val input = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, PinPullResistance.PULL_UP)
-    input.addListener(new GpioPinListenerDigital {
-      override def handleGpioPinDigitalStateChangeEvent(event: GpioPinDigitalStateChangeEvent) = {
-        result() = event.getState.isHigh
-      }
-    })
+object RxUtils {
+  def window[T](source: Rx[T], count: Int): Rx[Seq[T]] = {
+    val result = Var(List[T]())
+    source.foreach {
+      v => result() = v :: result().take(count - 1)
+    }
     result
   }
 }
