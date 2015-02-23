@@ -5,13 +5,17 @@ lazy val root = (project in file(".")).
     scalaVersion := "2.11.5",
     resolvers += Resolver.mavenLocal,
 
-    libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.9",
-    libraryDependencies += "com.lihaoyi" %% "scalarx" % "0.2.7",
-    libraryDependencies += "org.mongodb" %% "casbah" % "2.8.0",
-    libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.8.0",
+    libraryDependencies ++= {
+      Seq(
+        "com.typesafe.akka" %% "akka-actor" % "2.3.9",
+        "com.lihaoyi" %% "scalarx" % "0.2.7",
+        "org.mongodb" %% "casbah" % "2.8.0",
+        "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.3.0" % "test",
-    libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test",
+        "com.lihaoyi" %% "utest" % "0.3.0" % "test",
+        "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test"
+      )
+    },
 
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
