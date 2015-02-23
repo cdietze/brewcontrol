@@ -6,14 +6,21 @@ lazy val root = (project in file(".")).
     resolvers += Resolver.mavenLocal,
 
     libraryDependencies ++= {
+      val akkaVersion = "2.3.9"
+      val sprayVersion = "1.3.2"
+
       Seq(
-        "com.typesafe.akka" %% "akka-actor" % "2.3.9",
-        "com.lihaoyi" %% "scalarx" % "0.2.7",
+        "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+        "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
+
         "org.mongodb" %% "casbah" % "2.8.0",
         "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
         "com.lihaoyi" %% "utest" % "0.3.0" % "test",
-        "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test"
+
+        "io.spray" %% "spray-can" % sprayVersion,
+        "io.spray" %% "spray-routing" % sprayVersion,
+        "io.spray" %% "spray-testkit" % sprayVersion % "test"
       )
     },
 
