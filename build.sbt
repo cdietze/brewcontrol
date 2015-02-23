@@ -7,6 +7,9 @@ lazy val root = (project in file(".")).
 
     libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.9",
     libraryDependencies += "com.lihaoyi" %% "scalarx" % "0.2.7",
+    libraryDependencies += "org.mongodb" %% "casbah" % "2.8.0",
+    libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.8.0",
+
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.3.0" % "test",
     libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test",
 

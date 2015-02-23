@@ -2,8 +2,8 @@ package brewcontrol
 
 import scala.util.Try
 
-object MockTemperatureConnection extends TemperatureConnection {
-  override def sensorIds() = Try(Set("SensorA", "SensorB"))
+class MockTemperatureConnection extends TemperatureConnection {
+  override def sensorIds() = Try(Set("SensorA"))
 
   override def temperature(sensorId: String) = Try(24.5f)
 }
