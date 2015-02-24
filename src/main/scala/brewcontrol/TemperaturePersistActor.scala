@@ -1,15 +1,14 @@
 package brewcontrol
 
 import akka.actor.{Actor, Props}
-import brewcontrol.TemperaturePersistActor._
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.commons.conversions.scala._
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
-import scala.util.Try
+class TemperaturePersistActor(mongoConnection: MongoConnection) extends Actor with akka.actor.ActorLogging {
 
-class TemperaturePersistActor(temperatureConnection: TemperatureConnection, mongoConnection: MongoConnection, clock: Clock) extends Actor with akka.actor.ActorLogging {
+  import brewcontrol.TemperaturePersistActor._
 
   RegisterJodaTimeConversionHelpers()
 
@@ -37,13 +36,13 @@ class TemperaturePersistActor(temperatureConnection: TemperatureConnection, mong
   }
 
   override def receive = {
-    case Persist => {
-      val now = clock.now
-      val hour = now.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
-      val minutes = now.getMinuteOfHour
-      val seconds = now.getSecondOfMinute
-      val x = temperatureConnection.sensorIds().flatMap(l => Try(l.map(id => id -> temperatureConnection.temperature(id).get).toMap))
-      x.foreach(_.foreach { case (sensorId, temperature) => {
+    case Persist(reading) => {
+      log.info(s"persisting $reading")
+      val ts = reading.timestamp
+      val hour = ts.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+      val minutes = ts.getMinuteOfHour
+      val seconds = ts.getSecondOfMinute
+      reading.values.foreach { case (sensorId, temperature) => {
         val query = MongoDBObject("_id" -> documentIdCached(sensorId, hour))
         val update = $set(s"temp" -> temperature)
         collection.update(
@@ -51,15 +50,16 @@ class TemperaturePersistActor(temperatureConnection: TemperatureConnection, mong
           $set(s"secondlyValues.${minutes}.${seconds}" -> temperature)
         )
       }
-      })
+      }
     }
+    case m => sys.error(s"Unknown message received: $m")
   }
 }
 
 object TemperaturePersistActor {
-  def props(implicit connection: TemperatureConnection, mongoConnection: MongoConnection, clock: Clock) =
-    Props(classOf[TemperaturePersistActor], connection, mongoConnection, clock)
+  def props(implicit mongoConnection: MongoConnection) =
+    Props(classOf[TemperaturePersistActor], mongoConnection)
 
-  case object Persist
+  case class Persist(reading: TemperatureReader.Reading)
 
 }

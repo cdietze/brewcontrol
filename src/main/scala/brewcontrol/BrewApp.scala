@@ -4,7 +4,8 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import rx.ops.AkkaScheduler
+import brewcontrol.TemperaturePersistActor.Persist
+import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,6 +18,7 @@ trait AbstractBrewApp extends App {
   implicit def mongoConnection: MongoConnection
 
   def host = "192.168.178.22"
+
   def port = 8080
 
   println(s"Hi from BrewControl")
@@ -28,8 +30,7 @@ trait AbstractBrewApp extends App {
   val temperatureReader = new TemperatureReader()
 
   val persistActorRef: ActorRef = system.actorOf(TemperaturePersistActor.props, "temperaturePersistActor")
-
-  system.scheduler.schedule(10 seconds, 10 seconds, persistActorRef, TemperaturePersistActor.Persist)
+  val obs = temperatureReader.current.foreach(reading => persistActorRef ! Persist(reading))
 
   val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader), "webActor")
 
