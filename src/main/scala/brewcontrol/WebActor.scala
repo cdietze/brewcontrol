@@ -1,6 +1,7 @@
 package brewcontrol
 
 import akka.actor.Actor
+import org.joda.time.format.DateTimeFormat
 import spray.http.MediaTypes._
 import spray.routing._
 
@@ -20,18 +21,21 @@ trait BrewHttpService extends HttpService {
       get {
         respondWithMediaType(`text/html`) {
           complete {
+            val dateFormatter = DateTimeFormat.mediumDateTime()
+            val reading = temperatureReader.current()
             <html>
               <body>
-                <h1>Say hello to
-                  <i>spray-routing</i>
-                  on
-                  <i>spray-can</i>
-                  !</h1>
-
-                <h2>Temperatures:</h2>
+                <h1>BrewControl</h1>
+                <h3>Time</h3>
                 <p>
-                  {temperatureReader.current()}
+                  {reading.timestamp.toString(dateFormatter)}
                 </p>
+                <h3>Temperatures</h3>{reading.values.map { case (sensorId, temp) => <p>
+                {sensorId}
+                :
+                {temp}
+                °C</p>
+              }}
               </body>
             </html>
           }
