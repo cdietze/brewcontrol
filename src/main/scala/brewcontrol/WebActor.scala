@@ -4,25 +4,21 @@ import akka.actor.Actor
 import spray.http.MediaTypes._
 import spray.routing._
 
-class WebActor extends Actor with BrewHttpService {
+class WebActor(val temperatureReader: TemperatureReader) extends Actor with BrewHttpService {
 
-  // the HttpService trait defines only one abstract member, which
-  // connects the services environment to the enclosing actor or test
   def actorRefFactory = context
 
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing
-  // or timeout handling
   def receive = runRoute(myRoute)
 }
 
 trait BrewHttpService extends HttpService {
 
+  def temperatureReader: TemperatureReader
+
   val myRoute =
     path("") {
       get {
         respondWithMediaType(`text/html`) {
-          // XML is marshalled to `text/xml` by default, so we simply override here
           complete {
             <html>
               <body>
@@ -31,6 +27,11 @@ trait BrewHttpService extends HttpService {
                   on
                   <i>spray-can</i>
                   !</h1>
+
+                <h2>Temperatures:</h2>
+                <p>
+                  {temperatureReader.current()}
+                </p>
               </body>
             </html>
           }

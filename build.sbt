@@ -13,6 +13,8 @@ lazy val root = (project in file(".")).
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
 
+        "com.lihaoyi" %% "scalarx" % "0.2.7",
+
         "org.mongodb" %% "casbah" % "2.8.0",
         "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
