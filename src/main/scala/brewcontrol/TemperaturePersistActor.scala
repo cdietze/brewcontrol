@@ -37,7 +37,7 @@ class TemperaturePersistActor(mongoConnection: MongoConnection) extends Actor wi
 
   override def receive = {
     case Persist(reading) => {
-      log.info(s"persisting $reading")
+      log.debug(s"persisting $reading")
       val ts = reading.timestamp
       val hour = ts.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
       val minutes = ts.getMinuteOfHour
