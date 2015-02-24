@@ -19,8 +19,17 @@ class TemperatureReader()(implicit temperatureConnection: TemperatureConnection,
   private val obs = t.foreach(_ => current.update(reading()))
 
   private def reading(): Reading = {
-    val values = temperatureConnection.sensorIds().flatMap(l => Try(l.map(id => id -> temperatureConnection.temperature(id).get).toMap)).get
+    val values = temperatureConnection.sensorIds().flatMap(sensorIds =>
+      Try(sensorIds.map(sensorId =>
+        sensorName(sensorId) -> temperatureConnection.temperature(sensorId).get)
+        .toMap)).get
     Reading(clock.now, values)
+  }
+
+  private def sensorName(sensorId: String): String = sensorId match {
+    case "28-031462078cff" => "Gäreimer Innen"
+    case "28-011463e799ff" => "Gäreimer Umgebung"
+    case x => s"SensorId($x)"
   }
 }
 
