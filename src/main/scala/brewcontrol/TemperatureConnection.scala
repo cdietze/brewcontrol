@@ -13,10 +13,18 @@ class TemperatureConnection {
 
   def temperature(sensorId: String): Try[Float] = {
     val path = s"/sys/bus/w1/devices/$sensorId/w1_slave"
-    Try((for {
-      line <- Source.fromFile(path).getLines()
-      s <- "t=(\\d+)".r.findFirstMatchIn(line).map(_.group(1))
-      f = s.toInt / 1000f
-    } yield f).toSeq.head)
+    Try {
+      val lines = Source.fromFile(path).getLines().toList
+      val floats = (for {
+        line <- lines
+        s <- "t=(\\d+)".r.findFirstMatchIn(line).map(_.group(1))
+        f = s.toInt / 1000f
+      } yield f).toSeq
+      floats match {
+        case Nil => throw new RuntimeException(s"Failed to parse temperature of sensor: $sensorId, content: '$lines'")
+        case v :: _ => v
+      }
+      throw new RuntimeException("test exception")
+    }
   }
 }
