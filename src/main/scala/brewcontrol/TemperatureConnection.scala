@@ -24,7 +24,6 @@ class TemperatureConnection {
         case Nil => throw new RuntimeException(s"Failed to parse temperature of sensor: $sensorId, content: '$lines'")
         case v :: _ => v
       }
-      throw new RuntimeException("test exception")
     }
   }
 }
