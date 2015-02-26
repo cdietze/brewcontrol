@@ -7,7 +7,7 @@ class MockMongoConnection extends MongoConnection {
 
   val mongoClient = MongoClient("localhost:27017", MongoClientOptions(connectTimeout = 1000))
 
-  override def db = mongoClient("brewcontrol")
+  override def db = mongoClient("test_brewcontrol")
 
   def reset() = db.dropDatabase()
 
