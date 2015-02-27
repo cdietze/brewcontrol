@@ -11,6 +11,7 @@ lazy val root = (project in file(".")).
 
       Seq(
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+        "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
 
         "com.lihaoyi" %% "scalarx" % "0.2.7",
@@ -22,7 +23,10 @@ lazy val root = (project in file(".")).
 
         "io.spray" %% "spray-can" % sprayVersion,
         "io.spray" %% "spray-routing" % sprayVersion,
-        "io.spray" %% "spray-testkit" % sprayVersion % "test"
+        "io.spray" %% "spray-testkit" % sprayVersion % "test",
+
+        "ch.qos.logback" % "logback-classic" % "1.0.13"
+
       )
     },
 
