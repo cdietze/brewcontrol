@@ -17,6 +17,8 @@ trait AbstractBrewApp extends App {
 
   implicit def mongoConnection: MongoConnection
 
+  implicit def gpio: GpioConnection
+
   def host = "192.168.178.22"
 
   def port = 8080
@@ -38,6 +40,14 @@ trait AbstractBrewApp extends App {
 
   IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
 
+  val pin = gpio.outPin(2)
+
+  val timer = Timer(10 seconds)
+  val o = timer.foreach { t => {
+    pin.update(t % 2 == 0)
+  }
+  }
+
   println(s"Running...")
   system.awaitTermination()
 }
@@ -45,4 +55,5 @@ trait AbstractBrewApp extends App {
 object BrewApp extends AbstractBrewApp {
   override lazy val temperatureConnection = new TemperatureConnection
   override lazy val mongoConnection = new MongoConnection
+  override lazy val gpio = new GpioConnection
 }
