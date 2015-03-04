@@ -7,7 +7,7 @@ import rx.ops.{Scheduler, Timer}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class TemperatureReader()(implicit temperatureConnection: TemperatureConnection, clock: Clock, scheduler: Scheduler, ex: ExecutionContext, updateInterval: FiniteDuration = 5 seconds) extends LazyLogging {
 
@@ -17,17 +17,20 @@ class TemperatureReader()(implicit temperatureConnection: TemperatureConnection,
 
   private val timer = Timer(updateInterval)
 
-  private val obs = Obs(timer, skipInitial = true) {
-    current.update(reading())
+  private val obs = Obs(timer) {
+    reading() match {
+      case Success(r) => current.update(r)
+      case Failure(e) => logger.warn(s"Failed to get reading", e)
+    }
   }
 
-  private def reading(): Reading = {
+  private def reading(): Try[Reading] = {
     val values = temperatureConnection.sensorIds().flatMap(sensorIds =>
       Try(sensorIds.map(sensorId =>
         sensorName(sensorId) -> temperatureConnection.temperature(sensorId).get)
-        .toMap)).get
+        .toMap))
     logger.debug(s"Read temperatures: $values")
-    Reading(clock.now, values)
+    values.map(v => Reading(clock.now, v))
   }
 
   private def sensorName(sensorId: String): String = sensorId match {
