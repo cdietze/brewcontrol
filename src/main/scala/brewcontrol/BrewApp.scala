@@ -15,13 +15,9 @@ import scala.concurrent.duration._
 trait AbstractBrewApp extends App with LazyLogging {
 
   implicit def temperatureConnection: TemperatureConnection
-
   implicit def mongoConnection: MongoConnection
-
   implicit def gpio: GpioConnection
-
   def host = "192.168.178.22"
-
   def port = 8080
 
   logger.info(s"Hi from BrewControl")
@@ -38,8 +34,8 @@ trait AbstractBrewApp extends App with LazyLogging {
   val obs2 = startPinDemo()
   startWebServer()
 
-  println(s"Running...")
-  system.awaitTermination()
+  logger.info("Startup complete")
+  // No need to do anything else - the daemon threads are loose!
 
   def startTemperaturePolling(): Obs = {
     val temperatureStorage = new TemperatureStorage(mongoConnection)
