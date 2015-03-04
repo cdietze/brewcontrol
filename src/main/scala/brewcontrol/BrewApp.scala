@@ -5,6 +5,7 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
 import brewcontrol.TemperaturePersistActor.Persist
+import rx.core.Obs
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
 
@@ -30,26 +31,32 @@ trait AbstractBrewApp extends App {
   implicit val clock = new Clock
 
   val temperatureReader = new TemperatureReader()
-
-  val persistActorRef: ActorRef = system.actorOf(TemperaturePersistActor.props, "temperaturePersistActor")
-  val obs = temperatureReader.current.foreach(reading => persistActorRef ! Persist(reading))
-
-  val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader), "webActor")
-
-  implicit val timeout = Timeout(5 seconds)
-
-  IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
-
-  val pin = gpio.outPin(2)
-
-  val timer = Timer(10 seconds)
-  val o = timer.foreach { t => {
-    pin.update(t % 2 == 0)
-  }
-  }
+  val obs1 = startTemperaturePolling()
+  val obs2 = startPinDemo()
+  startWebServer()
 
   println(s"Running...")
   system.awaitTermination()
+
+  def startTemperaturePolling(): Obs = {
+    val persistActorRef: ActorRef = system.actorOf(TemperaturePersistActor.props, "temperaturePersistActor")
+    temperatureReader.current.foreach(reading => persistActorRef ! Persist(reading))
+  }
+
+  def startPinDemo(): Obs = {
+    val pin = gpio.outPin(2)
+    val timer = Timer(10 seconds)
+    timer.foreach { t => {
+      pin.update(t % 2 == 0)
+    }
+    }
+  }
+
+  def startWebServer() = {
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader), "webActor")
+    implicit val timeout = Timeout(5 seconds)
+    IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
+  }
 }
 
 object BrewApp extends AbstractBrewApp {
