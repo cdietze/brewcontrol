@@ -21,6 +21,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   def port = 8080
 
   logger.info(s"Hi from BrewControl")
+  sys.addShutdownHook(logger.info("Shutting down"))
 
   logger.info(s"Using MongoDB: ${mongoConnection.mongoClient.getAddress} / ${mongoConnection.db}")
   logger.debug(s"MongoDB details: ${mongoConnection.mongoClient.underlying}")
@@ -44,6 +45,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   def startPinDemo(): Obs = {
     val pin = gpio.outPin(2)
+    sys.addShutdownHook(gpio.unexport(2))
     val timer = Timer(10 seconds)
     timer.foreach { t => {
       pin.update(t % 2 == 0)
