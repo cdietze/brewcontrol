@@ -4,7 +4,6 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import brewcontrol.TemperaturePersistActor.Persist
 import rx.core.Obs
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
@@ -39,8 +38,8 @@ trait AbstractBrewApp extends App {
   system.awaitTermination()
 
   def startTemperaturePolling(): Obs = {
-    val persistActorRef: ActorRef = system.actorOf(TemperaturePersistActor.props, "temperaturePersistActor")
-    temperatureReader.current.foreach(reading => persistActorRef ! Persist(reading))
+    val temperatureStorage = new TemperatureStorage(mongoConnection)
+    temperatureReader.current.foreach(reading => temperatureStorage.persist(reading))
   }
 
   def startPinDemo(): Obs = {
