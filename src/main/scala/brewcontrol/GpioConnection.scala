@@ -12,20 +12,22 @@ class OutPin(pinNumber: Int) extends Var[Boolean](false)
 
 class GpioConnection extends LazyLogging {
 
-  def unexport(pinNumber: Int): Unit = {
+  def export(pinNumber: Int): Unit = {
     try {
-      IO.write(Paths.unexport, pinNumber.toString)
+      logger.debug(s"Exporting pin $pinNumber")
+      IO.write(Paths.export, pinNumber.toString)
     } catch {
-      // Ignore the "IOException: Invalid argument" when a pin is already unexported
+      // Ignore the "IOException: Device or resource busy" when a pin is already exported
       case e: IOException =>
     }
   }
 
-  def export(pinNumber: Int): Unit = {
+  def unexport(pinNumber: Int): Unit = {
     try {
-      IO.write(Paths.export, pinNumber.toString)
+      logger.debug(s"Unexporting pin $pinNumber")
+      IO.write(Paths.unexport, pinNumber.toString)
     } catch {
-      // Ignore the "IOException: Device or resource busy" when a pin is already exported
+      // Ignore the "IOException: Invalid argument" when a pin is already unexported
       case e: IOException =>
     }
   }
