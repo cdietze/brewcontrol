@@ -1,24 +1,40 @@
 package brewcontrol
 
+import java.io.IOException
+
 import com.typesafe.scalalogging.LazyLogging
-import rx.core.Var
+import rx._
 import rx.ops._
+import sbt.Path._
 import sbt._
 
 class OutPin(pinNumber: Int) extends Var[Boolean](false)
 
 class GpioConnection extends LazyLogging {
 
-  def outPin(pinNumber: Int): OutPin = {
-
-    if (!Paths.direction(pinNumber).exists()) {
-      IO.write(Paths.export, pinNumber.toString)
-      assert(Paths.direction(pinNumber).exists())
+  def unexport(pinNumber: Int): Unit = {
+    try {
+      IO.write(Paths.unexport, pinNumber.toString)
+    } catch {
+      // Ignore the "IOException: Invalid argument" when a pin is already unexported
+      case e: IOException =>
     }
-    IO.write(Paths.direction(pinNumber), "out")
+  }
 
+  def export(pinNumber: Int): Unit = {
+    try {
+      IO.write(Paths.export, pinNumber.toString)
+    } catch {
+      // Ignore the "IOException: Device or resource busy" when a pin is already exported
+      case e: IOException =>
+    }
+  }
+
+  def outPin(pinNumber: Int): OutPin = {
+    export(pinNumber)
+    IO.write(Paths.direction(pinNumber), "out")
     new OutPin(pinNumber) {
-      val obs = this.foreach {
+      val obs: Obs = this.foreach {
         value: Boolean => {
           logger.debug(s"Writing $value to pin $pinNumber")
           IO.write(Paths.value(pinNumber), if (value) "1" else "0")
@@ -30,8 +46,10 @@ class GpioConnection extends LazyLogging {
   object Paths {
     val gpioPath = Path("/sys/class/gpio")
     val export = gpioPath / "export"
-    def direction(pinNumber: Int) = gpioPath / s"/gpio$pinNumber/direction"
-    def value(pinNumber: Int) = gpioPath / s"/gpio$pinNumber/value"
+    val unexport = gpioPath / "unexport"
+    def pinPath(pinNumber: Int) = gpioPath / s"gpio$pinNumber"
+    def direction(pinNumber: Int) = pinPath(pinNumber) / "direction"
+    def value(pinNumber: Int) = pinPath(pinNumber) / "value"
   }
 }
 
