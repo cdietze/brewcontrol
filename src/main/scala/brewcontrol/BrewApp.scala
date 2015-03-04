@@ -4,6 +4,7 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
 import rx.core.Obs
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
@@ -11,7 +12,7 @@ import spray.can.Http
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-trait AbstractBrewApp extends App {
+trait AbstractBrewApp extends App with LazyLogging {
 
   implicit def temperatureConnection: TemperatureConnection
 
@@ -23,7 +24,10 @@ trait AbstractBrewApp extends App {
 
   def port = 8080
 
-  println(s"Hi from BrewControl")
+  logger.info(s"Hi from BrewControl")
+
+  logger.info(s"Using MongoDB: ${mongoConnection.mongoClient.getAddress} / ${mongoConnection.db}")
+  logger.debug(s"MongoDB details: ${mongoConnection.mongoClient.underlying}")
 
   implicit val system = akka.actor.ActorSystem()
   implicit val scheduler = new AkkaScheduler(akka.actor.ActorSystem())

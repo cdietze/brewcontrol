@@ -5,9 +5,9 @@ import com.mongodb.casbah.Imports._
 
 class MockMongoConnection extends MongoConnection {
 
-  val mongoClient = MongoClient("localhost:27017", MongoClientOptions(connectTimeout = 1000))
+  override lazy val mongoClient = MongoClient("localhost:27017", MongoClientOptions(connectTimeout = 1000))
 
-  override def db = mongoClient("test_brewcontrol")
+  override lazy val db = mongoClient("test_brewcontrol")
 
   def reset() = db.dropDatabase()
 
