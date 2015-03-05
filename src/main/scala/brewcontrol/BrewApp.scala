@@ -5,11 +5,12 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import rx.core.Obs
+import rx._
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 trait AbstractBrewApp extends App with LazyLogging {
@@ -27,7 +28,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   logger.debug(s"MongoDB details: ${mongoConnection.mongoClient.underlying}")
 
   implicit val system = akka.actor.ActorSystem()
-  implicit val scheduler = new AkkaScheduler(akka.actor.ActorSystem())
+  implicit val scheduler = new AkkaScheduler(system)
   implicit val clock = new Clock
 
   val temperatureReader = new TemperatureReader()
@@ -43,13 +44,15 @@ trait AbstractBrewApp extends App with LazyLogging {
     temperatureReader.current.foreach(reading => temperatureStorage.persist(reading))
   }
 
-  def startPinDemo(): Obs = {
-    val pin = gpio.outPin(2)
-    sys.addShutdownHook(gpio.unexport(2))
-    val timer = Timer(10 seconds)
-    timer.foreach { t => {
-      pin.update(t % 2 == 0)
-    }
+  def startPinDemo(): Future[Obs] = {
+    gpio.outPin(2).map { pin =>
+      sys.addShutdownHook(gpio.unexport(2))
+      val timer = Timer(10 seconds)
+      timer.foreach {
+        t => {
+          pin.update(t % 2 == 0)
+        }
+      }
     }
   }
 
@@ -63,5 +66,5 @@ trait AbstractBrewApp extends App with LazyLogging {
 object BrewApp extends AbstractBrewApp {
   override lazy val temperatureConnection = new TemperatureConnection
   override lazy val mongoConnection = new MongoConnection
-  override lazy val gpio = new GpioConnection
+  override lazy val gpio = new GpioConnectionImpl()(system.scheduler, global)
 }
