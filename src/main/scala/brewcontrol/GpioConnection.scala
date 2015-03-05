@@ -46,7 +46,7 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
     waitUntil(Paths.pinPath(pinNumber).exists(), 1 second)
   }
 
-  def unexport(pinNumber: Int): Future[Unit] = {
+  def unexport(pinNumber: Int): Unit = {
     try {
       logger.debug(s"Unexporting pin $pinNumber")
       IO.write(Paths.unexport, pinNumber.toString)
@@ -54,7 +54,6 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
       // Ignore the "IOException: Invalid argument" when a pin is already unexported
       case e: IOException => logger.debug(s"Ignoring exception while unexporting pin $pinNumber: $e")
     }
-    waitUntil(!Paths.pinPath(pinNumber).exists(), 1 second)
   }
 
   def outPin(pinNumber: Int): Future[OutPin] = {
