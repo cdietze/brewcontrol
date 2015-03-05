@@ -17,8 +17,6 @@ import scala.util.{Failure, Success}
 class OutPin(pinNumber: Int) extends Var[Boolean](false)
 
 trait GpioConnection {
-  def export(pinNumber: Int): Future[Unit]
-  def unexport(pinNumber: Int): Future[Unit]
   def outPin(pinNumber: Int): Future[OutPin]
 }
 
@@ -33,7 +31,7 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
     def value(pinNumber: Int) = pinPath(pinNumber) / "value"
   }
 
-  def export(pinNumber: Int): Future[Unit] = {
+  private def export(pinNumber: Int): Future[Unit] = {
     try {
       logger.debug(s"Exporting pin $pinNumber")
       IO.write(Paths.export, pinNumber.toString)
@@ -43,10 +41,11 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
         logger.debug(s"Ignoring exception while exporting pin $pinNumber: $e")
       }
     }
+    sys.addShutdownHook(unexport(pinNumber))
     waitUntil(Paths.pinPath(pinNumber).exists(), 1 second)
   }
 
-  def unexport(pinNumber: Int): Unit = {
+  private def unexport(pinNumber: Int): Unit = {
     try {
       logger.debug(s"Unexporting pin $pinNumber")
       IO.write(Paths.unexport, pinNumber.toString)

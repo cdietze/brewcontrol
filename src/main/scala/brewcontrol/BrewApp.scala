@@ -10,7 +10,6 @@ import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 trait AbstractBrewApp extends App with LazyLogging {
@@ -33,6 +32,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   val temperatureReader = new TemperatureReader()
   val obs1 = startTemperaturePolling()
+  val relayController = new RelayController(gpio)
   val obs2 = startPinDemo()
   startWebServer()
 
@@ -44,20 +44,17 @@ trait AbstractBrewApp extends App with LazyLogging {
     temperatureReader.current.foreach(reading => temperatureStorage.persist(reading))
   }
 
-  def startPinDemo(): Future[Obs] = {
-    gpio.outPin(2).map { pin =>
-      sys.addShutdownHook(gpio.unexport(2))
-      val timer = Timer(10 seconds)
-      timer.foreach {
-        t => {
-          pin.update(t % 2 == 0)
-        }
+  def startPinDemo(): Obs = {
+    val timer = Timer(10 seconds)
+    timer.foreach {
+      t => {
+        relayController.relay1.update(t % 2 == 0)
       }
     }
   }
 
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader), "webActor")
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, relayController), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }
