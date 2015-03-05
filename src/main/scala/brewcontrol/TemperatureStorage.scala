@@ -38,8 +38,8 @@ class TemperatureStorage(mongoConnection: MongoConnection) extends LazyLogging {
   private var documentIdCache = Map[String, (DateTime, ObjectId)]()
 
   private def documentIdCached(sensorId: String, hour: DateTime): ObjectId = {
-    documentIdCache.get(sensorId) match {
-      case Some((h, docId)) if (h == hour) => docId
+    documentIdCache.get(sensorId).filter(_._1 == hour) match {
+      case Some((h, docId)) => docId
       case None => {
         val docId = documentId(sensorId, hour)
         documentIdCache = documentIdCache.updated(sensorId, (hour, docId))
