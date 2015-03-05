@@ -27,30 +27,27 @@ trait AbstractBrewApp extends App with LazyLogging {
   logger.debug(s"MongoDB details: ${mongoConnection.mongoClient.underlying}")
 
   implicit val system = akka.actor.ActorSystem()
-  implicit val scheduler = new AkkaScheduler(system)
+  implicit val scheduler = system.scheduler
+  implicit val rxScheduler = new AkkaScheduler(system)
   implicit val clock = new Clock
 
   val temperatureReader = new TemperatureReader()
   val obs1 = startTemperaturePolling()
   val relayController = new RelayController(gpio)
-  val obs2 = startPinDemo()
-  startWebServer()
 
+  val pidController = new PidController(Var(25f), temperatureReader.BucketOutside.temperature, 10 seconds)
+
+  val obs2 = pidController.output.map { output =>
+    relayController.relay1() = output > 0f
+  }
+
+  startWebServer()
   logger.info("Startup complete")
   // No need to do anything else - the daemon threads are loose!
 
   def startTemperaturePolling(): Obs = {
     val temperatureStorage = new TemperatureStorage(mongoConnection)
-    temperatureReader.current.foreach(reading => temperatureStorage.persist(reading))
-  }
-
-  def startPinDemo(): Obs = {
-    val timer = Timer(10 seconds)
-    timer.foreach {
-      t => {
-        relayController.relay1.update(t % 2 == 0)
-      }
-    }
+    temperatureReader.currentReading.foreach(reading => temperatureStorage.persist(reading))
   }
 
   def startWebServer() = {

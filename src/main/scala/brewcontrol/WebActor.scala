@@ -1,10 +1,6 @@
 package brewcontrol
 
-import java.util.Locale
-
 import akka.actor.Actor
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import spray.http.MediaTypes._
 import spray.routing._
 
@@ -27,7 +23,7 @@ trait BrewHttpService extends HttpService {
         respondWithMediaType(`text/html`) {
           complete {
             val dateFormatter = DateTimeFormat.mediumDateTime().withLocale(Locale.GERMANY)
-            val reading = temperatureReader.current()
+            val reading = temperatureReader.currentReading()
             <html>
               <body>
                 <h1>BrewControl</h1>
@@ -38,7 +34,7 @@ trait BrewHttpService extends HttpService {
                 <p>Reading from
                   {reading.timestamp.toString(dateFormatter)}
                 </p>{reading.values.map { case (sensorId, temp) => <p>
-                {sensorId}
+                {temperatureReader.sensorName(sensorId)}
                 :
                 {temp}
                 °C</p>
