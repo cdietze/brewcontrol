@@ -7,6 +7,27 @@ import com.typesafe.scalalogging.LazyLogging
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
+/**
+ * Stores temperature values. Document structure:
+ * <pre>
+ {
+	"_id" : ObjectId("54eacff344ae2d97d8fca4cd"),
+	"sensorId" : "28-011463e799ff",
+	"timeStampHour" : ISODate("2015-02-23T07:00:00Z"),
+	"secondlyValues" : {
+		"58" : {
+			"0" : 22.625,
+			"10" : 22.625,
+			"15" : 22.625
+		},
+		"59" : {
+			"50" : 22.437000274658203,
+			"55" : 22.437000274658203
+		}
+	}
+}
+</pre>
+ */
 class TemperatureStorage(mongoConnection: MongoConnection) extends LazyLogging {
 
   RegisterJodaTimeConversionHelpers()
@@ -39,7 +60,7 @@ class TemperatureStorage(mongoConnection: MongoConnection) extends LazyLogging {
   }
 
   def persist(reading: Reading) {
-    logger.debug(s"persisting $reading")
+    logger.debug(s"Persisting $reading")
     val ts = reading.timestamp
     val hour = ts.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
     val minutes = ts.getMinuteOfHour
