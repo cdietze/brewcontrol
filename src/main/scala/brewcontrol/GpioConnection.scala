@@ -42,7 +42,7 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
       }
     }
     sys.addShutdownHook(unexport(pinNumber))
-    waitUntil(Paths.pinPath(pinNumber).exists(), 1 second)
+    waitUntil(Paths.direction(pinNumber).canWrite, 1 second)
   }
 
   private def unexport(pinNumber: Int): Unit = {
