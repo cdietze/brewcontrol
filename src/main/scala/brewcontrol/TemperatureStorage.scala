@@ -11,7 +11,7 @@ class TemperatureStorage(mongoConnection: MongoConnection) extends LazyLogging {
 
   RegisterJodaTimeConversionHelpers()
 
-  lazy val collection = mongoConnection.db.getCollection("temperature")
+  lazy val collection = mongoConnection.db.getCollection("temperatures")
 
   private var documentIdCache = Map[(String, DateTime), ObjectId]()
 
