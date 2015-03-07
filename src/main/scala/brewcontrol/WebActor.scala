@@ -45,7 +45,7 @@ trait BrewHttpService extends HttpService {
               }}<h3>Relays</h3>{relayController.relayMap.map { case (name, relay) => <p>
                 {name}
                 :
-                {relay.now}
+                {relay.value.now}
               </p>
               }}
               </body>

@@ -8,10 +8,18 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class RelayController(gpio: GpioConnection) extends LazyLogging {
+  sealed class Relay(pinNumber: Int) {
+    val outPin = Await.result(gpio.outPin(pinNumber), 5 seconds)
+    val value = inversePin(outPin)
+    value.update(false)
+  }
 
-  val relay1 = inversePin(Await.result(gpio.outPin(2), 5 seconds))
+  case object Relay1 extends Relay(7)
+  case object Relay2 extends Relay(8)
+  case object Relay3 extends Relay(25)
+  case object Relay4 extends Relay(24)
 
-  val relayMap: Map[String, Var[Boolean]] = Map("Kühlung" -> relay1)
+  val relayMap: Map[String, Relay] = Map("Kühlung" -> Relay1)
 
   logger.debug(s"Initialized $this")
 

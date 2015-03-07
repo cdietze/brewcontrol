@@ -35,8 +35,9 @@ class TemperatureReader()(implicit temperatureConnection: TemperatureConnection,
     }
   }
 
-  case object BucketOutside extends Sensor("28-011463e799ff", "Gäreimer Umgebung")
+  case object DevBoard extends Sensor("28-011463e799ff", "Entwicklungsboard")
   case object BucketInside extends Sensor("28-031462078cff", "Gäreimer Innen")
+  case object BucketOutside extends Sensor("28-0214638301ff", "Gäreimer Außen")
 
   val sensors = List(BucketOutside, BucketInside)
 }
