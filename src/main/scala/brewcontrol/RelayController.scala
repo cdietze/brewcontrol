@@ -14,12 +14,12 @@ class RelayController(gpio: GpioConnection) extends LazyLogging {
     value.update(false)
   }
 
-  case object Relay1 extends Relay(7)
-  case object Relay2 extends Relay(8)
+  case object Cooler extends Relay(7)
+  case object Heater extends Relay(8)
   case object Relay3 extends Relay(25)
   case object Relay4 extends Relay(24)
 
-  val relayMap: Map[String, Relay] = Map("Kühlung" -> Relay1)
+  val relayMap: Map[String, Relay] = Map("Kühlung" -> Cooler, "Heizung" -> Heater)
 
   logger.debug(s"Initialized $this")
 
