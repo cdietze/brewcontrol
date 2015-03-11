@@ -33,12 +33,11 @@ lazy val root = (project in file(".")).
 
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
         "ch.qos.logback" % "logback-classic" % "1.0.13"
-
       )
     },
 
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     fullClasspath in Revolver.reStart <<= fullClasspath in Test,
-      mainClass in Revolver.reStart <<= mainClass in Test
-)
+    mainClass in Revolver.reStart <<= mainClass in Test
+  )
