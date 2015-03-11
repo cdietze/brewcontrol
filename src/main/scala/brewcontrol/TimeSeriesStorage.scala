@@ -28,7 +28,7 @@ import org.joda.time.DateTime
 }
 </pre>
  */
-class TimeSeriesStorage(val collection: DBCollection) extends LazyLogging {
+class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
 
   RegisterJodaTimeConversionHelpers()
 
@@ -51,18 +51,20 @@ class TimeSeriesStorage(val collection: DBCollection) extends LazyLogging {
       "seriesId" -> seriesId,
       "timeStampHour" -> hour
     )
-    Option(collection.findOne(o)) match {
+    collection.findOne(o) match {
       case Some(result) => result("_id").asInstanceOf[ObjectId]
       case None => collection.insert(o); o("_id").asInstanceOf[ObjectId]
     }
   }
+
+  def toHourTimeStamp(timestamp: DateTime): DateTime = timestamp.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
 
   /**
    * Creates a new document when it doesn't exist already
    */
   def persist(seriesId: String, timestamp: DateTime, value: Float) {
     logger.debug(s"Persisting $value")
-    val hour = timestamp.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+    val hour = toHourTimeStamp(timestamp)
     val minutes = timestamp.getMinuteOfHour
     val seconds = timestamp.getSecondOfMinute
     val query = MongoDBObject("_id" -> documentIdCached(seriesId, hour))
