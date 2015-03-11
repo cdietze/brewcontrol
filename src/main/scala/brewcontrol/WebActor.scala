@@ -3,16 +3,19 @@ package brewcontrol
 import java.util.Locale
 
 import akka.actor.Actor
+import com.typesafe.scalalogging.LazyLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import spray.http.MediaTypes._
+import spray.httpx.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 import spray.routing._
 
-class WebActor(val temperatureReader: TemperatureReader, val relayController: RelayController) extends Actor with BrewHttpService {
+class WebActor(val temperatureReader: TemperatureReader, val relayController: RelayController) extends Actor with BrewHttpService with TemperatureService {
 
   def actorRefFactory = context
 
-  def receive = runRoute(myRoute)
+  def receive = runRoute(indexHtmlRoute ~ temperaturesRoute)
 }
 
 trait BrewHttpService extends HttpService {
@@ -21,7 +24,7 @@ trait BrewHttpService extends HttpService {
 
   def relayController: RelayController
 
-  val myRoute =
+  val indexHtmlRoute: Route =
     path("") {
       get {
         respondWithMediaType(`text/html`) {
@@ -49,5 +52,29 @@ trait BrewHttpService extends HttpService {
           }
         }
       }
+    }
+}
+
+import spray.httpx.marshalling._
+
+trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJsonProtocol with LazyLogging {
+
+  def temperatureReader: TemperatureReader
+
+  val temperaturesRoute: Route =
+    pathPrefix("temperatures") {
+      pathEnd {
+        get {
+          complete {
+            marshal(temperatureReader.currentReadings.now.map(_.sensorId))
+          }
+        }
+      } ~
+        path(Segment) { sensorId =>
+          complete {
+
+            marshal(Map("sensorId" ->sensorId))
+          }
+        }
     }
 }

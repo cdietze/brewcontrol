@@ -29,6 +29,7 @@ lazy val root = (project in file(".")).
 
         "io.spray" %% "spray-can" % sprayVersion,
         "io.spray" %% "spray-routing" % sprayVersion,
+        "io.spray" %% "spray-json" % "1.3.1",
         "io.spray" %% "spray-testkit" % sprayVersion % "test",
 
         "org.scalatest" %% "scalatest" % "2.2.1" % "test",
