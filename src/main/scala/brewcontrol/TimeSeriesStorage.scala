@@ -1,6 +1,5 @@
 package brewcontrol
 
-import com.mongodb.DBCollection
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.commons.conversions.scala._
 import com.typesafe.scalalogging.LazyLogging
@@ -47,17 +46,24 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
   }
 
   private def documentId(seriesId: String, hour: DateTime): ObjectId = {
-    val o = MongoDBObject(
+    collection.findOne(MongoDBObject(
       "seriesId" -> seriesId,
-      "timeStampHour" -> hour
-    )
-    collection.findOne(o) match {
+      "timeStampHour" -> hour)
+    ) match {
       case Some(result) => result("_id").asInstanceOf[ObjectId]
-      case None => collection.insert(o); o("_id").asInstanceOf[ObjectId]
+      case None => {
+        val o = emptyDocument(seriesId, hour)
+        collection.insert(o)
+        o("_id").asInstanceOf[ObjectId]
+      }
     }
   }
 
-  def toHourTimeStamp(timestamp: DateTime): DateTime = timestamp.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+  private def toHourTimeStamp(timestamp: DateTime): DateTime = timestamp.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
+  private def emptyDocument(seriesId: String, hour: DateTime): MongoDBObject = {
+    MongoDBObject("seriesId" -> seriesId,
+      "timeStampHour" -> hour)
+  }
 
   /**
    * Creates a new document when it doesn't exist already
@@ -76,5 +82,13 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
         seconds
       }" -> value)
     )
+  }
+
+  def getHourlyDocument(seriesId: String, timeStamp: DateTime): DBObject = {
+    val hour = toHourTimeStamp(timeStamp)
+    collection.findOne(MongoDBObject(
+      "seriesId" -> seriesId,
+      "timeStampHour" -> hour)
+    ).getOrElse(emptyDocument(seriesId, hour))
   }
 }

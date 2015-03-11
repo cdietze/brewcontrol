@@ -11,7 +11,7 @@ import spray.httpx.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.routing._
 
-class WebActor(val temperatureReader: TemperatureReader, val relayController: RelayController) extends Actor with BrewHttpService with TemperatureService {
+class WebActor(val temperatureReader: TemperatureReader, val temperatureStorage: TemperatureStorage, val relayController: RelayController) extends Actor with BrewHttpService with TemperatureService {
 
   def actorRefFactory = context
 
@@ -61,6 +61,8 @@ trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJ
 
   def temperatureReader: TemperatureReader
 
+  def temperatureStorage: TemperatureStorage
+
   val temperaturesRoute: Route =
     pathPrefix("temperatures") {
       pathEnd {
@@ -72,8 +74,9 @@ trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJ
       } ~
         path(Segment) { sensorId =>
           complete {
-
-            marshal(Map("sensorId" ->sensorId))
+            val o = temperatureStorage.getHourlyDocument(sensorId, DateTime.now)
+            val json = com.mongodb.util.JSON.serialize(o)
+            marshal(json)
           }
         }
     }

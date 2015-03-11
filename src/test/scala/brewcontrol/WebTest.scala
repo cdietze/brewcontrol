@@ -10,6 +10,7 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
 
   implicit val mongoConnection = new MockMongoConnection
   implicit val gpio = new MockGpioConnection
+  implicit val temperatureStorage = new TemperatureStorage
 
   lazy val temperatureReader: TemperatureReader = new MockTemperatureReader()
   lazy val relayController: RelayController = new RelayController()
