@@ -27,25 +27,21 @@ trait BrewHttpService extends HttpService {
         respondWithMediaType(`text/html`) {
           complete {
             val dateFormatter = DateTimeFormat.mediumDateTime().withLocale(Locale.GERMANY)
-            val reading = temperatureReader.currentReading()
+            val readings = temperatureReader.currentReadings()
             <html>
               <body>
                 <h1>BrewControl</h1>
                 <p>Current time is
                   {DateTime.now.toString(dateFormatter)}
                 </p>
-                <h3>Temperatures</h3>
-                <p>Reading from
-                  {reading.timestamp.toString(dateFormatter)}
-                </p>{reading.values.map { case (sensorId, temp) => <p>
-                {temperatureReader.sensorName(sensorId)}
+                <h3>Temperatures</h3>{readings.map(reading => <p>
+                {temperatureReader.sensorName(reading.sensorId)}
                 :
-                {temp}
-                °C</p>
-              }}<h3>Relays</h3>{relayController.relayMap.map { case (name, relay) => <p>
+                {reading.value}
+                °C</p>)}<h3>Relays</h3>{relayController.relayMap.map { case (name, relay) => <p>
                 {name}
                 :
-                {relay.value.now}
+                {if (relay.value.now) "on" else "off"}
               </p>
               }}
               </body>

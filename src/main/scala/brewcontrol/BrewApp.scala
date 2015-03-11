@@ -32,10 +32,11 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit val clock = new Clock
 
   val temperatureReader = new TemperatureReader()
+  val temperatureStorage = new TemperatureStorage()
   val obs1 = startTemperaturePolling()
   val relayController = new RelayController(gpio)
 
-  val pidController = new PidController(Var(15f), temperatureReader.Cooler.temperature, 10 seconds)
+  val pidController = new PidController(Var(20f), temperatureReader.Cooler.temperature, 10 seconds)
 
   val obs2 = pidController.output.map { output =>
     relayController.Heater.value() = output > 0f
@@ -46,8 +47,9 @@ trait AbstractBrewApp extends App with LazyLogging {
   // No need to do anything else - the daemon threads are loose!
 
   def startTemperaturePolling(): Obs = {
-    val temperatureStorage = new TemperatureStorage(mongoConnection)
-    temperatureReader.currentReading.foreach(reading => temperatureStorage.persist(reading))
+    temperatureReader.currentReadings.foreach(
+      _.foreach(reading => temperatureStorage.persist(reading.sensorId, reading.timestamp, reading.value))
+    )
   }
 
   def startWebServer() = {

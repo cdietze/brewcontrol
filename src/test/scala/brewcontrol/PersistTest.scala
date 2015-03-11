@@ -12,31 +12,32 @@ object PersistTest extends TestSuite {
       implicit val mongoConnection = new MockMongoConnection
       implicit val temperatureConnection = new MockTemperatureConnection
 
-      val temperatureStorage = new TemperatureStorage(mongoConnection)
+      val temperatureStorage = new TemperatureStorage()
+      val collection = temperatureStorage.collection
 
-      var docCount = temperatureStorage.collection.count()
+      var docCount = collection.count()
       assert(docCount == 0)
 
-      var reading = Reading(new DateTime(0), Map("SensorA" -> 24.5f))
+      var reading = Reading(new DateTime(0), "SensorA", 24.5f)
 
       temperatureStorage.persist(reading)
-      docCount = temperatureStorage.collection.count()
+      docCount = collection.count()
       assert(docCount == 1)
 
       temperatureStorage.persist(reading)
-      docCount = temperatureStorage.collection.count()
+      docCount = collection.count()
       assert(docCount == 1)
 
       // After 1 minute there is still 1 document
       reading = reading.copy(timestamp = reading.timestamp.plusMinutes(1))
       temperatureStorage.persist(reading)
-      docCount = temperatureStorage.collection.count()
+      docCount = collection.count()
       assert(docCount == 1)
 
       // After 1 hour, there are 2 documents
       reading = reading.copy(timestamp = reading.timestamp.plusHours(1))
       temperatureStorage.persist(reading)
-      docCount = temperatureStorage.collection.count()
+      docCount = collection.count()
       assert(docCount == 2)
     }
   }

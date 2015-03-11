@@ -13,25 +13,23 @@ class TemperatureReader()(implicit temperatureConnection: TemperatureConnection,
 
   import brewcontrol.TemperatureReader._
 
-  val currentReading: Rx[Reading] = Timer(updateInterval).map { t =>
+  val currentReadings: Rx[Readings] = Timer(updateInterval).map { t =>
     reading().get
   }
 
-  private def reading(): Try[Reading] = {
-    val values = temperatureConnection.sensorIds().flatMap(sensorIds =>
-      Try(sensorIds.map(sensorId =>
-        sensorId -> temperatureConnection.temperature(sensorId).get)
-        .toMap))
-    logger.debug(s"Read temperatures: $values")
-    values.map(v => Reading(clock.now, v))
+  private def reading(): Try[Readings] = {
+    Try {
+      val sensorIds = temperatureConnection.sensorIds().get.toList
+      sensorIds.map(sensorId => Reading(DateTime.now(), sensorId, temperatureConnection.temperature(sensorId).get))
+    }
   }
 
-  def sensorName(sensorId: String): String = sensors.find(_.id == sensorId).map(_.name).getOrElse(s"Sensor($sensorId}")
+  def sensorName(sensorId: String): String = sensors.find(_.id == sensorId).map(_.name).getOrElse(s"Sensor($sensorId)")
 
   sealed abstract class Sensor(val id: String,
                                val name: String) {
     lazy val temperature: Rx[Float] = Rx {
-      currentReading().values.get(id).get
+      currentReadings().find(_.sensorId == id).get.value
     }
   }
 
@@ -43,8 +41,6 @@ class TemperatureReader()(implicit temperatureConnection: TemperatureConnection,
 }
 
 object TemperatureReader {
-
-  case class Reading(timestamp: DateTime, values: Map[String, Float])
-
+  type Readings = List[Reading]
+  case class Reading(timestamp: DateTime, sensorId: String, value: Float)
 }
-
