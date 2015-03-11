@@ -1,4 +1,7 @@
+import spray.revolver.RevolverPlugin._
+
 lazy val root = (project in file(".")).
+  settings(Revolver.settings: _*).
   settings(
     name := "brewcontrol",
     version := "0.1-SNAPSHOT",
@@ -34,5 +37,8 @@ lazy val root = (project in file(".")).
       )
     },
 
-    testFrameworks += new TestFramework("utest.runner.Framework")
-  )
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+
+    fullClasspath in Revolver.reStart <<= fullClasspath in Test,
+      mainClass in Revolver.reStart <<= mainClass in Test
+)
