@@ -31,6 +31,8 @@ lazy val root = (project in file(".")).
         "io.spray" %% "spray-routing" % sprayVersion,
         "io.spray" %% "spray-testkit" % sprayVersion % "test",
 
+        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
         "ch.qos.logback" % "logback-classic" % "1.0.13"
       )

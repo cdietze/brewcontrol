@@ -31,10 +31,10 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit val rxScheduler = new AkkaScheduler(system)
   implicit val clock = new Clock
 
-  val temperatureReader = new TemperatureReader()
+  val temperatureReader = new TemperatureReaderImpl()
   val temperatureStorage = new TemperatureStorage()
   val obs1 = startTemperaturePolling()
-  val relayController = new RelayController(gpio)
+  val relayController = new RelayController()
 
   val pidController = new PidController(Var(20f), temperatureReader.Cooler.temperature, 10 seconds)
 
