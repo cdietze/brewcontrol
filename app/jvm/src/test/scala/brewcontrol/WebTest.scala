@@ -16,7 +16,7 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
   lazy val relayController: RelayController = new RelayController()
 
   "GET /" should "return OK" in {
-    Get("/") ~> indexHtmlRoute ~> check {
+    Get("/") ~> staticContentRoute ~> check {
       status should equal(OK)
     }
   }
