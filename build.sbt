@@ -1,14 +1,19 @@
-import spray.revolver.RevolverPlugin._
 
-lazy val root = (project in file(".")).
-  settings(Revolver.settings: _*).
-  settings(
-    name := "brewcontrol",
-    version := "0.1-SNAPSHOT",
-    scalaVersion := "2.11.5",
-    resolvers += Resolver.mavenLocal,
-    resolvers += Resolver.url("typesafe-ivy-repo", url("http://typesafe.artifactoryonline.com/typesafe/releases"))(Resolver.ivyStylePatterns),
-
+val app = crossProject.settings(
+  unmanagedSourceDirectories in Compile +=
+    baseDirectory.value / "shared" / "main" / "scala",
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "scalatags" % "0.4.6",
+    "com.lihaoyi" %%% "upickle" % "0.2.7"
+  ),
+  scalaVersion := "2.11.5").
+  jsSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.8.0"
+    )
+  ).
+  jvmSettings(Revolver.settings: _*).
+  jvmSettings(
     libraryDependencies ++= {
       val akkaVersion = "2.3.9"
       val sprayVersion = "1.3.2"
@@ -38,9 +43,12 @@ lazy val root = (project in file(".")).
         "ch.qos.logback" % "logback-classic" % "1.0.13"
       )
     },
-
     testFrameworks += new TestFramework("utest.runner.Framework"),
-
     fullClasspath in Revolver.reStart <<= fullClasspath in Test,
     mainClass in Revolver.reStart <<= mainClass in Test
   )
+
+lazy val appJS = app.js
+lazy val appJVM = app.jvm.settings(
+  (resources in Compile) += (fastOptJS in(appJS, Compile)).value.data
+)

@@ -53,7 +53,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   }
 
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, relayController), "webActor")
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, temperatureStorage, relayController), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }
