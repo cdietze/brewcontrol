@@ -50,5 +50,6 @@ val app = crossProject.settings(
 
 lazy val appJS = app.js
 lazy val appJVM = app.jvm.settings(
-  (resources in Compile) += (fastOptJS in(appJS, Compile)).value.data
+  (resources in Compile) += (fastOptJS in(appJS, Compile)).value.data,
+  (resources in Compile) += file((fastOptJS in(appJS, Compile)).value.data.absolutePath + ".map")
 )
