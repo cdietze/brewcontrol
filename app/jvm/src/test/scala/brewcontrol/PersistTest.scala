@@ -1,6 +1,5 @@
 package brewcontrol
 
-import brewcontrol.TemperatureReader.Reading
 import org.joda.time.DateTime
 import utest._
 import utest.framework.TestSuite

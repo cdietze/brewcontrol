@@ -1,6 +1,5 @@
 package brewcontrol
 
-import brewcontrol.TemperatureReader.{Reading, Readings}
 import org.joda.time.DateTime
 import rx.core.Var
 

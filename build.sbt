@@ -4,7 +4,7 @@ val app = crossProject.settings(
     baseDirectory.value / "shared" / "main" / "scala",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.4.6",
-    "com.lihaoyi" %%% "upickle" % "0.2.7"
+    "com.lihaoyi" %%% "upickle" % "0.2.8"
   ),
   scalaVersion := "2.11.5").
   jsSettings(

@@ -7,6 +7,8 @@ import spray.http.{HttpEntity, MediaTypes}
 import spray.httpx.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.routing._
+import upickle.Js
+
 import scalatags.Text.all._
 
 class WebActor(val temperatureReader: TemperatureReader, val temperatureStorage: TemperatureStorage, val relayController: RelayController) extends Actor with BrewHttpService with TemperatureService {
@@ -67,11 +69,9 @@ trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJ
       } ~
         path(Segment) { sensorId =>
           complete {
-            val o = temperatureStorage.getHourlyDocument(sensorId, DateTime.now)
-            val json = com.mongodb.util.JSON.serialize(o)
-            marshal(json)
+            val o = temperatureReader.currentReading(sensorId).get
+            upickle.write(o)
           }
         }
     }
 }
-
