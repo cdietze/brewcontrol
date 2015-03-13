@@ -18,6 +18,12 @@ object Client {
   implicit val scheduler = new DomScheduler
 
   val readingsRx: Var[List[Reading]] = Var(List())
+  val lastUpdate: Rx[String] = Rx {
+    readingsRx() match {
+      case Nil => "n/a"
+      case x :: _ => s"${new Date(x.timestamp).toLocaleString()}"
+    }
+  }
   val timer: Rx[Long] = Timer(5 seconds).map(_ => Date.now().toLong)
 
   @JSExport
@@ -40,6 +46,9 @@ object Client {
     container.appendChild(
       div(
         h1("Current temperatures"),
+        Rx {
+          div(s"Last update: ${lastUpdate()}")
+        },
         Rx {
           allSensors()
         },
