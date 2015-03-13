@@ -2,10 +2,7 @@ package brewcontrol
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.LazyLogging
-import org.joda.time.DateTime
 import spray.http.{HttpEntity, MediaTypes}
-import spray.httpx.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
 import spray.routing._
 import upickle.Js
 
@@ -50,9 +47,7 @@ object Page {
     )
 }
 
-import spray.httpx.marshalling._
-
-trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJsonProtocol with LazyLogging {
+trait TemperatureService extends HttpService with LazyLogging {
 
   def temperatureReader: TemperatureReader
 
@@ -63,7 +58,7 @@ trait TemperatureService extends HttpService with SprayJsonSupport with DefaultJ
       pathEnd {
         get {
           complete {
-            marshal(temperatureReader.currentReadings.now.map(_.sensorId))
+            upickle.write(temperatureReader.currentReadings.now)
           }
         }
       } ~
