@@ -3,16 +3,22 @@ package brewcontrol
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
-import rx.core.Var
+import rx.core.{Rx, Var}
+import rx.ops.{DomScheduler, Timer}
 
+import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
 
 @JSExport
 object Client {
 
-  val sensorA: Var[String] = Var("unknown")
+  implicit val scheduler = new DomScheduler
+
+  val readingsRx: Var[List[Reading]] = Var(List())
+  val timer: Rx[Long] = Timer(5 seconds).map(_ => Date.now().toLong)
 
   @JSExport
   def main(container: html.Div) = {
@@ -21,23 +27,37 @@ object Client {
     val btn = button("My Button").render
     inputBox.onkeyup = (e: dom.Event) => outputBox.innerHTML = inputBox.value
 
-    def updateSensorA: (() => Unit) = () => {
-      Ajax.get("/temperatures/SensorA").foreach(xhr => {
-        val reading = upickle.read[Reading](xhr.responseText)
-        sensorA() = reading.toString
-        dom.window.setTimeout(updateSensorA, 5000)
+    def updateTemperatures: (() => Unit) = () => {
+      Ajax.get("/temperatures").foreach(xhr => {
+        val readings = upickle.read[List[Reading]](xhr.responseText)
+        val map = readings.groupBy(_.sensorId).mapValues(_.head)
+        readingsRx() = readings
+        dom.window.setTimeout(updateTemperatures, (5 seconds).toMillis)
       })
     }
-    updateSensorA()
+    updateTemperatures()
 
     container.appendChild(
       div(
-        h1("Hi from ScalaJS"),
+        h1("Current temperatures"),
+        Rx {
+          allSensors()
+        },
+        br, br, br,
         inputBox,
         outputBox,
-        btn,
-        sensorA
+        btn
       ).render
     )
+  }
+
+  def allSensors(): Frag = {
+    readingsRx().map(reading => readingFrag(reading))
+  }
+
+  def readingFrag(reading: Reading): Frag = {
+    val age = DurationLong(timer() - reading.timestamp).millis
+    val ageSuffix = if (age < (30 seconds)) "" else s" ${age.toSeconds} seconds ago"
+    div(s"${reading.sensorId}: ${reading.value}${ageSuffix}")
   }
 }
