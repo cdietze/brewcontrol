@@ -4,7 +4,8 @@ val app = crossProject.settings(
     baseDirectory.value / "shared" / "main" / "scala",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.4.6",
-    "com.lihaoyi" %%% "upickle" % "0.2.8"
+    "com.lihaoyi" %%% "upickle" % "0.2.8",
+    "com.lihaoyi" %%% "scalarx" % "0.2.8"
   ),
   scalaVersion := "2.11.5").
   jsSettings(
@@ -24,8 +25,6 @@ val app = crossProject.settings(
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
 
         "org.scala-sbt" %% "io" % "0.13.7",
-
-        "com.lihaoyi" %% "scalarx" % "0.2.7",
 
         "org.mongodb" %% "casbah" % "2.8.0",
         "com.github.nscala-time" %% "nscala-time" % "1.8.0",
