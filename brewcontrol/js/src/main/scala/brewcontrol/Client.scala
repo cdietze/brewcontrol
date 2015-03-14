@@ -119,13 +119,26 @@ object Plot {
     getSensorData(sensorId).map(data => updateData(js.Array(data)))
   }
 
+  def update(): Unit = {
+    ServerApi.temperatures().flatMap(readings => {
+      val x = readings.map {
+        reading => getSensorData(reading.sensorId)
+      }
+      Future.sequence(x).map(seriesList => {
+        val data: js.Array[js.Object] = js.Array()
+        seriesList.foreach(s => data.push(s))
+        updateData(data)
+      })
+    })
+  }
+
   val sensorId = "SensorA"
 
-  def getSensorData(sensorId: String): Future[js.Array[_]] = {
+  def getSensorData(sensorId: String): Future[js.Object] = {
     ServerApi.temperatureHourData(sensorId).map(hourData => {
       val data: js.Array[js.Array[Float]] = js.Array()
       hourData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
-      data
+      literal("data" -> data, "label" -> sensorId)
     })
   }
 
