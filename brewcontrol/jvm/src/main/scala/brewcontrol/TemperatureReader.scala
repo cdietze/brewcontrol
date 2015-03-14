@@ -38,7 +38,7 @@ class TemperatureReaderImpl()(implicit temperatureConnection: TemperatureConnect
   private def reading(): Try[Readings] = {
     Try {
       val sensorIds = temperatureConnection.sensorIds().get.toList
-      sensorIds.map(sensorId => Reading(System.currentTimeMillis(), sensorId, temperatureConnection.temperature(sensorId).get))
+      sensorIds.map(sensorId => Reading(System.currentTimeMillis(), sensorId, sensorName(sensorId), temperatureConnection.temperature(sensorId).get))
     }
   }
 }

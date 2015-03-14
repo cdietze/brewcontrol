@@ -43,7 +43,7 @@ object Page {
   val content =
     html(
       head(
-        script(src := "/app-fastopt.js")
+        script(src := "/brewcontrol-fastopt.js")
       ),
       body(
         onload := "brewcontrol.Client().main(document.getElementById('contents'))",

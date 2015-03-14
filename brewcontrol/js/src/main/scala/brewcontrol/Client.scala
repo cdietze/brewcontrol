@@ -46,7 +46,7 @@ object Client {
     def readingFrag(reading: Reading): Frag = {
       val age = DurationLong(timer() - reading.timestamp).millis
       val ageSuffix = if (age < (30 seconds)) "" else s" ${age.toSeconds} seconds ago"
-      div(s"${reading.sensorId}: ${reading.value}${ageSuffix}")
+      div(s"${reading.name}: ${reading.value}${ageSuffix}")
     }
     temperaturesRx().map(reading => readingFrag(reading))
   }

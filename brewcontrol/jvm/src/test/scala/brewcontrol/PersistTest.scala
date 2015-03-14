@@ -17,7 +17,7 @@ object PersistTest extends TestSuite {
       var docCount = collection.count()
       assert(docCount == 0)
 
-      var reading = Reading(new DateTime(0), "SensorA", 24.5f)
+      var reading = Reading(new DateTime(0), "SensorA", "Sensor name", 24.5f)
 
       temperatureStorage.persist(reading)
       docCount = collection.count()
