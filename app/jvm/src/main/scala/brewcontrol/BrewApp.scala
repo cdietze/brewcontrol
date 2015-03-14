@@ -17,7 +17,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit def temperatureConnection: TemperatureConnection
   implicit def mongoConnection: MongoConnection
   implicit def gpio: GpioConnection
-  def host = "192.168.178.22"
+  def host = "0.0.0.0"
   def port = 8080
 
   logger.info(s"Hi from BrewControl")
