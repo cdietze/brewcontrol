@@ -13,7 +13,7 @@ import org.joda.time.DateTime
  {
 	"_id" : ObjectId("54eacff344ae2d97d8fca4cd"),
 	"seriesId" : "temperatureSensor1",
-	"hourTimestamp" : 142302342223240000,
+	"hourTimestamp" : 1426374000000,
 	"values" : {
 		"0" : 22.625,
 		"1" : 22.5,
