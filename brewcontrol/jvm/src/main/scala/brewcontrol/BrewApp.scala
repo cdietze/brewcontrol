@@ -36,7 +36,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   val obs1 = startTemperaturePolling()
   val relayController = new RelayController()
 
-  val pidController = new PidController(Var(20f), temperatureReader.Cooler.temperature, 10 seconds)
+  val pidController = new PidController(Var(25f), temperatureReader.Cooler.temperature, 10 seconds)
 
   val obs2 = pidController.output.map { output =>
     relayController.Heater.value() = output > 0f
