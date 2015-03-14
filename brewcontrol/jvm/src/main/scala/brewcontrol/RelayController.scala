@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 
 class RelayController()(implicit gpio: GpioConnection) extends LazyLogging {
   sealed class Relay(pinNumber: Int, val name: String) {
-    val outPin = Await.result(gpio.outPin(pinNumber), 5 seconds)
+    val outPin = Await.result(gpio.outPin(pinNumber), 15 seconds)
     val value = inversePin(outPin)
     value.update(false)
   }
