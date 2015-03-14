@@ -38,7 +38,9 @@ val brewcontrol = crossProject.settings(
         "org.scalatest" %% "scalatest" % "2.2.1" % "test",
 
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
-        "ch.qos.logback" % "logback-classic" % "1.0.13"
+        "ch.qos.logback" % "logback-classic" % "1.0.13",
+
+        "com.novus" %% "salat" % "1.9.9"
       )
     },
     testFrameworks += new TestFramework("utest.runner.Framework"),

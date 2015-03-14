@@ -4,6 +4,8 @@ import com.mongodb.casbah.Imports._
 import com.typesafe.scalalogging.LazyLogging
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
+import com.novus.salat._
+import com.novus.salat.global._
 
 /**
  * Stores values of time series. Document structure:
@@ -75,15 +77,12 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
     )
   }
 
-  //  def getHourlyDocument(seriesId: String, timeStamp: Long): DBObject = {
-  //    val hour = toHourTimeStamp(timeStamp)
-  //    collection.findOne(MongoDBObject(
-  //      "seriesId" -> seriesId,
-  //      "hourTimestamp" -> hour)
-  //    ).getOrElse(emptyDocument(seriesId, hour))
-  //  }
-
   def getLatestDocument(seriesId: String): DBObject = {
     collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("hourTimestamp" -> -1)).one()
   }
+
+}
+
+object TimeSeriesStorage {
+  implicit def dbObjectToTimeData(o: DBObject): HourTimeData = grater[HourTimeData].asObject(o)
 }
