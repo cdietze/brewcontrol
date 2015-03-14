@@ -6,8 +6,10 @@ import org.scalajs.dom.html
 import rx.core.{Rx, Var}
 import rx.ops.{DomScheduler, Timer}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
@@ -73,8 +75,45 @@ object Client {
         h2("Relay states"),
         Rx {
           relaysFrag()
-        }
+        },
+        div(id := "flotContainer", style := "width:600px;height:300px;background:#eee")
       ).render
     )
+
+    dom.window.setTimeout(Plot.init, 1000)
+  }
+}
+
+object Plot {
+
+  import scala.scalajs.js.Dynamic.literal
+
+  var plot: js.Dynamic = null
+
+  def init(): (() => Unit) = () => {
+    val seriesData = js.Array(js.Array(0, 0), js.Array(1, 1))
+    val data = js.Array()
+    val options = literal("series" -> literal("shadowSize" -> 0))
+    plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
+
+    getSensorData(sensorId).map(data => updateData(js.Array(data)))
+  }
+
+  val sensorId = "SensorA"
+
+  def getSensorData(sensorId: String): Future[js.Array[_]] = {
+    Ajax.get(s"/temperatures/$sensorId/hour").map(xhr => {
+      val hourTimeData = upickle.read[HourTimeData](xhr.responseText)
+      val data: js.Array[js.Array[Float]] = js.Array()
+      hourTimeData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
+      data
+    })
+  }
+
+  def updateData(data: js.Array[_]): Unit = {
+    println(s"pushing new data: $data")
+    plot.setData(data)
+    plot.setupGrid()
+    plot.draw()
   }
 }

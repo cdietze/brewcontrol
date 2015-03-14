@@ -42,6 +42,8 @@ object Page {
   val content =
     html(
       head(
+        script(src := "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"),
+        script(src := "https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"),
         script(src := "/brewcontrol-fastopt.js")
       ),
       body(
@@ -78,7 +80,7 @@ trait TemperatureService extends HttpService with LazyLogging {
             path("hour") {
               respondWithMediaType(`application/json`) {
                 complete {
-                  val doc : HourTimeData = temperatureStorage.getLatestDocument(sensorId)
+                  val doc: HourTimeData = temperatureStorage.getLatestDocument(sensorId)
                   upickle.write(doc)
                 }
               }
