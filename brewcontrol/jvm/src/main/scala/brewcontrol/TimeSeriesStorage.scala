@@ -1,11 +1,11 @@
 package brewcontrol
 
 import com.mongodb.casbah.Imports._
+import com.novus.salat._
+import com.novus.salat.global._
 import com.typesafe.scalalogging.LazyLogging
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
-import com.novus.salat._
-import com.novus.salat.global._
 
 /**
  * Stores values of time series. Document structure:
@@ -77,8 +77,8 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
     )
   }
 
-  def getLatestDocument(seriesId: String): DBObject = {
-    collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("hourTimestamp" -> -1)).one()
+  def getLatestDocument(seriesId: String): Option[HourTimeData] = {
+    Option(collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("hourTimestamp" -> -1)).one()).map(TimeSeriesStorage.dbObjectToTimeData)
   }
 
 }

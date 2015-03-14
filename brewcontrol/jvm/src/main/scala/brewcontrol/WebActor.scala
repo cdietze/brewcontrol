@@ -1,6 +1,8 @@
 package brewcontrol
 
 import akka.actor.Actor
+import akka.actor.FSM.Failure
+import akka.actor.Status.Success
 import com.typesafe.scalalogging.LazyLogging
 import spray.http.MediaTypes._
 import spray.http.{HttpEntity, MediaTypes}
@@ -73,15 +75,13 @@ trait TemperatureService extends HttpService with LazyLogging {
         pathPrefix(Segment) { sensorId =>
           pathEnd {
             complete {
-              val o = temperatureReader.currentReading(sensorId).get
-              upickle.write(o)
+               temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
             }
           } ~
             path("hour") {
               respondWithMediaType(`application/json`) {
                 complete {
-                  val doc: HourTimeData = temperatureStorage.getLatestDocument(sensorId)
-                  upickle.write(doc)
+                  temperatureStorage.getLatestDocument(sensorId).map(upickle.write(_))
                 }
               }
             }
