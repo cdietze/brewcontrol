@@ -9,11 +9,15 @@ import spray.routing._
 
 import scalatags.Text.all._
 
-class WebActor(val temperatureReader: TemperatureReader, val temperatureStorage: TemperatureStorage, val relayController: RelayController) extends Actor with BrewHttpService with TemperatureService {
+class WebActor(
+                val temperatureReader: TemperatureReader,
+                val temperatureStorage: TemperatureStorage,
+                val relayController: RelayController)
+  extends Actor with BrewHttpService with TemperatureService with RelayService {
 
   def actorRefFactory = context
 
-  def receive = runRoute(temperaturesRoute ~ staticContentRoute)
+  def receive = runRoute(temperaturesRoute ~ relayRoute ~ staticContentRoute)
 }
 
 trait BrewHttpService extends HttpService {
@@ -79,5 +83,21 @@ trait TemperatureService extends HttpService with LazyLogging {
               }
             }
         }
+    }
+}
+
+trait RelayService extends HttpService with LazyLogging {
+
+  def relayController: RelayController
+
+  val relayRoute: Route =
+    pathPrefix("relays") {
+      pathEnd {
+        get {
+          complete {
+            upickle.write(relayController.relays.map(r => RelayState(r.name, r.value.now)))
+          }
+        }
+      }
     }
 }
