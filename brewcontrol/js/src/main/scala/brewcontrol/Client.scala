@@ -116,13 +116,13 @@ object Plot {
     val options = literal("series" -> literal("shadowSize" -> 0))
     plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
 
-    getSensorData(sensorId).map(data => updateData(js.Array(data)))
+    update()
   }
 
   def update(): Unit = {
     ServerApi.temperatures().flatMap(readings => {
       val x = readings.map {
-        reading => getSensorData(reading.sensorId)
+        reading => getSensorData(reading.sensorId, reading.name)
       }
       Future.sequence(x).map(seriesList => {
         val data: js.Array[js.Object] = js.Array()
@@ -132,13 +132,11 @@ object Plot {
     })
   }
 
-  val sensorId = "SensorA"
-
-  def getSensorData(sensorId: String): Future[js.Object] = {
+  def getSensorData(sensorId: String, name: String): Future[js.Object] = {
     ServerApi.temperatureHourData(sensorId).map(hourData => {
       val data: js.Array[js.Array[Float]] = js.Array()
       hourData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
-      literal("data" -> data, "label" -> sensorId)
+      literal("data" -> data, "label" -> name)
     })
   }
 
