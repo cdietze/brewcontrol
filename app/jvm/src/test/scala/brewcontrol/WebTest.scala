@@ -12,7 +12,7 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
   implicit val gpio = new MockGpioConnection
   implicit val temperatureStorage = new TemperatureStorage
 
-  lazy val temperatureReader: TemperatureReader = new MockTemperatureReader()
+  lazy val temperatureReader = new MockTemperatureReader()
   lazy val relayController: RelayController = new RelayController()
 
   "GET /" should "return OK" in {
@@ -27,7 +27,7 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
     }
   }
   it should "for path /sensorId return OK" in {
-    Get("/temperatures/XYZ") ~> temperaturesRoute ~> check {
+    Get(s"/temperatures/${temperatureReader.mockSensorId}") ~> temperaturesRoute ~> check {
       logger.info(s"response: ${response.entity}")
       status should equal(OK)
     }
