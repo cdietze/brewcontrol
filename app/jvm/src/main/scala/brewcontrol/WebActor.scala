@@ -1,10 +1,11 @@
 package brewcontrol
 
 import akka.actor.Actor
+import com.mongodb.util.JSON
 import com.typesafe.scalalogging.LazyLogging
+import spray.http.MediaTypes._
 import spray.http.{HttpEntity, MediaTypes}
 import spray.routing._
-import upickle.Js
 
 import scalatags.Text.all._
 
@@ -62,11 +63,21 @@ trait TemperatureService extends HttpService with LazyLogging {
           }
         }
       } ~
-        path(Segment) { sensorId =>
-          complete {
-            val o = temperatureReader.currentReading(sensorId).get
-            upickle.write(o)
-          }
+        pathPrefix(Segment) { sensorId =>
+          pathEnd {
+            complete {
+              val o = temperatureReader.currentReading(sensorId).get
+              upickle.write(o)
+            }
+          } ~
+            path("hour") {
+              respondWithMediaType(`application/json`) {
+                complete {
+                  val doc = temperatureStorage.getLatestDocument(sensorId)
+                  JSON.serialize(doc.toMap)
+                }
+              }
+            }
         }
     }
 }

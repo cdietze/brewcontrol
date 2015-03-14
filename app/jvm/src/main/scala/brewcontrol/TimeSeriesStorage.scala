@@ -91,4 +91,8 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
       "timeStampHour" -> hour)
     ).getOrElse(emptyDocument(seriesId, hour))
   }
+
+  def getLatestDocument(seriesId:String) : DBObject = {
+    collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("timeStampHour" -> -1)).one()
+  }
 }
