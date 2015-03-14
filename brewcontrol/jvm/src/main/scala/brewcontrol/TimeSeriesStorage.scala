@@ -1,7 +1,6 @@
 package brewcontrol
 
 import com.mongodb.casbah.Imports._
-import com.mongodb.casbah.commons.conversions.scala._
 import com.typesafe.scalalogging.LazyLogging
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
@@ -12,16 +11,13 @@ import org.joda.time.DateTime
  {
 	"_id" : ObjectId("54eacff344ae2d97d8fca4cd"),
 	"seriesId" : "temperatureSensor1",
-	"timeStampHour" : ISODate("2015-02-23T07:00:00Z"),
-	"secondlyValues" : {
-		"58" : {
-			"0" : 22.625,
-			"10" : 22.625,
-			"15" : 22.625
-		},
-		"59" : {
-			"50" : 22.437000274658203,
-			"55" : 22.437000274658203
+	"hourTimestamp" : 142302342223240000,
+	"values" : {
+		"0" : 22.625,
+		"1" : 22.5,
+    "16" : 22.5,
+    ...
+    "3599" : 23.0
 		}
 	}
 }
@@ -29,12 +25,10 @@ import org.joda.time.DateTime
  */
 class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
 
-  RegisterJodaTimeConversionHelpers()
-
   /** A cache containing the most recently used documentId per seriesId */
-  private var documentIdCache = Map[String, (DateTime, ObjectId)]()
+  private var documentIdCache = Map[String, (Long, ObjectId)]()
 
-  private def documentIdCached(sensorId: String, hour: DateTime): ObjectId = {
+  private def documentIdCached(sensorId: String, hour: Long): ObjectId = {
     documentIdCache.get(sensorId).filter(_._1 == hour) match {
       case Some((h, docId)) => docId
       case None => {
@@ -45,10 +39,10 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
     }
   }
 
-  private def documentId(seriesId: String, hour: DateTime): ObjectId = {
+  private def documentId(seriesId: String, hour: Long): ObjectId = {
     collection.findOne(MongoDBObject(
       "seriesId" -> seriesId,
-      "timeStampHour" -> hour)
+      "hourTimestamp" -> hour)
     ) match {
       case Some(result) => result("_id").asInstanceOf[ObjectId]
       case None => {
@@ -59,40 +53,37 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
     }
   }
 
-  private def toHourTimeStamp(timestamp: DateTime): DateTime = timestamp.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0)
-  private def emptyDocument(seriesId: String, hour: DateTime): MongoDBObject = {
+  private def emptyDocument(seriesId: String, hour: Long): MongoDBObject = {
     MongoDBObject("seriesId" -> seriesId,
-      "timeStampHour" -> hour)
+      "hourTimestamp" -> hour)
   }
 
   /**
    * Creates a new document when it doesn't exist already
    */
-  def persist(seriesId: String, timestamp: DateTime, value: Float) {
+  def persist(seriesId: String, timestamp: Long, value: Float) {
     logger.debug(s"Persisting $value")
-    val hour = toHourTimeStamp(timestamp)
-    val minutes = timestamp.getMinuteOfHour
-    val seconds = timestamp.getSecondOfMinute
+    val date = new DateTime(timestamp)
+    val hour = date.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0).getMillis()
+    val seconds = date.getSecondOfMinute + date.getMinuteOfHour * 60
     val query = MongoDBObject("_id" -> documentIdCached(seriesId, hour))
     collection.update(
       MongoDBObject("_id" -> documentIdCached(seriesId, hour)),
-      $set(s"secondlyValues.${
-        minutes
-      }.${
+      $set(s"values.${
         seconds
       }" -> value)
     )
   }
 
-  def getHourlyDocument(seriesId: String, timeStamp: DateTime): DBObject = {
-    val hour = toHourTimeStamp(timeStamp)
-    collection.findOne(MongoDBObject(
-      "seriesId" -> seriesId,
-      "timeStampHour" -> hour)
-    ).getOrElse(emptyDocument(seriesId, hour))
-  }
+  //  def getHourlyDocument(seriesId: String, timeStamp: Long): DBObject = {
+  //    val hour = toHourTimeStamp(timeStamp)
+  //    collection.findOne(MongoDBObject(
+  //      "seriesId" -> seriesId,
+  //      "hourTimestamp" -> hour)
+  //    ).getOrElse(emptyDocument(seriesId, hour))
+  //  }
 
-  def getLatestDocument(seriesId:String) : DBObject = {
-    collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("timeStampHour" -> -1)).one()
+  def getLatestDocument(seriesId: String): DBObject = {
+    collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("hourTimestamp" -> -1)).one()
   }
 }
