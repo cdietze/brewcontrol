@@ -14,6 +14,26 @@ import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
 
+object ServerApi {
+  def temperatures(): Future[List[Reading]] = {
+    Ajax.get("/temperatures").map(xhr => {
+      upickle.read[List[Reading]](xhr.responseText)
+    })
+  }
+
+  def temperatureHourData(sensorId: String): Future[HourTimeData] = {
+    Ajax.get(s"/temperatures/$sensorId/hour").map(xhr => {
+      upickle.read[HourTimeData](xhr.responseText)
+    })
+  }
+
+  def relayStates(): Future[List[RelayState]] = {
+    Ajax.get("/relays").map(xhr => {
+      upickle.read[List[RelayState]](xhr.responseText)
+    })
+  }
+}
+
 @JSExport
 object Client {
 
@@ -31,17 +51,17 @@ object Client {
   val timer: Rx[Long] = Timer(5 seconds).map(_ => Date.now().toLong)
 
   def updateTemperatures: (() => Unit) = () => {
-    Ajax.get("/temperatures").foreach(xhr => {
-      temperaturesRx() = upickle.read[List[Reading]](xhr.responseText)
+    ServerApi.temperatures().foreach { readings =>
+      temperaturesRx() = readings
       dom.window.setTimeout(updateTemperatures, (5 seconds).toMillis)
-    })
+    }
   }
 
   def updateRelays: (() => Unit) = () => {
-    Ajax.get("/relays").foreach(xhr => {
-      relaysRx() = upickle.read[List[RelayState]](xhr.responseText)
+    ServerApi.relayStates().foreach { relayStates =>
+      relaysRx() = relayStates
       dom.window.setTimeout(updateRelays, (5 seconds).toMillis)
-    })
+    }
   }
 
   def temperaturesFrag(): Frag = {
@@ -102,10 +122,9 @@ object Plot {
   val sensorId = "SensorA"
 
   def getSensorData(sensorId: String): Future[js.Array[_]] = {
-    Ajax.get(s"/temperatures/$sensorId/hour").map(xhr => {
-      val hourTimeData = upickle.read[HourTimeData](xhr.responseText)
+    ServerApi.temperatureHourData(sensorId).map(hourData => {
       val data: js.Array[js.Array[Float]] = js.Array()
-      hourTimeData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
+      hourData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
       data
     })
   }
