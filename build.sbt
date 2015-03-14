@@ -1,5 +1,5 @@
 
-val app = crossProject.settings(
+val brewcontrol = crossProject.settings(
   unmanagedSourceDirectories in Compile +=
     baseDirectory.value / "shared" / "main" / "scala",
   libraryDependencies ++= Seq(
@@ -46,8 +46,8 @@ val app = crossProject.settings(
     mainClass in Revolver.reStart <<= mainClass in Test
   )
 
-lazy val appJS = app.js
-lazy val appJVM = app.jvm.settings(
-  (resources in Compile) += (fastOptJS in(appJS, Compile)).value.data,
-  (resources in Compile) += file((fastOptJS in(appJS, Compile)).value.data.absolutePath + ".map")
+lazy val js = brewcontrol.js
+lazy val jvm = brewcontrol.jvm.settings(
+  (resources in Compile) += (fastOptJS in(js, Compile)).value.data,
+  (resources in Compile) += file((fastOptJS in(js, Compile)).value.data.absolutePath + ".map")
 )
