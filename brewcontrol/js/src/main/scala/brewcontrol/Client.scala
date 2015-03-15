@@ -4,14 +4,15 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import rx.core.{Rx, Var}
-import rx.ops.{DomScheduler, Timer}
+import rx.ops._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import scala.scalajs.js
+import scala.scalajs.js.Date
+import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation.JSExport
-import scala.scalajs.js.{Date, JSON}
 import scalatags.JsDom.all._
 
 object ServerApi {
@@ -21,8 +22,8 @@ object ServerApi {
     })
   }
 
-  def temperatureHourData(sensorId: String): Future[HourTimeData] = {
-    Ajax.get(s"/temperatures/$sensorId/hour").map(xhr => {
+  def temperatureHourData(sensorId: String, hourTimestamp: Long): Future[HourTimeData] = {
+    Ajax.get(s"/temperatures/$sensorId/hour/$hourTimestamp").map(xhr => {
       upickle.read[HourTimeData](xhr.responseText)
     })
   }
@@ -39,6 +40,16 @@ object Client {
 
   implicit val scheduler = new DomScheduler
 
+  def currentHourTimestamp(): Long = {
+    val d = new Date()
+    d.setMilliseconds(0)
+    d.setSeconds(0)
+    d.setMinutes(0)
+    d.valueOf().toLong
+  }
+
+  val oneHourInMillis = (1 hour).toMillis
+
   val temperaturesRx: Var[List[Reading]] = Var(List())
   val lastTemperatureUpdate: Rx[String] = Rx {
     temperaturesRx() match {
@@ -49,6 +60,8 @@ object Client {
   val relaysRx: Var[List[RelayState]] = Var(List())
 
   val timer: Rx[Long] = Timer(5 seconds).map(_ => Date.now().toLong)
+
+  val currentHourRx: Var[Long] = Var(currentHourTimestamp())
 
   def updateTemperatures: (() => Unit) = () => {
     ServerApi.temperatures().foreach { readings =>
@@ -96,37 +109,44 @@ object Client {
         Rx {
           relaysFrag()
         },
+        Rx {
+          new Date(currentHourRx()).toString
+        },
+        button("<-", onclick := { () => {
+          currentHourRx() = currentHourRx() - oneHourInMillis
+        }
+        }).render,
+        button("->", onclick := { () => {
+          currentHourRx() = currentHourRx() + oneHourInMillis
+        }
+        }).render,
         div(id := "flotContainer", style := "width:600px;height:300px;background:#eee")
       ).render
     )
 
-    dom.window.setTimeout(Plot.init, 1000)
+    dom.window.setTimeout({ () => new Plot()}, 1000)
   }
 }
 
-object Plot {
+class Plot {
 
-  import scala.scalajs.js.Dynamic.literal
+  val data = js.Array()
+  val options = literal(
+    "series" -> literal("shadowSize" -> 0),
+    "xaxis" -> literal(
+      "mode" -> "time",
+      "timezone" -> "browser"
+    ))
+  val plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
 
-  var plot: js.Dynamic = null
-
-  def init(): (() => Unit) = () => {
-    val data = js.Array()
-    val options = literal(
-      "series" -> literal("shadowSize" -> 0),
-      "xaxis" -> literal(
-        "mode" -> "time",
-        "timezone" -> "browser"
-      ))
-    plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
-
-    update()
+  val o = Client.currentHourRx.foreach { hour =>
+    update(hour)
   }
 
-  def update(): Unit = {
+  def update(hour: Long): Unit = {
     ServerApi.temperatures().flatMap(readings => {
       val x = readings.map {
-        reading => getSensorData(reading.sensorId, reading.name)
+        reading => getSensorData(reading.sensorId, reading.name, hour)
       }
       Future.sequence(x).map(seriesList => {
         val data: js.Array[js.Object] = js.Array()
@@ -136,8 +156,8 @@ object Plot {
     })
   }
 
-  def getSensorData(sensorId: String, name: String): Future[js.Object] = {
-    ServerApi.temperatureHourData(sensorId).map(hourData => {
+  def getSensorData(sensorId: String, name: String, hour: Long): Future[js.Object] = {
+    ServerApi.temperatureHourData(sensorId, hour).map(hourData => {
       val data: js.Array[js.Array[js.Any]] = js.Array()
       hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v))}
       literal("data" -> data, "label" -> name)
@@ -145,7 +165,6 @@ object Plot {
   }
 
   def updateData(data: js.Array[_]): Unit = {
-    println(s"pushing new data: ${JSON.stringify(data)}")
     plot.setData(data)
     plot.setupGrid()
     plot.draw()
