@@ -115,7 +115,8 @@ object Plot {
     val options = literal(
       "series" -> literal("shadowSize" -> 0),
       "xaxis" -> literal(
-        "mode" -> "time"
+        "mode" -> "time",
+        "timezone" -> "browser"
       ))
     plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
 
