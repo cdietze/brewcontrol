@@ -10,8 +10,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import scala.scalajs.js
-import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.{Date, JSON}
 import scalatags.JsDom.all._
 
 object ServerApi {
@@ -113,7 +113,11 @@ object Plot {
   def init(): (() => Unit) = () => {
     val seriesData = js.Array(js.Array(0, 0), js.Array(1, 1))
     val data = js.Array()
-    val options = literal("series" -> literal("shadowSize" -> 0))
+    val options = literal(
+      "series" -> literal("shadowSize" -> 0),
+      "xaxis" -> literal(
+        "mode" -> "time"
+      ))
     plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
 
     update()
@@ -134,14 +138,14 @@ object Plot {
 
   def getSensorData(sensorId: String, name: String): Future[js.Object] = {
     ServerApi.temperatureHourData(sensorId).map(hourData => {
-      val data: js.Array[js.Array[Float]] = js.Array()
-      hourData.values.foreach { case (k, v) => data.push(js.Array(k.toFloat, v))}
+      val data: js.Array[js.Array[js.Any]] = js.Array()
+      hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v))}
       literal("data" -> data, "label" -> name)
     })
   }
 
   def updateData(data: js.Array[_]): Unit = {
-    println(s"pushing new data: $data")
+    println(s"pushing new data: ${JSON.stringify(data)}")
     plot.setData(data)
     plot.setupGrid()
     plot.draw()
