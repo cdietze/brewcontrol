@@ -58,8 +58,6 @@ object Page {
 
 trait TemperatureService extends HttpService with LazyLogging {
 
-  import TimeSeriesStorage._
-
   def temperatureReader: TemperatureReader
 
   def temperatureStorage: TemperatureStorage
@@ -76,13 +74,13 @@ trait TemperatureService extends HttpService with LazyLogging {
         pathPrefix(Segment) { sensorId =>
           pathEnd {
             complete {
-               temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
+              temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
             }
           } ~
             path("hour") {
               respondWithMediaType(`application/json`) {
                 complete {
-                  temperatureStorage.getLatestDocument(sensorId).map(upickle.write(_))
+                  temperatureStorage.getLatestDocument(sensorId).map{d: HourTimeData => {println(s"d: $d"); upickle.write(d)}}
                 }
               }
             }

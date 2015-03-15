@@ -111,7 +111,6 @@ object Plot {
   var plot: js.Dynamic = null
 
   def init(): (() => Unit) = () => {
-    val seriesData = js.Array(js.Array(0, 0), js.Array(1, 1))
     val data = js.Array()
     val options = literal(
       "series" -> literal("shadowSize" -> 0),

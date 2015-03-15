@@ -3,7 +3,7 @@ package brewcontrol
 import com.mongodb.MongoTimeoutException
 import com.mongodb.casbah.Imports._
 
-class MockMongoConnection extends MongoConnection {
+class MockMongoConnection(resetInitially: Boolean = true) extends MongoConnection {
 
   override lazy val mongoClient = MongoClient("localhost:27017", MongoClientOptions(connectTimeout = 1000))
 
@@ -17,5 +17,5 @@ class MockMongoConnection extends MongoConnection {
     case e: MongoTimeoutException => sys.error("MongoDB not found, did you really start it?")
   }
 
-  reset()
+  if (resetInitially) reset()
 }
