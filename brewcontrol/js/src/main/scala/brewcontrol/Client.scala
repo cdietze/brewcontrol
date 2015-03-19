@@ -13,7 +13,6 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation.JSExport
-import scala.util.{Failure, Success, Try}
 import scalatags.JsDom.all._
 
 object ServerApi {
@@ -32,6 +31,12 @@ object ServerApi {
   def relayStates(): Future[List[RelayState]] = {
     Ajax.get("/relays").map(xhr => {
       upickle.read[List[RelayState]](xhr.responseText)
+    })
+  }
+
+  def relayHourData(relayName: String, hourTimestamp: Long): Future[HourTimeData] = {
+    Ajax.get(s"/relays/$relayName/hour/$hourTimestamp").map(xhr => {
+      upickle.read[HourTimeData](xhr.responseText)
     })
   }
 }
@@ -149,32 +154,51 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   def update(hour: Long): Unit = {
     messagesContainer.innerHTML = ""
-    ServerApi.temperatures().flatMap(readings => {
-      val futures: List[Future[Try[js.Object]]] = readings.map {
-        reading => getSensorData(reading.sensorId, reading.name, hour).map(Success(_)).recover { case x => {
-          messagesContainer.appendChild(div(s"No data available for: ${reading.name}").render)
-          Failure(x)
+    val temperatureFutures: Future[List[js.Object]] = ServerApi.temperatures().flatMap(readings => {
+      val futures = readings.map(
+        reading => getTemperatureData(reading.sensorId, reading.name, hour).map(Some(_)).recover { case x => {
+          messagesContainer.appendChild(div(s"No temperature data available for: ${reading.name}").render)
+          None
         }
         }
-      }
-      Future.sequence(futures).map(seriesList => {
-        val data: js.Array[js.Object] = js.Array()
-        seriesList.foreach {
-          case Success(s) => data.push(s)
-          case Failure(x) => {
-          }
+      )
+      Future.sequence(futures).map(_.flatten)
+    })
+    val relayFutures: Future[List[js.Object]] = ServerApi.relayStates().flatMap(states => {
+      val futures = states.map(
+        state => getRelayData(state.name, hour).map(Some(_)).recover { case x => {
+          messagesContainer.appendChild(div(s"No relay data available for: ${state.name}").render)
+          None
         }
-        updateData(data)
-      })
+        }
+      )
+      Future.sequence(futures).map(_.flatten)
+    })
+
+    val allFutures = Future.sequence(List(temperatureFutures,relayFutures)).map(_.flatten)
+    allFutures.map(seriesList => {
+      val data: js.Array[js.Object] = js.Array()
+      seriesList.foreach(s => data.push(s))
+      updateData(data)
     })
   }
 
-  def getSensorData(sensorId: String, name: String, hour: Long): Future[js.Object] = {
+  def getTemperatureData(sensorId: String, name: String, hour: Long): Future[js.Object] = {
     ServerApi.temperatureHourData(sensorId, hour).map(hourData => {
-      val data: js.Array[js.Array[js.Any]] = js.Array()
-      hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v))}
-      literal("data" -> data, "label" -> name)
+      literal("label" -> name, "data" -> hourDataToSeries(hourData))
     })
+  }
+
+  def getRelayData(relayName: String, hour: Long): Future[js.Object] = {
+    ServerApi.relayHourData(relayName, hour).map(hourData => {
+      literal("label" -> relayName, "data" -> hourDataToSeries(hourData))
+    })
+  }
+
+  def hourDataToSeries(hourData: HourTimeData): js.Array[_] = {
+    val data: js.Array[js.Array[js.Any]] = js.Array()
+    hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v))}
+    data
   }
 
   def updateData(data: js.Array[_]): Unit = {

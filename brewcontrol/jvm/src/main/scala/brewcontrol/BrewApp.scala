@@ -34,7 +34,10 @@ trait AbstractBrewApp extends App with LazyLogging {
   val temperatureReader = new TemperatureReaderImpl()
   val temperatureStorage = new TemperatureStorage()
   val obs1 = startTemperaturePolling()
+
   val relayController = new RelayController()
+  val relayStorage = new RelayStorage()
+  val obs3 = persistRelayStates()
 
   val pidController = new PidController(Var(25f), temperatureReader.Cooler.temperature, 10 seconds)
 
@@ -52,8 +55,14 @@ trait AbstractBrewApp extends App with LazyLogging {
     )
   }
 
+  def persistRelayStates() : Seq[Obs] = {
+    relayController.relays.map(r =>
+      r.value.foreach(v => relayStorage.persist(r.name, clock.now.getMillis, if (v) 1f else 0f))
+    )
+  }
+
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, temperatureStorage, relayController), "webActor")
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, temperatureStorage, relayController, relayStorage), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }

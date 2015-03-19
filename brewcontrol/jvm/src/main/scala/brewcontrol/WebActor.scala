@@ -11,7 +11,8 @@ import scalatags.Text.all._
 class WebActor(
                 val temperatureReader: TemperatureReader,
                 val temperatureStorage: TemperatureStorage,
-                val relayController: RelayController)
+                val relayController: RelayController,
+                val relayStorage: RelayStorage)
   extends Actor with BrewHttpService with TemperatureService with RelayService {
 
   def actorRefFactory = context
@@ -54,6 +55,30 @@ object Page {
     )
 }
 
+object Util {
+
+  import spray.routing.Directives._
+
+  def hourDataRoute(storage: TimeSeriesStorage, seriesId: String): Route = {
+    pathPrefix("hour") {
+      pathEnd {
+        respondWithMediaType(`application/json`) {
+          complete {
+            storage.getLatestDocument(seriesId).map(upickle.write(_))
+          }
+        }
+      } ~
+        path(LongNumber) { hourTimestamp =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              storage.getDocument(seriesId, hourTimestamp).map(upickle.write(_))
+            }
+          }
+        }
+    }
+  }
+}
+
 trait TemperatureService extends HttpService with LazyLogging {
 
   def temperatureReader: TemperatureReader
@@ -75,29 +100,16 @@ trait TemperatureService extends HttpService with LazyLogging {
               temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
             }
           } ~
-            pathPrefix("hour") {
-              pathEnd {
-                respondWithMediaType(`application/json`) {
-                  complete {
-                    temperatureStorage.getLatestDocument(sensorId).map(upickle.write(_))
-                  }
-                }
-              } ~
-                path(LongNumber) { hourTimestamp =>
-                  respondWithMediaType(`application/json`) {
-                    complete {
-                      temperatureStorage.getDocument(sensorId, hourTimestamp).map(upickle.write(_))
-                    }
-                  }
-                }
-            }
+            Util.hourDataRoute(temperatureStorage, sensorId)
         }
     }
+
 }
 
 trait RelayService extends HttpService with LazyLogging {
 
   def relayController: RelayController
+  def relayStorage: RelayStorage
 
   val relayRoute: Route =
     pathPrefix("relays") {
@@ -107,6 +119,9 @@ trait RelayService extends HttpService with LazyLogging {
             upickle.write(relayController.relays.map(r => RelayState(r.name, r.value.now)))
           }
         }
-      }
+      } ~
+        pathPrefix(Segment) { relayName =>
+          Util.hourDataRoute(relayStorage, relayName)
+        }
     }
 }
