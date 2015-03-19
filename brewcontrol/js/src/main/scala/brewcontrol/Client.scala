@@ -145,6 +145,10 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
     "xaxis" -> literal(
       "mode" -> "time",
       "timezone" -> "browser"
+    ),
+    "yaxes" -> js.Array(
+      literal("position" -> "right"),
+      literal("show" -> false, "min" -> -0.1, "max" -> 1.1)
     ))
   val plot = js.Dynamic.global.jQuery.plot(plotContainer, data, options)
 
@@ -175,7 +179,7 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
       Future.sequence(futures).map(_.flatten)
     })
 
-    val allFutures = Future.sequence(List(temperatureFutures,relayFutures)).map(_.flatten)
+    val allFutures = Future.sequence(List(temperatureFutures, relayFutures)).map(_.flatten)
     allFutures.map(seriesList => {
       val data: js.Array[js.Object] = js.Array()
       seriesList.foreach(s => data.push(s))
@@ -191,7 +195,7 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   def getRelayData(relayName: String, hour: Long): Future[js.Object] = {
     ServerApi.relayHourData(relayName, hour).map(hourData => {
-      literal("label" -> relayName, "data" -> hourDataToSeries(hourData))
+      literal("label" -> relayName, "data" -> hourDataToSeries(hourData), "lines" -> literal("show" -> true, "steps" -> true), "yaxis" -> 2)
     })
   }
 
