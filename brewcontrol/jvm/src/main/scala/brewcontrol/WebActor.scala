@@ -1,13 +1,11 @@
 package brewcontrol
 
 import akka.actor.Actor
-import brewcontrol.HourTimeData.Links
 import com.typesafe.scalalogging.LazyLogging
 import spray.http.MediaTypes._
 import spray.http.{HttpEntity, MediaTypes}
 import spray.routing._
 
-import scala.concurrent.duration._
 import scalatags.Text.all._
 
 class WebActor(
@@ -63,45 +61,37 @@ trait TemperatureService extends HttpService with LazyLogging {
   def temperatureStorage: TemperatureStorage
 
   val temperaturesRoute: Route =
-    unmatchedPath { absPath => {
-      pathPrefix("temperatures") {
-        pathEnd {
-          get {
-            complete {
-              upickle.write(temperatureReader.currentReadings.now)
-            }
+    pathPrefix("temperatures") {
+      pathEnd {
+        get {
+          complete {
+            upickle.write(temperatureReader.currentReadings.now)
           }
-        } ~
-          pathPrefix(Segment) { sensorId =>
-            pathEnd {
-              complete {
-                temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
-              }
-            } ~
-              pathPrefix("hour") {
-                pathEnd {
+        }
+      } ~
+        pathPrefix(Segment) { sensorId =>
+          pathEnd {
+            complete {
+              temperatureReader.currentReading(sensorId).map(upickle.write(_)).toOption
+            }
+          } ~
+            pathPrefix("hour") {
+              pathEnd {
+                respondWithMediaType(`application/json`) {
+                  complete {
+                    temperatureStorage.getLatestDocument(sensorId).map(upickle.write(_))
+                  }
+                }
+              } ~
+                path(LongNumber) { hourTimestamp =>
                   respondWithMediaType(`application/json`) {
                     complete {
-                      temperatureStorage.getLatestDocument(sensorId).map(upickle.write(_))
+                      temperatureStorage.getDocument(sensorId, hourTimestamp).map(upickle.write(_))
                     }
                   }
-                } ~
-                  path(LongNumber) { hourTimestamp =>
-                    respondWithMediaType(`application/json`) {
-                      complete {
-                        temperatureStorage.getDocument(sensorId, hourTimestamp).map(data => {
-                          val prevPath = absPath / ".." / (data.hourTimestamp - (1 hour).toMillis).toString
-                          val dataWithLinks = data.copy(links = Some(Links(`this` = absPath.toString(), prev = prevPath.toString)))
-                          upickle.write(dataWithLinks)
-                        }
-                        )
-                      }
-                    }
-                  }
-              }
-          }
-      }
-    }
+                }
+            }
+        }
     }
 }
 
