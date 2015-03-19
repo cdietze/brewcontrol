@@ -141,6 +141,9 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   val data = js.Array()
   val options = literal(
+    "legend" -> literal(
+      "position" -> "nw"
+    ),
     "series" -> literal("shadowSize" -> 0),
     "xaxis" -> literal(
       "mode" -> "time",
