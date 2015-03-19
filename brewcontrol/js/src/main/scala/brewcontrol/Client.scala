@@ -13,6 +13,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation.JSExport
+import scala.util.{Failure, Success, Try}
 import scalatags.JsDom.all._
 
 object ServerApi {
@@ -95,6 +96,8 @@ object Client {
     updateTemperatures()
     updateRelays()
 
+    val flotContainer = div(style := "width:600px;height:300px;background:#eee").render
+    val flotMessages = div().render
     container.appendChild(
       div(
         h1("BrewControl"),
@@ -120,15 +123,16 @@ object Client {
           currentHourRx() = currentHourRx() + oneHourInMillis
         }
         }).render,
-        div(id := "flotContainer", style := "width:600px;height:300px;background:#eee")
+        flotContainer,
+        flotMessages
       ).render
     )
-
-    dom.window.setTimeout({ () => new Plot()}, 1000)
+    val jQuery = js.Dynamic.global.jQuery
+    dom.window.setTimeout({ () => new Plot(flotContainer, flotMessages)}, 1000)
   }
 }
 
-class Plot {
+class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   val data = js.Array()
   val options = literal(
@@ -137,20 +141,29 @@ class Plot {
       "mode" -> "time",
       "timezone" -> "browser"
     ))
-  val plot = js.Dynamic.global.jQuery.plot(js.Dynamic.global.jQuery("#flotContainer"), data, options)
+  val plot = js.Dynamic.global.jQuery.plot(plotContainer, data, options)
 
   val o = Client.currentHourRx.foreach { hour =>
     update(hour)
   }
 
   def update(hour: Long): Unit = {
+    messagesContainer.innerHTML = ""
     ServerApi.temperatures().flatMap(readings => {
-      val x = readings.map {
-        reading => getSensorData(reading.sensorId, reading.name, hour)
+      val futures: List[Future[Try[js.Object]]] = readings.map {
+        reading => getSensorData(reading.sensorId, reading.name, hour).map(Success(_)).recover { case x => {
+          messagesContainer.appendChild(div(s"No data available for: ${reading.name}").render)
+          Failure(x)
+        }
+        }
       }
-      Future.sequence(x).map(seriesList => {
+      Future.sequence(futures).map(seriesList => {
         val data: js.Array[js.Object] = js.Array()
-        seriesList.foreach(s => data.push(s))
+        seriesList.foreach {
+          case Success(s) => data.push(s)
+          case Failure(x) => {
+          }
+        }
         updateData(data)
       })
     })
