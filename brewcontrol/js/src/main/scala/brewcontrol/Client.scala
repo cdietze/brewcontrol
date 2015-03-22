@@ -140,18 +140,18 @@ object Client {
     container.appendChild(
       div(
         h1("BrewControl"),
-        h2("Current temperatures"),
         Rx {
           div(s"Last update: ${lastTemperatureUpdate()}")
         },
+        br,
         Rx {
           temperaturesFrag()
         },
-        h2("Relay states"),
         Rx {
           relaysFrag()
         },
         div("Ziel-Temperatur: ", targetTemperatureSelect()),
+        br,
         Rx {
           new Date(currentHourRx()).toString
         },
