@@ -24,14 +24,19 @@ class TemperatureConnection {
   def temperature(sensorId: String): Try[Float] = {
     val path = Paths.w1Slave(sensorId)
     Try {
-      val lines = Source.fromFile(path).getLines().toList
+      Source.fromFile(path).getLines().toList
+    }.flatMap(lines => parseTemperature(lines))
+  }
+
+  def parseTemperature(lines: Seq[String]): Try[Float] = {
+    Try {
       val floats = (for {
         line <- lines
-        s <- "t=(\\d+)".r.findFirstMatchIn(line).map(_.group(1))
+        s <- "t=(-?\\d+)".r.findFirstMatchIn(line).map(_.group(1))
         f = s.toInt / 1000f
       } yield f).toSeq
       floats match {
-        case Nil => throw new RuntimeException(s"Failed to parse temperature of sensor: $sensorId, content: '$lines'")
+        case Nil => throw new RuntimeException(s"Failed to parse temperature event, content: '$lines'")
         case v :: _ => v
       }
     }
