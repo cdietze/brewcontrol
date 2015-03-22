@@ -107,7 +107,7 @@ object Client {
 
   def temperaturesFrag(): Frag = {
     def readingFrag(reading: Reading): Frag = {
-      val formattedValue = "%1.2f".format(reading.value)
+      val formattedValue = "%1.2f °C".format(reading.value)
       div(s"${reading.name}: ${formattedValue}")
     }
     temperaturesRx().map(reading => readingFrag(reading))
@@ -150,7 +150,7 @@ object Client {
         Rx {
           relaysFrag()
         },
-        div("Ziel-Temperatur: ", targetTemperatureSelect()),
+        div("Ziel-Temperatur: ", targetTemperatureSelect(), " °C"),
         br,
         Rx {
           new Date(currentHourRx()).toString
