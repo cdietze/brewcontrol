@@ -14,7 +14,7 @@ class Config()(implicit mongoConnection: MongoConnection) {
   val targetTemperature = new Var(initialValue())
 
   private def initialValue(): Float = {
-    val o = Option(collection.find(idQuery).one()).map(o => o.as[Float]("value"))
+    val o = Option(collection.find(idQuery).one()).map(o => o.as[Double]("value").toFloat)
     o.getOrElse(20f)
   }
 
