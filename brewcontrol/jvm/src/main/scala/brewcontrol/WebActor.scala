@@ -12,12 +12,13 @@ class WebActor(
                 val temperatureReader: TemperatureReader,
                 val temperatureStorage: TemperatureStorage,
                 val relayController: RelayController,
-                val relayStorage: RelayStorage)
-  extends Actor with BrewHttpService with TemperatureService with RelayService {
+                val relayStorage: RelayStorage,
+                val config: Config)
+  extends Actor with BrewHttpService with TemperatureService with RelayService with ConfigService{
 
   def actorRefFactory = context
 
-  def receive = runRoute(temperaturesRoute ~ relayRoute ~ staticContentRoute)
+  def receive = runRoute(temperaturesRoute ~ relayRoute ~ staticContentRoute ~ configRoute)
 }
 
 trait BrewHttpService extends HttpService {
@@ -77,6 +78,27 @@ object Util {
         }
     }
   }
+}
+
+trait ConfigService extends HttpService with LazyLogging {
+
+  def config: Config
+
+  val configRoute: Route =
+    path("targetTemperature") {
+      get {
+        complete {
+          upickle.write(config.targetTemperature())
+        }
+      } ~
+        post {
+          entity(as[String]) { valueString =>
+            val value = valueString.toFloat
+            config.targetTemperature() = value
+            complete(s"Updated target temperature to $value")
+          }
+        }
+    }
 }
 
 trait TemperatureService extends HttpService with LazyLogging {

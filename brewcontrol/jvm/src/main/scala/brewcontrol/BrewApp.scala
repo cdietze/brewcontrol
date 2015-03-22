@@ -30,6 +30,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit val scheduler = system.scheduler
   implicit val rxScheduler = new AkkaScheduler(system)
   implicit val clock = new Clock
+  implicit val config = new Config()
 
   val temperatureReader = new TemperatureReaderImpl()
   val temperatureStorage = new TemperatureStorage()
@@ -39,7 +40,8 @@ trait AbstractBrewApp extends App with LazyLogging {
   val relayStorage = new RelayStorage()
   val obs3 = persistRelayStates()
 
-  val pidController = new PidController(Var(25f), temperatureReader.Cooler.temperature, 10 seconds)
+
+  val pidController = new PidController(config.targetTemperature, temperatureReader.Cooler.temperature, 10 seconds)
 
   val obs2 = pidController.output.map { output =>
     relayController.Heater.value() = output > 0f
@@ -55,14 +57,14 @@ trait AbstractBrewApp extends App with LazyLogging {
     )
   }
 
-  def persistRelayStates() : Seq[Obs] = {
+  def persistRelayStates(): Seq[Obs] = {
     relayController.relays.map(r =>
       r.value.foreach(v => relayStorage.persist(r.name, clock.now.getMillis, if (v) 1f else 0f))
     )
   }
 
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, temperatureStorage, relayController, relayStorage), "webActor")
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, temperatureStorage, relayController, relayStorage, config), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }

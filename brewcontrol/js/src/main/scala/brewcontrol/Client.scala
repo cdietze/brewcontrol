@@ -3,7 +3,8 @@ package brewcontrol
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
-import rx.core.{Rx, Var}
+import org.scalajs.dom.raw.HTMLSelectElement
+import rx._
 import rx.ops._
 
 import scala.concurrent.Future
@@ -39,12 +40,22 @@ object ServerApi {
       upickle.read[HourTimeData](xhr.responseText)
     })
   }
+
+  def updateTargetTemperature(value: Float): Future[String] = {
+    Ajax.post("/targetTemperature", upickle.write(value)).map(xhr => xhr.responseText)
+  }
+
+  def targetTemperature(): Future[Float] = {
+    Ajax.get("/targetTemperature").map(xhr => upickle.read[Float](xhr.responseText))
+  }
 }
 
 @JSExport
 object Client {
 
   implicit val scheduler = new DomScheduler
+
+  private var obs = List[Obs]()
 
   def currentHourTimestamp(): Long = {
     val d = new Date()
@@ -83,6 +94,17 @@ object Client {
     }
   }
 
+  val targetTemperature: Var[Float] = Var(0f)
+  var o: Obs = null
+  ServerApi.targetTemperature().foreach { v =>
+    targetTemperature() = v
+    o = targetTemperatureUpdater()
+  }
+
+  def targetTemperatureUpdater() = targetTemperature.foreach(v => {
+    ServerApi.updateTargetTemperature(v)
+  }, skipInitial = true)
+
   def temperaturesFrag(): Frag = {
     def readingFrag(reading: Reading): Frag = {
       val age = DurationLong(timer() - reading.timestamp).millis
@@ -96,6 +118,19 @@ object Client {
 
   def relaysFrag(): Frag = {
     relaysRx().map(state => div(s"${state.name}: ${state.value}"))
+  }
+
+  def targetTemperatureSelect(): Frag = {
+    lazy val s: HTMLSelectElement = select(
+      (0 to 30).map(t => option(t.toString)),
+      value := targetTemperature(),
+      onchange := { () => {
+        targetTemperature() = s.value.toFloat
+      }
+      }
+    ).render
+    obs = targetTemperature.foreach(t => s.value = t.toString) :: obs
+    s
   }
 
   @JSExport
@@ -119,6 +154,7 @@ object Client {
         Rx {
           relaysFrag()
         },
+        div("Ziel-Temperatur: ", targetTemperatureSelect()),
         Rx {
           new Date(currentHourRx()).toString
         },
