@@ -17,36 +17,39 @@ import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
 
 object ServerApi {
+  val baseUrl = ""
+//  val baseUrl = "http://pi:8080"
+
   def temperatures(): Future[List[Reading]] = {
-    Ajax.get("/temperatures").map(xhr => {
+    Ajax.get(s"$baseUrl/temperatures").map(xhr => {
       upickle.read[List[Reading]](xhr.responseText)
     })
   }
 
   def temperatureHourData(sensorId: String, hourTimestamp: Long): Future[HourTimeData] = {
-    Ajax.get(s"/temperatures/$sensorId/hour/$hourTimestamp").map(xhr => {
+    Ajax.get(s"$baseUrl/temperatures/$sensorId/hour/$hourTimestamp").map(xhr => {
       upickle.read[HourTimeData](xhr.responseText)
     })
   }
 
   def relayStates(): Future[List[RelayState]] = {
-    Ajax.get("/relays").map(xhr => {
+    Ajax.get(s"$baseUrl/relays").map(xhr => {
       upickle.read[List[RelayState]](xhr.responseText)
     })
   }
 
   def relayHourData(relayName: String, hourTimestamp: Long): Future[HourTimeData] = {
-    Ajax.get(s"/relays/$relayName/hour/$hourTimestamp").map(xhr => {
+    Ajax.get(s"$baseUrl/relays/$relayName/hour/$hourTimestamp").map(xhr => {
       upickle.read[HourTimeData](xhr.responseText)
     })
   }
 
   def updateTargetTemperature(value: Float): Future[String] = {
-    Ajax.post("/targetTemperature", upickle.write(value)).map(xhr => xhr.responseText)
+    Ajax.post(s"$baseUrl/targetTemperature", upickle.write(value)).map(xhr => xhr.responseText)
   }
 
   def targetTemperature(): Future[Float] = {
-    Ajax.get("/targetTemperature").map(xhr => upickle.read[Float](xhr.responseText))
+    Ajax.get(s"$baseUrl/targetTemperature").map(xhr => upickle.read[Float](xhr.responseText))
   }
 }
 
