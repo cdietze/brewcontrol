@@ -40,11 +40,14 @@ trait AbstractBrewApp extends App with LazyLogging {
   val relayStorage = new RelayStorage()
   val obs3 = persistRelayStates()
 
-
   val pidController = new PidController(config.targetTemperature, temperatureReader.Cooler.temperature, 10 seconds)
 
+  // We use some tolerance to create a deadband in which neither relay is turned on
+  // This is to avoid switching too quickly between heating and cooling
+  val temperatureTolerance = 0.5f
   val obs2 = pidController.output.map { output =>
-    relayController.Heater.value() = output > 0f
+    relayController.Heater.value() = output > temperatureTolerance
+    relayController.Cooler.value() = output < -temperatureTolerance
   }
 
   startWebServer()
