@@ -7,6 +7,7 @@ import org.scalajs.dom.raw.HTMLSelectElement
 import rx._
 import rx.ops._
 
+import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
@@ -18,7 +19,7 @@ import scalatags.JsDom.all._
 
 object ServerApi {
   val baseUrl = ""
-//  val baseUrl = "http://pi:8080"
+  //  val baseUrl = "http://pi:8080"
 
   def temperatures(): Future[List[Reading]] = {
     Ajax.get(s"$baseUrl/temperatures").map(xhr => {
@@ -58,7 +59,7 @@ object Client {
 
   implicit val scheduler = new DomScheduler
 
-  private var obs = List[Obs]()
+  private val obs = mutable.Queue[Obs]()
 
   def currentHourTimestamp(): Long = {
     val d = new Date()
@@ -79,21 +80,25 @@ object Client {
   }
   val relaysRx: Var[List[RelayState]] = Var(List())
 
-  val timer: Rx[Long] = Timer(5 seconds).map(_ => Date.now().toLong)
+  val timer: Rx[Long] = Timer(1 second)
 
   val currentHourRx: Var[Long] = Var(currentHourTimestamp())
 
+  obs enqueue timer.foreach(t => {
+    if (t % 5 == 0) {
+      updateTemperatures()
+      updateRelays()
+    }
+  })
   def updateTemperatures: (() => Unit) = () => {
     ServerApi.temperatures().foreach { readings =>
       temperaturesRx() = readings
-      dom.window.setTimeout(updateTemperatures, (5 seconds).toMillis)
     }
   }
 
   def updateRelays: (() => Unit) = () => {
     ServerApi.relayStates().foreach { relayStates =>
       relaysRx() = relayStates
-      dom.window.setTimeout(updateRelays, (5 seconds).toMillis)
     }
   }
 
@@ -129,7 +134,7 @@ object Client {
       }
       }
     ).render
-    obs = targetTemperature.foreach(t => s.value = t.toString) :: obs
+    obs enqueue targetTemperature.foreach(t => s.value = t.toString)
     s
   }
 
@@ -144,15 +149,15 @@ object Client {
       div(
         h1("BrewControl"),
         Rx {
-          div(s"Last update: ${lastTemperatureUpdate()}")
-        },
-        br,
-        Rx {
           temperaturesFrag()
         },
         Rx {
           relaysFrag()
         },
+        Rx {
+          div(s"Next update in ${5 - (timer() % 5)} seconds")
+        },
+        br,
         div("Ziel-Temperatur: ", targetTemperatureSelect(), " °C"),
         br,
         Rx {
@@ -171,7 +176,7 @@ object Client {
       ).render
     )
     val jQuery = js.Dynamic.global.jQuery
-    dom.window.setTimeout({ () => new Plot(flotContainer, flotMessages)}, 1000)
+    dom.window.setTimeout({ () => new Plot(flotContainer, flotMessages) }, 1000)
   }
 }
 
@@ -242,7 +247,7 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   def hourDataToSeries(hourData: HourTimeData): js.Array[_] = {
     val data: js.Array[js.Array[js.Any]] = js.Array()
-    hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v))}
+    hourData.values.foreach { case (k, v) => data.push(js.Array(k.toLong * 1000L + hourData.hourTimestamp, v)) }
     data
   }
 
