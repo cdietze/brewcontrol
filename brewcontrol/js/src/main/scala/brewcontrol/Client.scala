@@ -19,7 +19,7 @@ object Client {
 
   implicit val scheduler = new DomScheduler
 
-  private val obs = mutable.Queue[Obs]()
+  private val obs = mutable.ListBuffer[Obs]()
 
   def currentHourTimestamp(): Long = {
     val d = new Date()
@@ -44,7 +44,7 @@ object Client {
 
   val currentHourRx: Var[Long] = Var(currentHourTimestamp())
 
-  obs enqueue timer.foreach(t => {
+  obs += timer.foreach(t => {
     if (t % 5 == 0) {
       updateTemperatures()
       updateRelays()
@@ -63,10 +63,9 @@ object Client {
   }
 
   val targetTemperature: Var[Float] = Var(0f)
-  var o: Obs = null
   ServerApi.targetTemperature().foreach { v =>
     targetTemperature() = v
-    o = targetTemperatureUpdater()
+    obs += targetTemperatureUpdater()
   }
 
   def targetTemperatureUpdater() = targetTemperature.foreach(v => {
@@ -94,7 +93,7 @@ object Client {
       }
       }
     ).render
-    obs enqueue targetTemperature.foreach(t => s.value = t.toString)
+    obs += targetTemperature.foreach(t => s.value = t.toString)
     s
   }
 
@@ -139,4 +138,3 @@ object Client {
     dom.window.setTimeout({ () => new Plot(flotContainer, flotMessages) }, 1000)
   }
 }
-
