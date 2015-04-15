@@ -7,7 +7,6 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.literal
-import scalatags.JsDom.all._
 
 class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
@@ -33,45 +32,24 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
 
   def update(hour: Long): Unit = {
     messagesContainer.innerHTML = ""
-    val temperatureFutures: Future[List[js.Object]] = ServerApi.temperatures().flatMap(readings => {
-      val futures = readings.map(
-        reading => getTemperatureData(reading.sensorId, reading.name, hour).map(Some(_)).recover { case x => {
-          messagesContainer.appendChild(div(s"No temperature data available for: ${reading.name}").render)
-          None
-        }
-        }
-      )
-      Future.sequence(futures).map(_.flatten)
-    })
-    val relayFutures: Future[List[js.Object]] = ServerApi.relayStates().flatMap(states => {
-      val futures = states.map(
-        state => getRelayData(state.name, hour).map(Some(_)).recover { case x => {
-          messagesContainer.appendChild(div(s"No relay data available for: ${state.name}").render)
-          None
-        }
-        }
-      )
-      Future.sequence(futures).map(_.flatten)
-    })
-
-    val allFutures = Future.sequence(List(temperatureFutures, relayFutures)).map(_.flatten)
-    allFutures.map(seriesList => {
-      val data: js.Array[js.Object] = js.Array()
-      seriesList.foreach(s => data.push(s))
-      updateData(data)
+    val temperatureSeries = getTemperatureData(hour)
+    temperatureSeries.map(seriesList => {
+      updateData(seriesList)
     })
   }
 
-  def getTemperatureData(sensorId: String, name: String, hour: Long): Future[js.Object] = {
-    ServerApi.temperatureHourData(sensorId, hour).map(hourData => {
-      literal("label" -> name, "data" -> hourDataToSeries(hourData))
-    })
-  }
+  def getTemperatureData(hour: Long): Future[js.Array[js.Object]] = {
+    def convert(data: Seq[SeriesData]): js.Array[js.Object] = {
+      val result: js.Array[js.Object] = js.Array()
+      data.foreach(e => result.push(convertSeries(e)))
+      result
+    }
+    def convertSeries(data: SeriesData): js.Object = data.kind match {
+      case Temperature => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData))
+      case Relay => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData), "lines" -> literal("show" -> true, "steps" -> true), "yaxis" -> 2)
+    }
 
-  def getRelayData(relayName: String, hour: Long): Future[js.Object] = {
-    ServerApi.relayHourData(relayName, hour).map(hourData => {
-      literal("label" -> relayName, "data" -> hourDataToSeries(hourData), "lines" -> literal("show" -> true, "steps" -> true), "yaxis" -> 2)
-    })
+    ServerApi.history(hour).map(convert)
   }
 
   def hourDataToSeries(hourData: HourTimeData): js.Array[_] = {

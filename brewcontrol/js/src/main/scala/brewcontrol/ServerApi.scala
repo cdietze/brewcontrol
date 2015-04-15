@@ -14,21 +14,9 @@ object ServerApi {
     })
   }
 
-  def temperatureHourData(sensorId: String, hourTimestamp: Long): Future[HourTimeData] = {
-    Ajax.get(s"$baseUrl/temperatures/$sensorId/hour/$hourTimestamp").map(xhr => {
-      upickle.read[HourTimeData](xhr.responseText)
-    })
-  }
-
   def relayStates(): Future[List[RelayState]] = {
     Ajax.get(s"$baseUrl/relays").map(xhr => {
       upickle.read[List[RelayState]](xhr.responseText)
-    })
-  }
-
-  def relayHourData(relayName: String, hourTimestamp: Long): Future[HourTimeData] = {
-    Ajax.get(s"$baseUrl/relays/$relayName/hour/$hourTimestamp").map(xhr => {
-      upickle.read[HourTimeData](xhr.responseText)
     })
   }
 
@@ -38,5 +26,11 @@ object ServerApi {
 
   def targetTemperature(): Future[Float] = {
     Ajax.get(s"$baseUrl/targetTemperature").map(xhr => upickle.read[Float](xhr.responseText))
+  }
+
+  def history(hourTimestamp: Long): Future[Seq[SeriesData]] = {
+    Ajax.get(s"$baseUrl/history/hour/$hourTimestamp").map(xhr => {
+      upickle.read[Seq[SeriesData]](xhr.responseText)
+    })
   }
 }

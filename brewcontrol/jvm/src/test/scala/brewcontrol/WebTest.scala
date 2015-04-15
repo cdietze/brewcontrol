@@ -27,14 +27,9 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
       status should equal(OK)
     }
   }
-  it should "for path /sensorId return OK" in {
-    Get(s"/temperatures/${temperatureReader.mockSensorId}") ~> temperaturesRoute ~> check {
+  it should "for path /hour return OK" in {
+    Get(s"/temperatures/hour/0") ~> temperaturesRoute ~> check {
       status should equal(OK)
-    }
-  }
-  it should "for wrong sensorId it should return 404" in {
-    Get(s"/temperatures/wrongSensorId") ~> temperaturesRoute ~> check {
-      status should equal(NotFound)
     }
   }
   "/temperatures hour route" should "return OK" in {
@@ -43,10 +38,5 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
 //    Get("/temperatures/${temperatureReader.mockSensorId}/hour") ~> temperaturesRoute ~> check {
 //      status should equal(OK)
 //    }
-  }
-  it should "return 404 for unknown sensorId" in {
-    Get("/temperatures/unknownSensorId/hour") ~> temperaturesRoute ~> check {
-      status should equal(NotFound)
-    }
   }
 }

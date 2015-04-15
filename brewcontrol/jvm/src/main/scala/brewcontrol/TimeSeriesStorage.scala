@@ -75,13 +75,19 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
     )
   }
 
+  def getDocument(seriesId: String, hourTimestamp: Long): Option[HourTimeData] = {
+    Option(collection.find(MongoDBObject("seriesId" -> seriesId, "hourTimestamp" -> hourTimestamp)).one())
+      .map(TimeSeriesStorage.dbObjectToTimeData)
+  }
   def getLatestDocument(seriesId: String): Option[HourTimeData] = {
     Option(collection.find(MongoDBObject("seriesId" -> seriesId)).sort(MongoDBObject("hourTimestamp" -> -1)).one())
       .map(TimeSeriesStorage.dbObjectToTimeData)
   }
-  def getDocument(seriesId: String, hourTimestamp: Long): Option[HourTimeData] = {
-    Option(collection.find(MongoDBObject("seriesId" -> seriesId, "hourTimestamp" -> hourTimestamp)).one())
-      .map(TimeSeriesStorage.dbObjectToTimeData)
+  /** Returns a map of sensorId -> HourTimeData for all documents available for that hour */
+  def getDocumentsByHour(hourTimestamp: Long): Map[String, HourTimeData] = {
+    collection.find(MongoDBObject("hourTimestamp" -> hourTimestamp)).map(o =>
+      o.as[String]("seriesId") -> TimeSeriesStorage.dbObjectToTimeData(o)
+    ).toMap
   }
 }
 
