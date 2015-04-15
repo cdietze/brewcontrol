@@ -1,7 +1,7 @@
 package brewcontrol
 
 import org.scalajs.dom.ext.Ajax
-
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import scala.concurrent.Future
 
 object ServerApi {
