@@ -130,11 +130,10 @@ object Client {
           currentHourRx() = currentHourRx() + oneHourInMillis
         }
         }).render,
-        flotContainer,
-        flotMessages
+        flotContainer
       ).render
     )
     val jQuery = js.Dynamic.global.jQuery
-    dom.window.setTimeout({ () => new Plot(flotContainer, flotMessages) }, 1000)
+    dom.window.setTimeout({ () => new Plot(flotContainer) }, 1000)
   }
 }

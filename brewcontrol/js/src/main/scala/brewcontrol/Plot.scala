@@ -8,7 +8,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.literal
 
-class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
+class Plot(plotContainer: dom.Element) {
 
   val data = js.Array()
   val options = literal(
@@ -31,7 +31,6 @@ class Plot(plotContainer: dom.Element, messagesContainer: dom.Element) {
   }
 
   def update(hour: Long): Unit = {
-    messagesContainer.innerHTML = ""
     val temperatureSeries = getTemperatureData(hour)
     temperatureSeries.map(seriesList => {
       updateData(seriesList)
