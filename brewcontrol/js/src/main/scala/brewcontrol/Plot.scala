@@ -1,6 +1,7 @@
 package brewcontrol
 
 import org.scalajs.dom
+import rx.Var
 import rx.ops._
 
 import scala.concurrent.Future
@@ -26,8 +27,19 @@ class Plot(plotContainer: dom.Element) {
     ))
   val plot = js.Dynamic.global.jQuery.plot(plotContainer, data, options)
 
+  val seriesStatus: Var[Map[String, Boolean]] = new Var(Map())
+
   val o = Client.currentHourRx.foreach { hour =>
     update(hour)
+  }
+
+  def toggleSeries(name: String): Unit = {
+    seriesStatus.update(seriesStatus.now.updated(name, !seriesStatus.now(name)))
+    update()
+  }
+
+  def update(): Unit = {
+    update(Client.currentHourRx.now)
   }
 
   def update(hour: Long): Unit = {
@@ -40,7 +52,16 @@ class Plot(plotContainer: dom.Element) {
   def getTemperatureData(hour: Long): Future[js.Array[js.Object]] = {
     def convert(data: Seq[SeriesData]): js.Array[js.Object] = {
       val result: js.Array[js.Object] = js.Array()
-      data.foreach(e => result.push(convertSeries(e)))
+      data.foreach(e => {
+        seriesStatus.now.get(e.seriesId) match {
+          case Some(true) =>
+            result.push(convertSeries(e))
+          case Some(false) =>
+          case None =>
+            seriesStatus.update(seriesStatus.now.updated(e.seriesId, true))
+            result.push(convertSeries(e))
+        }
+      })
       result
     }
     def convertSeries(data: SeriesData): js.Object = data.kind match {

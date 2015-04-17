@@ -1,15 +1,13 @@
 package brewcontrol
 
-import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.HTMLSelectElement
 import rx._
 import rx.ops._
 
 import scala.collection.mutable
-import scala.concurrent.duration._
+import scala.concurrent.duration.{span => _, _}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
-import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
@@ -102,8 +100,8 @@ object Client {
     updateTemperatures()
     updateRelays()
 
-    val flotContainer = div(style := "width:600px;height:300px;background:#eee").render
-    val flotMessages = div().render
+    val plotContainer = div(style := "width:600px;height:300px;background:#eee").render
+    val seriesPanel = div().render
     container.appendChild(
       div(
         h1("BrewControl"),
@@ -130,10 +128,25 @@ object Client {
           currentHourRx() = currentHourRx() + oneHourInMillis
         }
         }).render,
-        flotContainer
+        plotContainer,
+        seriesPanel
       ).render
     )
-    val jQuery = js.Dynamic.global.jQuery
-    dom.window.setTimeout({ () => new Plot(flotContainer) }, 1000)
+    val plot = new Plot(plotContainer)
+
+    seriesPanel.appendChild(rxFrag(Rx {
+      plot.seriesStatus().map(
+        e => div(
+          input(
+            `type` := "checkbox",
+            if (e._2) {
+              checked := true
+            } else {
+            },
+            onclick := { () => plot.toggleSeries(e._1) }),
+          span(s"${e._1}")
+        ).render
+      ).toList
+    }).render)
   }
 }
