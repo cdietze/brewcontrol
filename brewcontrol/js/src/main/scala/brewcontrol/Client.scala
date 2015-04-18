@@ -117,9 +117,12 @@ object Client {
         br,
         div("Ziel-Temperatur: ", targetTemperatureSelect(), " °C"),
         br,
+        seriesPanel,
+        plotContainer,
         Rx {
           new Date(currentHourRx()).toString
         },
+      br,
         button("<-", onclick := { () => {
           currentHourRx() = currentHourRx() - oneHourInMillis
         }
@@ -127,9 +130,7 @@ object Client {
         button("->", onclick := { () => {
           currentHourRx() = currentHourRx() + oneHourInMillis
         }
-        }).render,
-        plotContainer,
-        seriesPanel
+        }).render
       ).render
     )
     val plot = new Plot(plotContainer)
@@ -144,6 +145,7 @@ object Client {
             } else {
             },
             onclick := { () => plot.toggleSeries(e._1) }),
+          span("", display := "inline-block", verticalAlign := "middle", margin := "2px", backgroundColor := plot.color(e._1).getOrElse("white"), width := "1em", height := "1em"),
           span(s"${e._1}")
         ).render
       ).toList

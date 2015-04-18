@@ -14,7 +14,7 @@ class Plot(plotContainer: dom.Element) {
   val data = js.Array()
   val options = literal(
     "legend" -> literal(
-      "position" -> "nw"
+      "show" -> false
     ),
     "series" -> literal("shadowSize" -> 0),
     "xaxis" -> literal(
@@ -34,18 +34,29 @@ class Plot(plotContainer: dom.Element) {
   }
 
   def toggleSeries(name: String): Unit = {
-    seriesStatus.update(seriesStatus.now.updated(name, !seriesStatus.now(name)))
+    seriesStatus.updateSilent(seriesStatus.now.updated(name, !seriesStatus.now(name)))
     update()
   }
 
-  def update(): Unit = {
+  def color(seriesId: String): Option[String] = {
+    val series = plot.getData().asInstanceOf[js.Array[js.Dynamic]]
+    series.find(e => e.label == seriesId) match {
+      case None => None
+      case Some(x) => Some(x.color.asInstanceOf[String])
+    }
+  }
+
+  def update(): Future[_] = {
     update(Client.currentHourRx.now)
   }
 
-  def update(hour: Long): Unit = {
+  def update(hour: Long): Future[_] = {
     val temperatureSeries = getTemperatureData(hour)
     temperatureSeries.map(seriesList => {
       updateData(seriesList)
+    }).map(x => {
+      seriesStatus.propagate()
+      x
     })
   }
 
