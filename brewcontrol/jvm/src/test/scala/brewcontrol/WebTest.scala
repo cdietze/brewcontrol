@@ -27,11 +27,6 @@ class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHt
       status should equal(OK)
     }
   }
-  it should "for path /hour return OK" in {
-    Get(s"/temperatures/hour/0") ~> temperaturesRoute ~> check {
-      status should equal(OK)
-    }
-  }
   "/temperatures hour route" should "return OK" in {
 //    var reading = Reading(new DateTime(0), temperatureReader.mockSensorId, "Sensor name", 24.5f)
 //    temperatureStorage.persist(reading)
