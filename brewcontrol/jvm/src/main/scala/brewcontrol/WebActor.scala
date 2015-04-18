@@ -79,6 +79,7 @@ trait ConfigService extends HttpService with LazyLogging {
 
 trait HistoryService extends HttpService with LazyLogging {
   def temperatureStorage: TemperatureStorage
+  def temperatureReader: TemperatureReader
   def relayStorage: RelayStorage
 
   val historyRoute: Route =
@@ -87,7 +88,7 @@ trait HistoryService extends HttpService with LazyLogging {
         path(LongNumber) { hourTimestamp =>
           respondWithMediaType(`application/json`) {
             complete {
-              val temperatures = temperatureStorage.getDocumentsByHour(hourTimestamp).toSeq.map(e => SeriesData(e._1, Temperature, e._2))
+              val temperatures = temperatureStorage.getDocumentsByHour(hourTimestamp).toSeq.map(e => SeriesData(temperatureReader.sensorName(e._1), Temperature, e._2))
               val relays = relayStorage.getDocumentsByHour(hourTimestamp).toSeq.map(e => SeriesData(e._1, Relay, e._2))
               upickle.write(temperatures ++ relays)
             }
