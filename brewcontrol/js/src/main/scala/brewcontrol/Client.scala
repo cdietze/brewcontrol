@@ -140,13 +140,13 @@ object Client {
         e => div(
           input(
             `type` := "checkbox",
-            if (e._2) {
+            if (e.show) {
               checked := true
             } else {
             },
-            onclick := { () => plot.toggleSeries(e._1) }),
-          span("", display := "inline-block", verticalAlign := "middle", margin := "2px", backgroundColor := plot.color(e._1).getOrElse("white"), width := "1em", height := "1em"),
-          span(s"${e._1}")
+            onclick := { () => plot.toggleSeries(e.seriesId) }),
+          span("", display := "inline-block", verticalAlign := "middle", margin := "2px", backgroundColor := plot.color(e.seriesId).getOrElse("white"), width := "1em", height := "1em"),
+          span(s"${e.seriesId}")
         ).render
       ).toList
     }).render)

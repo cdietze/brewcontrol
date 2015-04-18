@@ -27,14 +27,17 @@ class Plot(plotContainer: dom.Element) {
     ))
   val plot = js.Dynamic.global.jQuery.plot(plotContainer, data, options)
 
-  val seriesStatus: Var[Map[String, Boolean]] = new Var(Map())
+  case class SeriesInfo(seriesId: String, show: Boolean, color: Int)
+
+  val seriesStatus: Var[List[SeriesInfo]] = new Var(List())
 
   val o = Client.currentHourRx.foreach { hour =>
     update(hour)
   }
 
-  def toggleSeries(name: String): Unit = {
-    seriesStatus.updateSilent(seriesStatus.now.updated(name, !seriesStatus.now(name)))
+  def toggleSeries(seriesId: String): Unit = {
+    val e = seriesStatus.now.zipWithIndex.find(_._1.seriesId == seriesId).get
+    seriesStatus.updateSilent(seriesStatus.now.updated(e._2, e._1.copy(show = !e._1.show)))
     update()
   }
 
@@ -64,20 +67,21 @@ class Plot(plotContainer: dom.Element) {
     def convert(data: Seq[SeriesData]): js.Array[js.Object] = {
       val result: js.Array[js.Object] = js.Array()
       data.foreach(e => {
-        seriesStatus.now.get(e.seriesId) match {
-          case Some(true) =>
-            result.push(convertSeries(e))
-          case Some(false) =>
+        seriesStatus.now.find(_.seriesId == e.seriesId) match {
+          case Some(SeriesInfo(_, true, color)) =>
+            result.push(convertSeries(e, color))
+          case Some(_) =>
           case None =>
-            seriesStatus.update(seriesStatus.now.updated(e.seriesId, true))
-            result.push(convertSeries(e))
+            val color = seriesStatus.now.length
+            seriesStatus.update(seriesStatus.now ::: List(SeriesInfo(e.seriesId, true, color)))
+            result.push(convertSeries(e, color))
         }
       })
       result
     }
-    def convertSeries(data: SeriesData): js.Object = data.kind match {
-      case Temperature => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData))
-      case Relay => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData), "lines" -> literal("show" -> true, "steps" -> true), "yaxis" -> 2)
+    def convertSeries(data: SeriesData, index: Int): js.Object = data.kind match {
+      case Temperature => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData), "color" -> index)
+      case Relay => literal("label" -> data.seriesId, "data" -> hourDataToSeries(data.hourTimeData), "color" -> index, "lines" -> literal("show" -> true, "steps" -> true), "yaxis" -> 2)
     }
 
     ServerApi.history(hour).map(convert)
