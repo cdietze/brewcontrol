@@ -7,18 +7,19 @@ class Config()(implicit mongoConnection: MongoConnection) {
 
   import com.mongodb.casbah.Imports._
 
-  private val collection = mongoConnection.db("targetTemperature")
+  private val collection = mongoConnection.db("config")
 
-  private val idQuery = MongoDBObject("_id" -> "targetTemperature")
+  private val soleDocQuery = MongoDBObject("_id" -> "config")
 
-  val targetTemperature = new Var(initialValue())
+  val targetTemperature = mongoVar(soleDocQuery, "targetTemperature", 20d)
 
-  private def initialValue(): Double = {
-    val o = Option(collection.find(idQuery).one()).map(o => o.as[Double]("value"))
-    o.getOrElse(20f)
+  /** @return a Var that is backed by a specific field in a specific document. Any changes to this var will be propagated via update() to the field. */
+  private def mongoVar[T](docQuery: MongoDBObject, fieldName: String, defaultVal: T)(implicit m: Manifest[T]): Var[T] = {
+    val initialVal: T = Option(collection.find(docQuery).one()).map(o => o.as[T](fieldName)).getOrElse(defaultVal)
+    new Var(initialVal) {
+      val o = this.foreach((x: T) =>
+        collection.update(docQuery, $set(fieldName -> x), upsert = true)
+      )
+    }
   }
-
-  private val obs = targetTemperature.foreach((v: Double) =>
-    collection.update(idQuery, $set("value" -> v), upsert = true)
-  )
 }
