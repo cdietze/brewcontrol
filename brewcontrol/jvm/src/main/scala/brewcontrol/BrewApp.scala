@@ -5,6 +5,7 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
+import org.joda.time.DateTime
 import rx._
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
@@ -34,21 +35,27 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   val temperatureReader = new TemperatureReaderImpl()
   val temperatureStorage = new TemperatureStorage()
-  val obs1 = startTemperaturePolling()
+
+  var observers = List[Obs]()
+
+  observers = startTemperaturePolling() :: observers
 
   val relayController = new RelayController()
   val relayStorage = new RelayStorage()
-  val obs3 = persistRelayStates()
+  observers = persistRelayStates().toList ::: observers
 
   val pidController = new PidController(config.targetTemperature, temperatureReader.Cooler.temperature, 10 seconds)
 
   // We use some tolerance to create a deadband in which neither relay is turned on
   // This is to avoid switching too quickly between heating and cooling
   val temperatureTolerance = 0.5f
-  val obs2 = pidController.output.map { output =>
+
+  pidController.output.map { output =>
     relayController.Heater.value() = output > temperatureTolerance
     relayController.Cooler.value() = output < -temperatureTolerance
   }
+
+  observers = startPruneJob() :: observers
 
   startWebServer()
   logger.info("Startup complete")
@@ -64,6 +71,19 @@ trait AbstractBrewApp extends App with LazyLogging {
     relayController.relays.map(r =>
       r.value.foreach(v => relayStorage.persist(r.name, clock.now.getMillis, if (v) 1f else 0f))
     )
+  }
+
+  // Repeatedly deletes all documents that are too old. The main reason is because the 32-Bit ARM version of
+  // mongodb easily reaches its maximum capacity and crashes.
+  def startPruneJob(): Obs = {
+    val pruneInterval: FiniteDuration = 1 day
+
+    Timer(pruneInterval).foreach { t =>
+      val minTimestamp = clock.now.getMillis - pruneInterval.toMillis
+      logger.debug(s"Checking if any documents expired before ${new DateTime(minTimestamp)}")
+      temperatureStorage.deleteDocumentsOlderThan(minTimestamp)
+      relayStorage.deleteDocumentsOlderThan(minTimestamp)
+    }
   }
 
   def startWebServer() = {

@@ -89,6 +89,11 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
       o.as[String]("seriesId") -> TimeSeriesStorage.dbObjectToTimeData(o)
     ).toMap
   }
+
+  def deleteDocumentsOlderThan(timestamp: Long): Unit = {
+    val result = collection.remove("hourTimestamp" $lt timestamp)
+    logger.info(s"Deleted ${result.getN} expired documents that are older than ${new DateTime(timestamp)}")
+  }
 }
 
 object TimeSeriesStorage {
