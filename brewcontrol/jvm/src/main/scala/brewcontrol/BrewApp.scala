@@ -7,6 +7,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.joda.time.DateTime
 import rx._
+import rx.core.Reactor
 import rx.ops.{AkkaScheduler, _}
 import spray.can.Http
 
@@ -36,7 +37,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   val temperatureReader = new TemperatureReaderImpl()
   val temperatureStorage = new TemperatureStorage()
 
-  var observers = List[Obs]()
+  var observers = List[Reactor[_]]()
 
   observers = startTemperaturePolling() :: observers
 
@@ -50,10 +51,10 @@ trait AbstractBrewApp extends App with LazyLogging {
   // This is to avoid switching too quickly between heating and cooling
   val temperatureTolerance = 0.5f
 
-  pidController.output.map { output =>
+  observers = pidController.output.map { output =>
     relayController.Heater.value() = output > temperatureTolerance
     relayController.Cooler.value() = output < -temperatureTolerance
-  }
+  } :: observers
 
   observers = startPruneJob() :: observers
 
