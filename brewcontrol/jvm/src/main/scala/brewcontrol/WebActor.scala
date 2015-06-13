@@ -69,7 +69,7 @@ trait ConfigService extends HttpService with LazyLogging {
       } ~
         post {
           entity(as[String]) { valueString =>
-            val value = valueString.toFloat
+            val value = valueString.toDouble
             config.targetTemperature() = value
             complete(s"Updated target temperature to $value")
           }

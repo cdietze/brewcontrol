@@ -13,12 +13,12 @@ class Config()(implicit mongoConnection: MongoConnection) {
 
   val targetTemperature = new Var(initialValue())
 
-  private def initialValue(): Float = {
-    val o = Option(collection.find(idQuery).one()).map(o => o.as[Double]("value").toFloat)
+  private def initialValue(): Double = {
+    val o = Option(collection.find(idQuery).one()).map(o => o.as[Double]("value"))
     o.getOrElse(20f)
   }
 
-  private val obs = targetTemperature.foreach((v: Float) =>
+  private val obs = targetTemperature.foreach((v: Double) =>
     collection.update(idQuery, $set("value" -> v), upsert = true)
   )
 }

@@ -2,7 +2,7 @@ package brewcontrol
 
 /** hour is the timestamp when this hour started (in milliseconds since the epoch)
   * values contains timed data for that hour. Maps seconds to values */
-case class HourTimeData(hourTimestamp: Long, values: List[(Int, Float)])
+case class HourTimeData(hourTimestamp: Long, values: List[(Int, Double)])
 
 sealed trait SeriesKind
 case object Temperature extends SeriesKind

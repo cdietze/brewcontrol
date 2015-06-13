@@ -17,7 +17,7 @@ trait TemperatureReader {
 
   sealed abstract class Sensor(val id: String,
                                val name: String) {
-    lazy val temperature: Rx[Float] = Rx {
+    lazy val temperature: Rx[Double] = Rx {
       currentReadings().find(_.sensorId == id).get.value
     }
   }

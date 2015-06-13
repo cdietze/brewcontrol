@@ -63,7 +63,7 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
   /**
    * Creates a new document when it doesn't exist already
    */
-  def persist(seriesId: String, timestamp: Long, value: Float) {
+  def persist(seriesId: String, timestamp: Long, value: Double) {
     logger.debug(s"Persisting $value")
     val date = new DateTime(timestamp)
     val hour = date.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0).getMillis()
@@ -98,12 +98,12 @@ class TimeSeriesStorage(val collection: MongoCollection) extends LazyLogging {
 
 object TimeSeriesStorage {
   implicit def dbObjectToTimeData(o: DBObject): HourTimeData = {
-    val values = ListBuffer[(Int, Float)]()
+    val values = ListBuffer[(Int, Double)]()
     val list = o.get("values").asInstanceOf[BasicDBList]
     for (elem <- list) {
       val tuple = elem.asInstanceOf[BasicDBList]
       val time = tuple.as[Double](0).toInt
-      val temp = tuple.as[Double](1).toFloat
+      val temp = tuple.as[Double](1)
       values.append((time, temp))
     }
     HourTimeData(o.as[Long]("hourTimestamp"), values.toList)
