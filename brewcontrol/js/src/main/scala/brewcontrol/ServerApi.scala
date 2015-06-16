@@ -1,8 +1,11 @@
 package brewcontrol
 
 import org.scalajs.dom.ext.Ajax
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import rx._
+import rx.core.Var
+
 import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 
 object ServerApi {
   val baseUrl = ""
@@ -20,17 +23,25 @@ object ServerApi {
     })
   }
 
-  def updateTargetTemperature(value: Float): Future[String] = {
-    Ajax.post(s"$baseUrl/targetTemperature", upickle.write(value)).map(xhr => xhr.responseText)
-  }
-
-  def targetTemperature(): Future[Float] = {
-    Ajax.get(s"$baseUrl/targetTemperature").map(xhr => upickle.read[Float](xhr.responseText))
-  }
-
   def history(hourTimestamp: Long): Future[Seq[SeriesData]] = {
     Ajax.get(s"$baseUrl/history/hour/$hourTimestamp").map(xhr => {
       upickle.read[Seq[SeriesData]](xhr.responseText)
     })
+  }
+
+  val targetTemperature: Var[Float] = ServerApi.createVarSync("/targetTemperature", 0f)
+
+  def createVarSync[T](path: String, initialValue: T)(implicit rw: upickle.ReadWriter[T]): Var[T] = {
+    val url = s"${baseUrl}${path}"
+    new Var(initialValue) {
+      val o = Ajax.get(url).map(xhr => {
+        val v = upickle.read(xhr.responseText)
+        this.update(v)
+        // start propagating updates of the Var after we received the initial state
+        Obs(this, skipInitial = true) {
+          Ajax.post(url, upickle.write(this()))
+        }
+      })
+    }
   }
 }

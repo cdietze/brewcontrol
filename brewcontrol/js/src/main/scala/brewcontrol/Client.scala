@@ -60,16 +60,6 @@ object Client {
     }
   }
 
-  val targetTemperature: Var[Float] = Var(0f)
-  ServerApi.targetTemperature().foreach { v =>
-    targetTemperature() = v
-    obs += targetTemperatureUpdater()
-  }
-
-  def targetTemperatureUpdater() = targetTemperature.foreach(v => {
-    ServerApi.updateTargetTemperature(v)
-  }, skipInitial = true)
-
   def temperaturesFrag(): Frag = {
     def readingFrag(reading: Reading): Frag = {
       val formattedValue = "%1.2f °C".format(reading.value)
@@ -85,13 +75,13 @@ object Client {
   def targetTemperatureSelect(): Frag = {
     lazy val s: HTMLSelectElement = select(
       (0 to 30).map(t => option(t.toString)),
-      value := targetTemperature(),
+      value := ServerApi.targetTemperature(),
       onchange := { () => {
-        targetTemperature() = s.value.toFloat
+        ServerApi.targetTemperature() = s.value.toFloat
       }
       }
     ).render
-    obs += targetTemperature.foreach(t => s.value = t.toString)
+    obs += ServerApi.targetTemperature.foreach(t => s.value = t.toString)
     s
   }
 
