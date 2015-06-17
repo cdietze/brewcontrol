@@ -2,6 +2,7 @@ package brewcontrol
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.LazyLogging
+import rx._
 import spray.http.MediaTypes._
 import spray.http.{HttpEntity, MediaTypes}
 import spray.routing._
@@ -62,19 +63,43 @@ trait ConfigService extends HttpService with LazyLogging {
 
   val configRoute: Route =
     path("targetTemperature") {
-      get {
-        complete {
-          upickle.write(config.targetTemperature())
-        }
+      doubleVarWithGetAndPost(config.targetTemperature)
+    } ~
+      path("heaterEnabled") {
+        booleanVarWithGetAndPost(config.heaterEnabled)
       } ~
-        post {
-          entity(as[String]) { valueString =>
-            val value = valueString.toDouble
-            config.targetTemperature() = value
-            complete(s"Updated target temperature to $value")
-          }
+      path("coolerEnabled") {
+        booleanVarWithGetAndPost(config.coolerEnabled)
+      }
+
+  def doubleVarWithGetAndPost(rx: Var[Double]) = {
+    get {
+      complete {
+        upickle.write(rx())
+      }
+    } ~
+      post {
+        entity(as[String]) { valueString =>
+          val value = upickle.read[Double](valueString)
+          rx() = value
+          complete(s"Updated value to $value")
         }
-    }
+      }
+  }
+  def booleanVarWithGetAndPost(rx: Var[Boolean]) = {
+    get {
+      complete {
+        upickle.write(rx())
+      }
+    } ~
+      post {
+        entity(as[String]) { valueString =>
+          val value = upickle.read[Boolean](valueString)
+          rx() = value
+          complete(s"Updated value to $value")
+        }
+      }
+  }
 }
 
 trait HistoryService extends HttpService with LazyLogging {

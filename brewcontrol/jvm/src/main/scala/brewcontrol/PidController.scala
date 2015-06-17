@@ -24,7 +24,7 @@ class PidController(sp: Rx[Double], pv: Rx[Double], updateInterval: FiniteDurati
     o
   }
 
-  val output = Timer(updateInterval).map { t =>
+  val output: Rx[Double] = Timer(updateInterval).map { t =>
     val o = calcOutput()
     o
   }

@@ -30,8 +30,10 @@ object ServerApi {
   }
 
   val targetTemperature: Var[Float] = ServerApi.createVarSync("/targetTemperature", 0f)
+  val heaterEnabled: Var[Boolean] = ServerApi.createVarSync("/heaterEnabled", false)
+  val coolerEnabled: Var[Boolean] = ServerApi.createVarSync("/coolerEnabled", false)
 
-  def createVarSync[T](path: String, initialValue: T)(implicit rw: upickle.ReadWriter[T]): Var[T] = {
+  private def createVarSync[T](path: String, initialValue: T)(implicit rw: upickle.ReadWriter[T]): Var[T] = {
     val url = s"${baseUrl}${path}"
     new Var(initialValue) {
       val o = Ajax.get(url).map(xhr => {

@@ -1,7 +1,7 @@
 package brewcontrol
 
 import org.scalajs.dom.html
-import org.scalajs.dom.raw.HTMLSelectElement
+import org.scalajs.dom.raw.{HTMLInputElement, HTMLSelectElement}
 import rx._
 import rx.ops._
 
@@ -85,6 +85,18 @@ object Client {
     s
   }
 
+  def varToCheckbox(v: Var[Boolean]): Frag = {
+    lazy val s: HTMLInputElement = input(`type` := "checkbox",
+      checked := v(),
+      onchange := { () => {
+        v() = s.checked
+      }
+      }
+    ).render
+    obs += v.foreach(t => s.checked = t)
+    s
+  }
+
   @JSExport
   def main(container: html.Div) = {
     updateTemperatures()
@@ -105,6 +117,9 @@ object Client {
           div(s"Next update in ${5 - (timer() % 5)} seconds")
         },
         br,
+        div("Kühlung freigegeben: ", varToCheckbox(ServerApi.coolerEnabled)),
+        div("Heizung freigegeben: ", varToCheckbox(ServerApi.heaterEnabled)),
+        br,
         div("Ziel-Temperatur: ", targetTemperatureSelect(), " °C"),
         br,
         seriesPanel,
@@ -112,7 +127,7 @@ object Client {
         Rx {
           new Date(currentHourRx()).toString
         },
-      br,
+        br,
         button("<-", onclick := { () => {
           currentHourRx() = currentHourRx() - oneHourInMillis
         }

@@ -14,6 +14,7 @@ val brewcontrol = crossProject.settings(
     )
   ).
   jvmSettings(Revolver.settings: _*).
+  jvmSettings(Revolver.enableDebugging(port = 5050, suspend = false)).
   jvmSettings(
     libraryDependencies ++= {
       val akkaVersion = "2.3.9"

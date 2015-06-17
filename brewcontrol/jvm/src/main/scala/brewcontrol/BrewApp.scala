@@ -52,8 +52,8 @@ trait AbstractBrewApp extends App with LazyLogging {
   val temperatureTolerance = 0.5f
 
   observers = pidController.output.map { output =>
-    relayController.Heater.value() = output > temperatureTolerance
-    relayController.Cooler.value() = output < -temperatureTolerance
+    relayController.Cooler.value() = config.coolerEnabled() && output < -temperatureTolerance
+    relayController.Heater.value() = config.heaterEnabled() && output > temperatureTolerance
   } :: observers
 
   observers = startPruneJob() :: observers
