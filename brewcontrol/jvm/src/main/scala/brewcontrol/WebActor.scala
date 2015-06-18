@@ -22,6 +22,25 @@ class WebActor(
   def receive = runRoute(temperaturesRoute ~ relayRoute ~ historyRoute ~ staticContentRoute ~ configRoute)
 }
 
+object SprayUtils {
+
+  import Directives._
+
+  def modifiableVar[T](rx: Var[T])(implicit rw: upickle.ReadWriter[T]) = {
+    get {
+      complete {
+        upickle.write(rx())
+      }
+    } ~ post {
+      entity(as[String]) { valueString =>
+        val value = upickle.read[T](valueString)
+        rx() = value
+        complete(s"Updated value to $value")
+      }
+    }
+  }
+}
+
 trait BrewHttpService extends HttpService {
 
   def temperatureReader: TemperatureReader
@@ -63,43 +82,14 @@ trait ConfigService extends HttpService with LazyLogging {
 
   val configRoute: Route =
     path("targetTemperature") {
-      doubleVarWithGetAndPost(config.targetTemperature)
+      SprayUtils.modifiableVar(config.targetTemperature)
     } ~
       path("heaterEnabled") {
-        booleanVarWithGetAndPost(config.heaterEnabled)
+        SprayUtils.modifiableVar(config.heaterEnabled)
       } ~
       path("coolerEnabled") {
-        booleanVarWithGetAndPost(config.coolerEnabled)
+        SprayUtils.modifiableVar(config.coolerEnabled)
       }
-
-  def doubleVarWithGetAndPost(rx: Var[Double]) = {
-    get {
-      complete {
-        upickle.write(rx())
-      }
-    } ~
-      post {
-        entity(as[String]) { valueString =>
-          val value = upickle.read[Double](valueString)
-          rx() = value
-          complete(s"Updated value to $value")
-        }
-      }
-  }
-  def booleanVarWithGetAndPost(rx: Var[Boolean]) = {
-    get {
-      complete {
-        upickle.write(rx())
-      }
-    } ~
-      post {
-        entity(as[String]) { valueString =>
-          val value = upickle.read[Boolean](valueString)
-          rx() = value
-          complete(s"Updated value to $value")
-        }
-      }
-  }
 }
 
 trait HistoryService extends HttpService with LazyLogging {
