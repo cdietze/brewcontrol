@@ -1,3 +1,7 @@
+
+server:
+  rootPath: '/api/*'
+
 database:
   driverClass: org.sqlite.JDBC
   url: jdbc:sqlite:test.db
