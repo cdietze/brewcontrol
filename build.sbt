@@ -52,8 +52,4 @@ val brewcontrol = crossProject.settings(
     mainClass in Revolver.reStart <<= mainClass in Test
   )
 
-lazy val js = brewcontrol.js
-lazy val jvm = brewcontrol.jvm.settings(
-  (resources in Compile) += (fastOptJS in(js, Compile)).value.data,
-  (resources in Compile) += file((fastOptJS in(js, Compile)).value.data.absolutePath + ".map")
-)
+lazy val jvm = brewcontrol.jvm
