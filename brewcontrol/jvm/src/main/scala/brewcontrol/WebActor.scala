@@ -99,8 +99,7 @@ trait HistoryService extends HttpService with LazyLogging {
     pathPrefix("history") {
       respondWithMediaType(`application/json`) {
         complete {
-          val x : History.Series = History.get()("djdjdj")
-          write(x.kind)
+          write(History.get())
         }
       }
     }

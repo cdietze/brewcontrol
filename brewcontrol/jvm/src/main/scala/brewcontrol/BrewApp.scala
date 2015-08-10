@@ -27,6 +27,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   Class.forName("org.sqlite.JDBC")
   val database = Database.forURL("jdbc:sqlite:data.sqlite")
   implicit val db = new DB(database)
+  db.init()
 
   implicit val system = akka.actor.ActorSystem()
   implicit val scheduler = system.scheduler
@@ -66,7 +67,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   def persistRelayStates(): Seq[Obs] = {
     relayController.relays.map(r =>
-      r.value.foreach(v => History.addItem(r.name, History.double, (clock.now.getMillis, if (v) 1 else 0)))
+      r.value.foreach(v => History.addItem(r.name, History.binary, (clock.now.getMillis, if (v) 1 else 0)))
     )
   }
 
