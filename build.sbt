@@ -7,7 +7,7 @@ val brewcontrol = crossProject.settings(
     "com.lihaoyi" %%% "upickle" % "0.3.4",
     "com.lihaoyi" %%% "scalarx" % "0.2.8"
   ),
-  scalaVersion := "2.11.5").
+  scalaVersion := "2.11.7").
   jsSettings(
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.8.0"
