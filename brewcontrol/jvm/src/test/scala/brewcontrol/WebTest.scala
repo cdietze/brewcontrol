@@ -9,9 +9,7 @@ import spray.testkit.ScalatestRouteTest
 class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHttpService with TemperatureService with LazyLogging {
   def actorRefFactory = system
 
-  implicit val mongoConnection = new MockMongoConnection
   implicit val gpio = new MockGpioConnection
-  implicit val temperatureStorage = new TemperatureStorage
 
   lazy val temperatureReader = new MockTemperatureReader()
   lazy val relayController: RelayController = new RelayController()

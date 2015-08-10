@@ -7,6 +7,5 @@ object MockBrewApp extends AbstractBrewApp {
   override lazy val temperatureConnection = new MockTemperatureConnection {
     override def temperature(sensorId: String) = Try(Random.nextFloat() * 10f + 10f)
   }
-  override lazy val mongoConnection = new MockMongoConnection(resetInitially = false)
   override lazy val gpio = new MockGpioConnection
 }

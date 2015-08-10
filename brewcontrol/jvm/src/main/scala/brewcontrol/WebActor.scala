@@ -9,11 +9,11 @@ import spray.routing._
 
 import scalatags.Text.all._
 
+import upickle.default._
+
 class WebActor(
                 val temperatureReader: TemperatureReader,
-                val temperatureStorage: TemperatureStorage,
                 val relayController: RelayController,
-                val relayStorage: RelayStorage,
                 val config: Config)
   extends Actor with BrewHttpService with TemperatureService with RelayService with HistoryService with ConfigService {
 
@@ -26,14 +26,14 @@ object SprayUtils {
 
   import Directives._
 
-  def modifiableVar[T](rx: Var[T])(implicit rw: upickle.ReadWriter[T]) = {
+  def modifiableVar[T](rx: Var[T])(implicit rw: ReadWriter[T]) = {
     get {
       complete {
-        upickle.write(rx())
+        write(rx())
       }
     } ~ post {
       entity(as[String]) { valueString =>
-        val value = upickle.read[T](valueString)
+        val value = read[T](valueString)
         rx() = value
         complete(s"Updated value to $value")
       }
@@ -93,21 +93,14 @@ trait ConfigService extends HttpService with LazyLogging {
 }
 
 trait HistoryService extends HttpService with LazyLogging {
-  def temperatureStorage: TemperatureStorage
   def temperatureReader: TemperatureReader
-  def relayStorage: RelayStorage
 
   val historyRoute: Route =
     pathPrefix("history") {
-      pathPrefix("hour") {
-        path(LongNumber) { hourTimestamp =>
-          respondWithMediaType(`application/json`) {
-            complete {
-              val temperatures = temperatureStorage.getDocumentsByHour(hourTimestamp).toSeq.map(e => SeriesData(temperatureReader.sensorName(e._1), Temperature, e._2))
-              val relays = relayStorage.getDocumentsByHour(hourTimestamp).toSeq.map(e => SeriesData(e._1, Relay, e._2))
-              upickle.write(temperatures ++ relays)
-            }
-          }
+      respondWithMediaType(`application/json`) {
+        complete {
+          val x : History.Series = History.get()("djdjdj")
+          write(x.kind)
         }
       }
     }
@@ -122,7 +115,7 @@ trait TemperatureService extends HttpService with LazyLogging {
       pathEnd {
         get {
           complete {
-            upickle.write(temperatureReader.currentReadings.now)
+            write(temperatureReader.currentReadings.now)
           }
         }
       }
@@ -138,7 +131,7 @@ trait RelayService extends HttpService with LazyLogging {
       pathEnd {
         get {
           complete {
-            upickle.write(relayController.relays.map(r => RelayState(r.name, r.value.now)))
+            write(relayController.relays.map(r => RelayState(r.name, r.value.now)))
           }
         }
       }

@@ -4,7 +4,7 @@ val brewcontrol = crossProject.settings(
     baseDirectory.value / "shared" / "main" / "scala",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.4.6",
-    "com.lihaoyi" %%% "upickle" % "0.2.8",
+    "com.lihaoyi" %%% "upickle" % "0.3.4",
     "com.lihaoyi" %%% "scalarx" % "0.2.8"
   ),
   scalaVersion := "2.11.5").
@@ -23,11 +23,14 @@ val brewcontrol = crossProject.settings(
       Seq(
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+        "com.typesafe.akka" %% "akka-agent" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
 
         "org.scala-sbt" %% "io" % "0.13.7",
 
-        "org.mongodb" %% "casbah" % "2.8.0",
+        "com.typesafe.slick" %% "slick" % "3.0.1",
+        "org.xerial" % "sqlite-jdbc" % "3.7.2",
+
         "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
         "com.lihaoyi" %% "utest" % "0.3.0" % "test",
@@ -36,7 +39,7 @@ val brewcontrol = crossProject.settings(
         "io.spray" %% "spray-routing" % sprayVersion,
         "io.spray" %% "spray-testkit" % sprayVersion % "test",
 
-        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatest" %% "scalatest" % "2.2.4" % "test",
 
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
