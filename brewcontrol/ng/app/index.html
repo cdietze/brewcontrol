@@ -27,10 +27,12 @@
         </h2>
     </div>
 </md-toolbar>
-<md-content layout="column" layout-fill>
+<md-content layout="column" layout-fill ng-controller="ConfigController">
     <md-whiteframe class="md-whiteframe-z2">
-        <md-switch ng-model="data.coolerEnabled">Kühlung freigegeben</md-switch>
-        <md-switch ng-model="data.heaterEnabled">Heizung freigegeben</md-switch>
+        <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung freigegeben
+        </md-switch>
+        <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung freigegeben
+        </md-switch>
     </md-whiteframe>
     <md-whiteframe class="md-whiteframe-z2 md-padding">
         <div>37° Außen</div>
@@ -39,6 +41,7 @@
     </md-whiteframe>
 </md-content>
 
+<script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>
 <script src="./bower_components/angular-animate/angular-animate.js"></script>
 <script src="./bower_components/angular-aria/angular-aria.js"></script>
@@ -52,12 +55,37 @@
 
     angular
             .module('brewControl', ['ngMaterial', 'users'])
-            .config(function ($mdThemingProvider, $mdIconProvider) {
+            .config(function ($mdThemingProvider) {
 
                 $mdThemingProvider.theme('default')
                         .primaryPalette('brown')
                         .accentPalette('red');
 
+            });
+    angular
+            .module('brewControl')
+            .controller('ConfigController', function ($scope, $http) {
+                $scope.data = {}
+
+                _.each(['coolerEnabled', 'heaterEnabled'], function (e) {
+                    var url = "/" + e;
+                    $http.get(url).then(function (response) {
+                        $scope.data[e] = (response.data === 'true');
+
+                        $scope.$watch('data.' + e, function (newValue, oldValue) {
+                            if (newValue === oldValue) return;
+                            console.log("posting new " + e + " value: " + newValue);
+                            $http.post(url, newValue);
+                        });
+                    });
+                });
+
+                $http.get("/temperatures").then(function (response) {
+                    console.log("response: " + JSON.stringify(response));
+                    _(response.data).each(function (e) {
+                        console.log("e: " + JSON.stringify(e));
+                    });
+                });
             });
 
 </script>
