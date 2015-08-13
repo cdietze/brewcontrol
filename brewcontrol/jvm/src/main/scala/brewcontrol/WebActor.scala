@@ -4,11 +4,7 @@ import akka.actor.Actor
 import com.typesafe.scalalogging.LazyLogging
 import rx._
 import spray.http.MediaTypes._
-import spray.http.{HttpEntity, MediaTypes}
 import spray.routing._
-
-import scalatags.Text.all._
-
 import upickle.default._
 
 class WebActor(
@@ -19,7 +15,7 @@ class WebActor(
 
   def actorRefFactory = context
 
-  def receive = runRoute(temperaturesRoute ~ relayRoute ~ historyRoute ~ staticContentRoute ~ configRoute)
+  def receive = runRoute(temperaturesRoute ~ relayRoute ~ historyRoute ~ configRoute ~ staticContentRoute)
 }
 
 object SprayUtils {
@@ -43,37 +39,11 @@ object SprayUtils {
 
 trait BrewHttpService extends HttpService {
 
-  def temperatureReader: TemperatureReader
-
-  def relayController: RelayController
-
   val staticContentRoute: Route =
     pathSingleSlash {
-      get {
-        complete {
-          HttpEntity(
-            MediaTypes.`text/html`,
-            Page.content.render
-          )
-        }
-      }
-    } ~ getFromResourceDirectory("")
-}
-
-object Page {
-  val content =
-    html(
-      head(
-        script(src := "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"),
-        script(src := "https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"),
-        script(src := "https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.js"),
-        script(src := "/brewcontrol-fastopt.js")
-      ),
-      body(
-        onload := "brewcontrol.Client().main(document.getElementById('contents'))",
-        div(id := "contents")
-      )
-    )
+      getFromDirectory("../ng/app/index.html")
+    } ~
+      getFromDirectory("../ng/app/")
 }
 
 trait ConfigService extends HttpService with LazyLogging {
