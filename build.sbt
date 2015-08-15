@@ -30,8 +30,6 @@ lazy val jvm = (project in file("jvm"))
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
 
-        "com.novus" %% "salat" % "1.9.9",
-
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
         "com.lihaoyi" %% "utest" % "0.3.0" % "test",
         "io.spray" %% "spray-testkit" % sprayVersion % "test",
