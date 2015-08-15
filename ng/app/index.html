@@ -27,7 +27,7 @@
         </h2>
     </div>
 </md-toolbar>
-<md-content layout="column" layout-fill ng-controller="ConfigController">
+<md-content layout="column" layout-fill ng-controller="FridgeCtrl">
     <md-whiteframe class="md-whiteframe-z2">
         <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung freigegeben
         </md-switch>
@@ -35,9 +35,9 @@
         </md-switch>
     </md-whiteframe>
     <md-whiteframe class="md-whiteframe-z2 md-padding">
-        <div>37° Außen</div>
-        <div>17° Gäreimer</div>
-        <div>14° Kühlschrank</div>
+        <div ng-repeat="t in temperatures">
+            <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
+        </div>
     </md-whiteframe>
 </md-content>
 
@@ -64,7 +64,7 @@
             });
     angular
             .module('brewControl')
-            .controller('ConfigController', function ($scope, $http) {
+            .controller('FridgeCtrl', function ($scope, $http) {
                 $scope.data = {}
 
                 _.each(['coolerEnabled', 'heaterEnabled'], function (e) {
@@ -74,17 +74,13 @@
 
                         $scope.$watch('data.' + e, function (newValue, oldValue) {
                             if (newValue === oldValue) return;
-                            console.log("posting new " + e + " value: " + newValue);
                             $http.post(url, newValue);
                         });
                     });
                 });
 
                 $http.get("/temperatures").then(function (response) {
-                    console.log("response: " + JSON.stringify(response));
-                    _(response.data).each(function (e) {
-                        console.log("e: " + JSON.stringify(e));
-                    });
+                    $scope.temperatures = response.data;
                 });
             });
 
