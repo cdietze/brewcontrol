@@ -1,30 +1,21 @@
 
-val brewcontrol = crossProject.settings(
-  unmanagedSourceDirectories in Compile +=
-    baseDirectory.value / "shared" / "main" / "scala",
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "scalatags" % "0.4.6",
-    "com.lihaoyi" %%% "upickle" % "0.3.4",
-    "com.lihaoyi" %%% "scalarx" % "0.2.8"
-  ),
-  scalaVersion := "2.11.7").
-  jsSettings(
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.8.0"
-    )
-  ).
-  jvmSettings(Revolver.settings: _*).
-  jvmSettings(Revolver.enableDebugging(port = 5050, suspend = false)).
-  jvmSettings(
+lazy val jvm = (project in file("jvm"))
+  .settings(Revolver.settings: _*)
+  .settings(Revolver.enableDebugging(port = 5050, suspend = false))
+  .settings(
+    scalaVersion := "2.11.7",
     libraryDependencies ++= {
       val akkaVersion = "2.3.9"
       val sprayVersion = "1.3.2"
 
       Seq(
+        "com.lihaoyi" %% "scalatags" % "0.4.6",
+        "com.lihaoyi" %% "upickle" % "0.3.4",
+        "com.lihaoyi" %% "scalarx" % "0.2.8",
+
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-agent" % akkaVersion,
-        "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
 
         "org.scala-sbt" %% "io" % "0.13.7",
 
@@ -33,23 +24,21 @@ val brewcontrol = crossProject.settings(
 
         "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
-        "com.lihaoyi" %% "utest" % "0.3.0" % "test",
-
         "io.spray" %% "spray-can" % sprayVersion,
         "io.spray" %% "spray-routing" % sprayVersion,
-        "io.spray" %% "spray-testkit" % sprayVersion % "test",
-
-        "org.scalatest" %% "scalatest" % "2.2.4" % "test",
 
         "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
 
-        "com.novus" %% "salat" % "1.9.9"
+        "com.novus" %% "salat" % "1.9.9",
+
+        "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
+        "com.lihaoyi" %% "utest" % "0.3.0" % "test",
+        "io.spray" %% "spray-testkit" % sprayVersion % "test",
+        "org.scalatest" %% "scalatest" % "2.2.4" % "test"
       )
     },
     testFrameworks += new TestFramework("utest.runner.Framework"),
     fullClasspath in Revolver.reStart <<= fullClasspath in Test,
     mainClass in Revolver.reStart <<= mainClass in Test
   )
-
-lazy val jvm = brewcontrol.jvm

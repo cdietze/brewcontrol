@@ -1,5 +1,7 @@
 package brewcontrol
 
+import java.io.File
+
 import akka.actor.Actor
 import com.typesafe.scalalogging.LazyLogging
 import rx._
@@ -41,9 +43,10 @@ trait BrewHttpService extends HttpService {
 
   val staticContentRoute: Route =
     pathSingleSlash {
-      getFromDirectory("../ng/app/index.html")
+      println(". is: " + new File(".").getAbsolutePath)
+      getFromResource("ng/index.html")
     } ~
-      getFromDirectory("../ng/app/")
+      getFromResourceDirectory("ng/")
 }
 
 trait ConfigService extends HttpService with LazyLogging {
