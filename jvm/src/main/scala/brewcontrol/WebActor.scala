@@ -66,7 +66,6 @@ trait ConfigService extends HttpService with LazyLogging {
 }
 
 trait HistoryService extends HttpService with LazyLogging {
-  def temperatureReader: TemperatureReader
 
   val historyRoute: Route =
     pathPrefix("history") {
