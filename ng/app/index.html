@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
-<body ng-app="brewControl" layout="column" ng-controller="UserController as ul">
+<body ng-app="brewControl" layout="column">
 
 <md-toolbar>
     <div class="md-toolbar-tools">
@@ -39,22 +39,25 @@
             <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
         </div>
     </md-whiteframe>
+
+    <md-whiteframe class="md-whiteframe-z2" ng-controller="GraphCtrl">
+        <div id="chart"></div>
+    </md-whiteframe>
 </md-content>
 
 <script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>
 <script src="./bower_components/angular-animate/angular-animate.js"></script>
 <script src="./bower_components/angular-aria/angular-aria.js"></script>
-<script type="text/javascript" src="./bower_components/angular-material/angular-material.js"></script>
-
-<script src="./src/users/Users.js"></script>
-<script src="./src/users/UserController.js"></script>
-<script src="./src/users/UserService.js"></script>
+<script src="./bower_components/angular-material/angular-material.js"></script>
+<script src="./bower_components/rickshaw/vendor/d3.min.js"></script>
+<script src="./bower_components/rickshaw/vendor/d3.layout.min.js"></script>
+<script src="./bower_components/rickshaw/rickshaw.min.js"></script>
 
 <script type="text/javascript">
 
     angular
-            .module('brewControl', ['ngMaterial', 'users'])
+            .module('brewControl', ['ngMaterial'])
             .config(function ($mdThemingProvider) {
 
                 $mdThemingProvider.theme('default')
@@ -82,6 +85,25 @@
                 $http.get("/temperatures").then(function (response) {
                     $scope.temperatures = response.data;
                 });
+            });
+
+    angular
+            .module('brewControl')
+            .controller('GraphCtrl', function ($scope, $http) {
+                var graph = new Rickshaw.Graph({
+                    element: document.querySelector("#chart"),
+                    height: 200,
+                    series: [{
+                        color: 'steelblue',
+                        data: [
+                            {x: 0, y: 40},
+                            {x: 1, y: 49},
+                            {x: 2, y: 38},
+                            {x: 3, y: 30},
+                            {x: 4, y: 32}]
+                    }]
+                });
+                graph.render();
             });
 
 </script>
