@@ -4,6 +4,7 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
+import brewcontrol.History.Item
 import com.typesafe.scalalogging.LazyLogging
 import rx._
 import rx.core.Reactor
@@ -61,13 +62,13 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   def persistTemperatureReadings(): Obs = {
     temperatureReader.currentReadings.foreach(
-      _.foreach(reading => History.addItem(reading.sensorId, "double", (reading.timestamp, reading.value)))
+      _.foreach(reading => History.addItem(reading.sensorId, "double", Item(reading.timestamp, reading.value)))
     )
   }
 
   def persistRelayStates(): Seq[Obs] = {
     relayController.relays.map(r =>
-      r.value.foreach(v => History.addItem(r.name, "binary", (clock.now.getMillis, if (v) 1 else 0)))
+      r.value.foreach(v => History.addItem(r.name, "binary", Item(clock.now.getMillis, if (v) 1 else 0)))
     )
   }
 

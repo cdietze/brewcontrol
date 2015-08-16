@@ -10,16 +10,6 @@ class History {
 
   import History._
 
-  type Item = (Long, Double)
-
-  case class Series(name: String, kind: String, data: Queue[Item] = Queue()) {
-    def addItem(item: Item): Series = {
-      var d = data.enqueue(item)
-      d = d.dropWhile { case (t, v) => ((item._1 - t) >= maxItemAge) }
-      this.copy(data = d)
-    }
-  }
-
   private val agent: Agent[Map[String, Series]] = Agent(Map())
 
   def addItem(name: String, kind: String, item: Item) = {
@@ -33,5 +23,22 @@ class History {
 }
 
 object History extends History {
+  case class Item(x: Long, y: Double) {
+
+  }
+  object Item {
+    // def apply(t: (Long, Double)): Item = apply(t._1, t._2)
+    implicit def tupleToItemInt(t: (Long, Double)): Item = Item(t._1, t._2)
+    // implicit def tupleToItemLong(t: (Long, Double)): Item = Item(t._1, t._2)
+  }
+
+  case class Series(name: String, kind: String, data: Queue[Item] = Queue()) {
+    def addItem(item: Item): Series = {
+      var d = data.enqueue(item)
+      d = d.dropWhile { e => ((item.x - e.x) >= maxItemAge) }
+      this.copy(data = d)
+    }
+  }
+
   val maxItemAge = (1 day).toMillis
 }

@@ -10,8 +10,28 @@
 
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic'>
     <link rel="stylesheet" href="./bower_components/angular-material/angular-material.css"/>
+    <link rel="stylesheet" href="./bower_components/rickshaw/rickshaw.min.css">
     <link rel="stylesheet" href="assets/app.css"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+
+        .relayLabel {
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .relayLabel.active {
+            border: solid 2px #F44336;
+            background-color: #E57373;
+        }
+
+        .relayLabel.inactive {
+            border: solid 2px #9E9E9E;
+            background-color: #E0E0E0;
+        }
+
+    </style>
 </head>
 
 <body ng-app="brewControl" layout="column">
@@ -39,9 +59,16 @@
             <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
         </div>
     </md-whiteframe>
+    <md-whiteframe class="md-whiteframe-z2 md-padding">
+        <div ng-repeat="e in relays">
+            <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
+            </div>
+        </div>
+    </md-whiteframe>
 
     <md-whiteframe class="md-whiteframe-z2" ng-controller="GraphCtrl">
         <div id="chart"></div>
+        <div id="legend"></div>
     </md-whiteframe>
 </md-content>
 
@@ -53,60 +80,7 @@
 <script src="./bower_components/rickshaw/vendor/d3.min.js"></script>
 <script src="./bower_components/rickshaw/vendor/d3.layout.min.js"></script>
 <script src="./bower_components/rickshaw/rickshaw.min.js"></script>
-
-<script type="text/javascript">
-
-    angular
-            .module('brewControl', ['ngMaterial'])
-            .config(function ($mdThemingProvider) {
-
-                $mdThemingProvider.theme('default')
-                        .primaryPalette('brown')
-                        .accentPalette('red');
-
-            });
-    angular
-            .module('brewControl')
-            .controller('FridgeCtrl', function ($scope, $http) {
-                $scope.data = {}
-
-                _.each(['coolerEnabled', 'heaterEnabled'], function (e) {
-                    var url = "/" + e;
-                    $http.get(url).then(function (response) {
-                        $scope.data[e] = (response.data === 'true');
-
-                        $scope.$watch('data.' + e, function (newValue, oldValue) {
-                            if (newValue === oldValue) return;
-                            $http.post(url, newValue);
-                        });
-                    });
-                });
-
-                $http.get("/temperatures").then(function (response) {
-                    $scope.temperatures = response.data;
-                });
-            });
-
-    angular
-            .module('brewControl')
-            .controller('GraphCtrl', function ($scope, $http) {
-                var graph = new Rickshaw.Graph({
-                    element: document.querySelector("#chart"),
-                    height: 200,
-                    series: [{
-                        color: 'steelblue',
-                        data: [
-                            {x: 0, y: 40},
-                            {x: 1, y: 49},
-                            {x: 2, y: 38},
-                            {x: 3, y: 30},
-                            {x: 4, y: 32}]
-                    }]
-                });
-                graph.render();
-            });
-
-</script>
+<script src="./BrewControl.js"></script>
 
 </body>
 </html>
