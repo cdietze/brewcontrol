@@ -64,7 +64,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   def persistTemperatureReadings(): Obs = {
     temperatureReader.currentReadings.foreach(
-      _.foreach(reading => History.addItem(reading.sensorId, "double", Item(reading.timestamp, reading.value)))
+      _.foreach(reading => History.addItem(reading.name, "double", Item(reading.timestamp, reading.value)))
     )
   }
 
