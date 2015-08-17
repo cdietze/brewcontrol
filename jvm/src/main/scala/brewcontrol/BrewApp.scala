@@ -21,12 +21,12 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit def gpio: GpioConnection
   def host = "0.0.0.0"
   def port = 8080
+  def jdbcUrl = "jdbc:sqlite:/mnt/lfs/brewcontrol/data.sqlite"
 
   logger.info(s"Hi from BrewControl")
   sys.addShutdownHook(logger.info("Shutting down"))
 
   Class.forName("org.sqlite.JDBC")
-  val jdbcUrl = "jdbc:sqlite:/mnt/lfs/brewcontrol/data.sqlite"
   logger.info(s"Using Database $jdbcUrl")
   val database = Database.forURL(jdbcUrl)
   implicit val db = new DB(database)

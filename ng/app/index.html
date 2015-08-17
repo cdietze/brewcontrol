@@ -31,6 +31,25 @@
             background-color: #E0E0E0;
         }
 
+        #chartContainer {
+            position: relative;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #chart {
+            position: relative;
+            left: 40px;
+        }
+        #yAxis {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+        }
+        #legend {
+            margin: 15px;
+        }
+
+
     </style>
 </head>
 
@@ -55,6 +74,7 @@
         </md-switch>
     </md-whiteframe>
     <md-whiteframe class="md-whiteframe-z2 md-padding">
+        Zieltemperatur
         <div layout>
             <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
             <div flex="20" layout layout-align="center center">
@@ -76,8 +96,11 @@
     </md-whiteframe>
 
     <md-whiteframe class="md-whiteframe-z2" ng-controller="GraphCtrl">
-        <div id="chart"></div>
-        <div id="legend"></div>
+        <div id="chartContainer">
+            <div id="yAxis"></div>
+            <div id="chart"></div>
+            <div id="legend"></div>
+        </div>
     </md-whiteframe>
 </md-content>
 
