@@ -32,17 +32,13 @@
         }
 
         #chartContainer {
-            position: relative;
-            font-family: Arial, Helvetica, sans-serif;
         }
         #chart {
-            position: relative;
-            left: 40px;
+            width: auto;
+            overflow: hidden;
         }
         #yAxis {
-            position: absolute;
-            top: 0;
-            bottom: 0;
+            float: left;
             width: 40px;
         }
         #legend {
@@ -95,13 +91,13 @@
         </div>
     </md-whiteframe>
 
-    <md-whiteframe class="md-whiteframe-z2" ng-controller="GraphCtrl">
+    <div ng-controller="GraphCtrl">
         <div id="chartContainer">
             <div id="yAxis"></div>
             <div id="chart"></div>
             <div id="legend"></div>
         </div>
-    </md-whiteframe>
+    </div>
 </md-content>
 
 <script src="./bower_components/underscore/underscore-min.js"></script>
