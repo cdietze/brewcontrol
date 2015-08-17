@@ -26,7 +26,9 @@ trait AbstractBrewApp extends App with LazyLogging {
   sys.addShutdownHook(logger.info("Shutting down"))
 
   Class.forName("org.sqlite.JDBC")
-  val database = Database.forURL("jdbc:sqlite:data.sqlite")
+  val jdbcUrl = "jdbc:sqlite:/mnt/lfs/brewcontrol/data.sqlite"
+  logger.info(s"Using Database $jdbcUrl")
+  val database = Database.forURL(jdbcUrl)
   implicit val db = new DB(database)
   db.init()
 

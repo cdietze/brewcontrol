@@ -3,6 +3,8 @@ lazy val jvm = (project in file("jvm"))
   .settings(Revolver.settings: _*)
   .settings(Revolver.enableDebugging(port = 5050, suspend = false))
   .settings(
+    name := "brewcontrol",
+    version := "0.2-SNAPSHOT",
     scalaVersion := "2.11.7",
     libraryDependencies ++= {
       val akkaVersion = "2.3.9"

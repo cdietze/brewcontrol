@@ -12,10 +12,10 @@ angular
     .controller('FridgeCtrl', function ($scope, $http) {
         $scope.data = {}
 
-        _.each(['coolerEnabled', 'heaterEnabled'], function (e) {
+        _.each(['coolerEnabled', 'heaterEnabled', 'targetTemperature'], function (e) {
             var url = "/" + e;
             $http.get(url).then(function (response) {
-                $scope.data[e] = (response.data === 'true');
+                $scope.data[e] = eval(response.data);
 
                 $scope.$watch('data.' + e, function (newValue, oldValue) {
                     if (newValue === oldValue) return;

@@ -24,7 +24,7 @@ class DB(val db: Database) {
   def runSync[R](f: Future[R]): R = Await.result(f, 10 seconds)
   def runSync[R](a: DBIOAction[R, NoStream, Nothing]): R = runSync(db.run(a): Future[R])
 
-  private def tableNames(): Set[String] = Await.result(db.run(MTable.getTables).map(_.map(_.name.name).toSet), 5 seconds)
+  private def tableNames(): Set[String] = Await.result(db.run(MTable.getTables).map(_.map(_.name.name).toSet), 60 seconds)
 
   class Props(tag: Tag) extends Table[(String, String)](tag, "Props") {
     def key = column[String]("ID", O.PrimaryKey)
