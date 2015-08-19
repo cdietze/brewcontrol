@@ -62,20 +62,21 @@
         </h2>
     </div>
 </md-toolbar>
-<md-content layout="column" layout-fill ng-controller="FridgeCtrl">
+<md-content layout="column" ng-controller="FridgeCtrl">
     <md-whiteframe class="md-whiteframe-z2">
         <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung freigegeben
         </md-switch>
         <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung freigegeben
         </md-switch>
     </md-whiteframe>
+
     <md-whiteframe class="md-whiteframe-z2 md-padding">
-        Zieltemperatur
-        <div layout>
+        <div layout="row" layout-wrap>
+            <div flex>Zieltemperatur</div>
+            <input flex type="number" ng-model="data.targetTemperature">
+        </div>
+        <div layout="row">
             <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
-            <div flex="20" layout layout-align="center center">
-                <input type="number" ng-model="data.targetTemperature">
-            </div>
         </div>
     </md-whiteframe>
 
