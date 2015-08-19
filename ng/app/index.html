@@ -33,14 +33,17 @@
 
         #chartContainer {
         }
+
         #chart {
             width: auto;
             overflow: hidden;
         }
+
         #yAxis {
             float: left;
             width: 40px;
         }
+
         #legend {
             margin: 15px;
         }
@@ -73,7 +76,9 @@
     <md-whiteframe class="md-whiteframe-z2 md-padding">
         <div layout="row" layout-wrap>
             <div flex>Zieltemperatur</div>
-            <input flex type="number" ng-model="data.targetTemperature">
+            <div flex>
+                <input type="number" ng-model="data.targetTemperature">°C
+            </div>
         </div>
         <div layout="row">
             <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
