@@ -40,5 +40,5 @@ object History extends History {
     }
   }
 
-  val maxItemAge = (1 day).toMillis
+  val maxItemAge = (2 hours).toMillis
 }
