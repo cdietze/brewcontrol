@@ -76,9 +76,9 @@
     <md-whiteframe class="md-whiteframe-z2 md-padding">
         <div layout="row" layout-wrap>
             <div flex>Zieltemperatur</div>
-            <div flex>
-                <input type="number" ng-model="data.targetTemperature">°C
-            </div>
+            <input flex="25" type="number" ng-model="data.targetTemperature">
+
+            <div flex="25">°C</div>
         </div>
         <div layout="row">
             <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
