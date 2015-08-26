@@ -70,7 +70,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   def persistRelayStates(): Seq[Obs] = {
     relayController.relays.map(r =>
-      r.value.foreach(v => History.addItem(r.name, "binary", Item(clock.now.getMillis, if (v) 1 else 0)))
+      r.value.foreach(v => History.addItem(r.name, "binary", Item(clock.now.toEpochMilli, if (v) 1 else 0)))
     )
   }
 

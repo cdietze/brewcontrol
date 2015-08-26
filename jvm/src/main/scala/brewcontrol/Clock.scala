@@ -1,8 +1,8 @@
 package brewcontrol
 
-import org.joda.time.DateTime
+import java.time.Instant
 
 class Clock {
 
-  def now: DateTime = DateTime.now()
+  def now: Instant = Instant.now()
 }

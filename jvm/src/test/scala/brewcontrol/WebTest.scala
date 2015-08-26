@@ -1,7 +1,6 @@
 package brewcontrol
 
 import com.typesafe.scalalogging.LazyLogging
-import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest

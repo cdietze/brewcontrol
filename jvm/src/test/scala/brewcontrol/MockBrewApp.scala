@@ -1,13 +1,14 @@
 package brewcontrol
 
+import java.time.Instant
+
 import brewcontrol.History.Item
-import org.joda.time.DateTime
 
 import scala.util.{Random, Try}
 
 object MockBrewApp extends AbstractBrewApp {
 
-  val startTime = DateTime.now()
+  val startTime = Instant.now().toEpochMilli
   History.addItem("Heizung", "binary", Item(startTime + 10000, 0))
   History.addItem("Heizung", "binary", Item(startTime + 12000, 1))
   History.addItem("Heizung", "binary", Item(startTime + 14000, 0))

@@ -6,6 +6,7 @@ lazy val jvm = (project in file("jvm"))
     name := "brewcontrol",
     version := "0.2-SNAPSHOT",
     scalaVersion := "2.11.7",
+    scalacOptions += "-target:jvm-1.8",
     libraryDependencies ++= {
       val akkaVersion = "2.3.9"
       val sprayVersion = "1.3.2"
@@ -23,8 +24,6 @@ lazy val jvm = (project in file("jvm"))
 
         "com.typesafe.slick" %% "slick" % "3.0.1",
         "org.xerial" % "sqlite-jdbc" % "3.7.2",
-
-        "com.github.nscala-time" %% "nscala-time" % "1.8.0",
 
         "io.spray" %% "spray-can" % sprayVersion,
         "io.spray" %% "spray-routing" % sprayVersion,
