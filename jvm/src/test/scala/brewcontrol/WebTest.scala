@@ -8,10 +8,10 @@ import spray.testkit.ScalatestRouteTest
 class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHttpService with TemperatureService with LazyLogging {
   def actorRefFactory = system
 
-  implicit val gpio = new MockGpioConnection
+  implicit val gpio = new MockGpio
 
-  lazy val temperatureReader = new MockTemperatureReader()
-  lazy val relayController: RelayController = new RelayController()
+  lazy val temperatureReader = new MockTemperatureManager()
+  lazy val relayController: RelayManager = new RelayManager()
 
   "GET /" should "return OK" in {
     Get("/") ~> staticContentRoute ~> check {

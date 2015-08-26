@@ -19,11 +19,11 @@ class DbTest extends FlatSpec with Matchers {
     Await.result(db.init(), 1 second)
 
     Await.result(
-      db.Props.getProp("test").map(v => assert(v.isEmpty))
+      db.PropsDao.getProp("test").map(v => assert(v.isEmpty))
       , 1 second)
 
     Await.result(
-      db.Props.setProp("test", "1").map(_ => db.Props.getProp("test").map(v => assert(v === Some("2"))))
+      db.PropsDao.setProp("test", "1").map(_ => db.PropsDao.getProp("test").map(v => assert(v === Some("2"))))
       , 1 second)
 
   }

@@ -10,9 +10,9 @@ import spray.routing._
 import upickle.default._
 
 class WebActor(
-                val temperatureReader: TemperatureReader,
-                val relayController: RelayController,
-                val config: Config)
+                val temperatureReader: TemperatureManager,
+                val relayController: RelayManager,
+                val db: DB)
   extends Actor with BrewHttpService with TemperatureService with RelayService with HistoryService with ConfigService {
 
   def actorRefFactory = context
@@ -51,17 +51,17 @@ trait BrewHttpService extends HttpService {
 
 trait ConfigService extends HttpService with LazyLogging {
 
-  def config: Config
+  def db: DB
 
   val configRoute: Route =
     path("targetTemperature") {
-      SprayUtils.modifiableVar(config.targetTemperature)
+      SprayUtils.modifiableVar(db.PropsDao.targetTemperature)
     } ~
       path("heaterEnabled") {
-        SprayUtils.modifiableVar(config.heaterEnabled)
+        SprayUtils.modifiableVar(db.PropsDao.heaterEnabled)
       } ~
       path("coolerEnabled") {
-        SprayUtils.modifiableVar(config.coolerEnabled)
+        SprayUtils.modifiableVar(db.PropsDao.coolerEnabled)
       }
 }
 
@@ -79,7 +79,7 @@ trait HistoryService extends HttpService with LazyLogging {
 
 trait TemperatureService extends HttpService with LazyLogging {
 
-  def temperatureReader: TemperatureReader
+  def temperatureReader: TemperatureManager
 
   val temperaturesRoute: Route =
     pathPrefix("temperatures") {
@@ -95,7 +95,7 @@ trait TemperatureService extends HttpService with LazyLogging {
 
 trait RelayService extends HttpService with LazyLogging {
 
-  def relayController: RelayController
+  def relayController: RelayManager
 
   val relayRoute: Route =
     pathPrefix("relays") {

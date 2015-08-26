@@ -14,13 +14,14 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
 
-class OutPin(pinNumber: Int) extends Var[Boolean](false)
+class GpioOutPin(pinNumber: Int) extends Var[Boolean](false)
 
-trait GpioConnection {
-  def outPin(pinNumber: Int): Future[OutPin]
+/** Provides access to the GPIO pins of the raspberry pi */
+trait Gpio {
+  def outPin(pinNumber: Int): Future[GpioOutPin]
 }
 
-class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionContext) extends GpioConnection with LazyLogging {
+class GpioImpl(implicit scheduler: actor.Scheduler, ec: ExecutionContext) extends Gpio with LazyLogging {
 
   object Paths {
     val gpioPath = Path("/sys/class/gpio")
@@ -55,10 +56,10 @@ class GpioConnectionImpl(implicit scheduler: actor.Scheduler, ec: ExecutionConte
     }
   }
 
-  def outPin(pinNumber: Int): Future[OutPin] = {
-    export(pinNumber).map[OutPin] { _ =>
+  def outPin(pinNumber: Int): Future[GpioOutPin] = {
+    export(pinNumber).map[GpioOutPin] { _ =>
       IO.write(Paths.direction(pinNumber), "out")
-      new OutPin(pinNumber) {
+      new GpioOutPin(pinNumber) {
         val obs: Obs = this.foreach {
           value: Boolean => {
             logger.debug(s"Writing $value to pin $pinNumber")

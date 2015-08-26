@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 trait AbstractBrewApp extends App with LazyLogging {
 
   implicit def temperatureConnection: TemperatureConnection
-  implicit def gpio: GpioConnection
+  implicit def gpio: Gpio
   def host = "0.0.0.0"
   def port = 8080
   def jdbcUrl = "jdbc:sqlite:/mnt/lfs/brewcontrol/data.sqlite"
@@ -36,26 +36,25 @@ trait AbstractBrewApp extends App with LazyLogging {
   implicit val scheduler = system.scheduler
   implicit val rxScheduler = new AkkaScheduler(system)
   implicit val clock = new Clock
-  implicit val config = new Config()
 
-  val temperatureReader = new TemperatureReaderImpl()
+  val temperatureReader = new TemperatureManagerImpl()
 
   var observers = List[Reactor[_]]()
 
   observers = persistTemperatureReadings() :: observers
 
-  val relayController = new RelayController()
+  val relayController = new RelayManager()
   observers = persistRelayStates().toList ::: observers
 
-  val pidController = new PidController(config.targetTemperature, temperatureReader.Cooler.temperature, 10 seconds)
+  val pidController = new PidController(db.PropsDao.targetTemperature, temperatureReader.Cooler.temperature, 10 seconds)
 
   // We use some tolerance to create a deadband in which neither relay is turned on
   // This is to avoid switching too quickly between heating and cooling
   val temperatureTolerance = 0.5f
 
   observers = pidController.output.map { output =>
-    relayController.Cooler.value() = config.coolerEnabled() && output < -temperatureTolerance
-    relayController.Heater.value() = config.heaterEnabled() && output > temperatureTolerance
+    relayController.Cooler.value() = db.PropsDao.coolerEnabled() && output < -temperatureTolerance
+    relayController.Heater.value() = db.PropsDao.heaterEnabled() && output > temperatureTolerance
   } :: observers
 
   startWebServer()
@@ -75,7 +74,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   }
 
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, relayController, config), "webActor")
+    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, relayController, db), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }
@@ -83,5 +82,5 @@ trait AbstractBrewApp extends App with LazyLogging {
 
 object BrewApp extends AbstractBrewApp {
   override lazy val temperatureConnection = new TemperatureConnection
-  override lazy val gpio = new GpioConnectionImpl()(system.scheduler, global)
+  override lazy val gpio = new GpioImpl()(system.scheduler, global)
 }

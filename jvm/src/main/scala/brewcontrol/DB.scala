@@ -13,10 +13,11 @@ import scala.concurrent.{Await, Future}
 import upickle.default._
 
 class DB(val db: Database) {
+  import DB._
 
   def init() = db.run(
     if (!tableNames().contains("Props")) {
-      props.schema.create
+      propsTable.schema.create
     } else {
       DBIO.successful()
     })
@@ -26,25 +27,24 @@ class DB(val db: Database) {
 
   private def tableNames(): Set[String] = Await.result(db.run(MTable.getTables).map(_.map(_.name.name).toSet), 60 seconds)
 
-  class Props(tag: Tag) extends Table[(String, String)](tag, "Props") {
-    def key = column[String]("ID", O.PrimaryKey)
-    def value = column[String]("VALUE")
-    def * = (key, value)
-  }
-  val props = TableQuery[Props]
+  /** DAO for the Props table */
+  object PropsDao {
 
-  object Props {
+    val targetTemperature = asVarSync("targetTemperature", 20d)
+
+    val heaterEnabled = asVarSync("heaterEnabled", false)
+    val coolerEnabled = asVarSync("coolerEnabled", false)
 
     def setProp(key: String, value: String): Future[_] = {
-      db.run(props.insertOrUpdate((key, value)))
+      db.run(propsTable.insertOrUpdate((key, value)))
     }
 
     def getProp(key: String): Future[Option[String]] = {
-      db.run(props.filter(_.key === key).map(_.value).result.headOption)
+      db.run(propsTable.filter(_.key === key).map(_.value).result.headOption)
     }
 
     /** @return a Var that is backed by a row in the Props table. */
-    def asVar[T](propsKey: String, defaultVal: T)(implicit rw: ReadWriter[T]): Future[Var[T]] = {
+    private def asVar[T](propsKey: String, defaultVal: T)(implicit rw: ReadWriter[T]): Future[Var[T]] = {
       getProp(propsKey).map(v => {
         val initialVal: T = v.map(s => read[T](s)).getOrElse(defaultVal)
         new Var(initialVal) {
@@ -55,9 +55,17 @@ class DB(val db: Database) {
       })
     }
 
-    def asVarSync[T](propsKey: String, defaultVal: T)(implicit rw: ReadWriter[T]): Var[T] = runSync(asVar(propsKey, defaultVal))
+    private def asVarSync[T](propsKey: String, defaultVal: T)(implicit rw: ReadWriter[T]): Var[T] = runSync(asVar(propsKey, defaultVal))
   }
 }
 
 object DB {
+
+  class PropsTable(tag: Tag) extends Table[(String, String)](tag, "Props") {
+    def key = column[String]("ID", O.PrimaryKey)
+    def value = column[String]("VALUE")
+    def * = (key, value)
+  }
+  val propsTable = TableQuery[PropsTable]
+
 }
