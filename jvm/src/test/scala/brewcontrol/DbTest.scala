@@ -16,15 +16,15 @@ class DbTest extends FlatSpec with Matchers {
     sbt.IO.delete(new File("unittest.sqlite"))
     val database = Database.forURL("jdbc:sqlite:unittest.sqlite")
     val db = new DB(database)
-    Await.result(db.init(), 1 second)
+    Await.result(db.init(), 5 seconds)
 
     Await.result(
       db.PropsDao.getProp("test").map(v => assert(v.isEmpty))
-      , 1 second)
+      , 5 seconds)
 
     Await.result(
       db.PropsDao.setProp("test", "1").map(_ => db.PropsDao.getProp("test").map(v => assert(v === Some("2"))))
-      , 1 second)
+      , 5 seconds)
 
   }
 

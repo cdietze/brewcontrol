@@ -4,5 +4,5 @@ import java.time.Instant
 
 class Clock {
 
-  def now: Instant = Instant.now()
+  def now(): Instant = Instant.now()
 }

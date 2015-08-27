@@ -1,4 +1,5 @@
 data.sqlite
+unittest.sqlite
 brewcontrol/ng/node_modules
 brewcontrol/ng/app/bower_components
 ng/app/bower_components

@@ -10,14 +10,14 @@ import scala.concurrent.duration._
 class RelayManager()(implicit gpio: Gpio) extends LazyLogging {
   sealed class Relay(pinNumber: Int, val name: String) {
     val outPin = Await.result(gpio.outPin(pinNumber), 15 seconds)
-    val value = inversePin(outPin)
+    val value: Var[Boolean] = inversePin(outPin)
     value.update(false)
   }
 
   case object Cooler extends Relay(7, "Kühlung")
   case object Heater extends Relay(8, "Heizung")
-//  case object Relay3 extends Relay(25)
-//  case object Relay4 extends Relay(24)
+  //  case object Relay3 extends Relay(25)
+  //  case object Relay4 extends Relay(24)
 
   val relays = List(Cooler, Heater)
 
