@@ -32,12 +32,10 @@ lazy val jvm = (project in file("jvm"))
         "ch.qos.logback" % "logback-classic" % "1.0.13",
 
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
-        "com.lihaoyi" %% "utest" % "0.3.0" % "test",
         "io.spray" %% "spray-testkit" % sprayVersion % "test",
         "org.scalatest" %% "scalatest" % "2.2.4" % "test"
       )
     },
-    testFrameworks += new TestFramework("utest.runner.Framework"),
     fullClasspath in Revolver.reStart <<= fullClasspath in Test,
     mainClass in Revolver.reStart <<= mainClass in Test
   )
