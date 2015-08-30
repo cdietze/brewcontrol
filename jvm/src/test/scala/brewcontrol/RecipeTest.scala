@@ -7,7 +7,7 @@ import rx.core.Var
 
 class RecipeTest extends FlatSpec with Matchers {
 
-  "Empty recipe" should "complete immediately" in {
+  "Empty recipe" should "be inactive and do nothing" in {
 
     val clock = MockClock(Instant.now)
 
@@ -16,7 +16,7 @@ class RecipeTest extends FlatSpec with Matchers {
       override val potTemperature = Var[Double](10d)
     }
 
-    assert(process.isActive === true)
+    assert(process.isActive === false)
     process.step(clock)
     assert(process.isActive === false)
   }
