@@ -4,6 +4,9 @@ import java.time.{Duration, Instant}
 
 import org.scalatest.{FlatSpec, Matchers}
 import rx.core.Var
+import upickle.default._
+
+import scala.concurrent.duration._
 
 class RecipeTest extends FlatSpec with Matchers {
 
@@ -11,10 +14,9 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val clock = MockClock(Instant.now)
 
-    val process = new BrewProcess(Recipe(List())) {
-      override val heater = Var[Boolean](false)
-      override val potTemperature = Var[Double](10d)
-    }
+    val heater = Var[Boolean](false)
+    val potTemperature = Var[Double](10d)
+    val process = new BrewProcessSync(Recipe(List()), heater, potTemperature)
 
     assert(process.isActive === false)
     process.step(clock)
@@ -25,12 +27,9 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val clock = MockClock(Instant.now)
 
-    val stage = Stage(64d, Duration.ofMinutes(30))
-
-    val process = new BrewProcess(Recipe(List(stage))) {
-      override val heater = Var[Boolean](false)
-      override val potTemperature = Var[Double](10d)
-    }
+    val heater = Var[Boolean](false)
+    val potTemperature = Var[Double](10d)
+    val process = new BrewProcessSync(Recipe(List(Stage(64d, (30 minutes).toMillis))), heater, potTemperature)
 
     assert(process.isActive === true)
     process.step(clock)
@@ -43,22 +42,36 @@ class RecipeTest extends FlatSpec with Matchers {
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(10))
-    process.potTemperature() = 65d
+    potTemperature() = 65d
     process.step(clock)
     assert(process.isActive === true)
     assert(process.heater() === false)
 
     clock.add(Duration.ofMinutes(16))
-    process.potTemperature() = 63d
+    potTemperature() = 63d
     process.step(clock)
     assert(process.isActive === true)
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(16))
-    process.potTemperature() = 63d
+    potTemperature() = 63d
     process.step(clock)
     assert(process.isActive === false)
     assert(process.heater() === false)
+  }
+
+  "BrewProcess" should "serialize" in {
+
+    val heater = Var[Boolean](false)
+    val potTemperature = Var[Double](10d)
+    val process = new BrewProcessSync(Recipe(
+      Stage(64d, (30 minutes).toMillis) :: Stage(72d, (45 minutes).toMillis) :: Nil
+    ), heater, potTemperature)
+
+    val t: HeatTask = HeatTask(Stage(64d, (32 minutes).toMillis))
+    t.startTime = Some(17)
+    println(s"task: ${write(t)}")
+    println(s"process: ${process.toJs}")
   }
 
   case class MockClock(var instant: Instant) extends Clock {

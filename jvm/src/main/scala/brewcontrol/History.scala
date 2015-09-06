@@ -27,9 +27,7 @@ object History extends History {
 
   }
   object Item {
-    // def apply(t: (Long, Double)): Item = apply(t._1, t._2)
     implicit def tupleToItemInt(t: (Long, Double)): Item = Item(t._1, t._2)
-    // implicit def tupleToItemLong(t: (Long, Double)): Item = Item(t._1, t._2)
   }
 
   case class Series(name: String, kind: String, data: Queue[Item] = Queue()) {

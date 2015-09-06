@@ -1,70 +1,93 @@
 package brewcontrol
 
-import java.time.{Duration, Instant}
+import java.time.Instant
 
+import akka.actor.{Actor, Props}
 import rx.core.{Rx, Var}
+import upickle.Js
+import upickle.default._
 
 import scala.annotation.tailrec
 
 case class Recipe(stages: List[Stage])
 
-case class Stage(temperature: Double, duration: Duration)
+case class Stage(temperature: Double, durationInMillis: Double)
 
-trait Task {
+sealed trait Task {
   /** @return whether this task wants to continue */
-  def step(clock: Clock): Boolean
+  def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean
 }
 
-abstract class BrewProcess(val recipe: Recipe) {
+case class HeatTask(stage: Stage, var startTime: Option[Double] = None) extends Task {
 
-  implicit def heater: Var[Boolean]
-  implicit def potTemperature: Rx[Double]
+  override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
+    if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
+    heater() = potTemperature() < stage.temperature
+    potTemperature() < stage.temperature
+  }
+}
 
-  private var tasks: Seq[Task] = buildTaskSeq()
+case class RestTask(stage: Stage, var startTime: Option[Double] = None) extends Task {
 
-  var currentTask: Option[Task] = tasks.headOption
+  override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
+    if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
+    val timeUp = clock.now().isAfter(Instant.ofEpochMilli((startTime.get + stage.durationInMillis).asInstanceOf[Long]))
+    heater() = !timeUp && potTemperature() < stage.temperature
+    !timeUp
+  }
+}
 
-  def isActive: Boolean = tasks.nonEmpty
+/** Wraps an Actor around [[BrewProcessSync]] */
+class BrewProcessActor(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor {
+
+  import BrewProcessActor._
+
+  val impl = new BrewProcessSync(recipe, heater, potTemperature)
+
+  override def receive = {
+    case GetStateAsJson => {
+      val js: Js.Value = impl.toJs
+      sender ! js
+    }
+    case Step(clock) => impl.step(clock)
+  }
+
+}
+
+object BrewProcessActor {
+  def props(recipe: Recipe, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new BrewProcessActor(recipe, heater, potTemperature))
+  case class GetStateAsJson()
+  case class Step(var clock: Clock)
+}
+
+class BrewProcessSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) {
+
+  val allTasks: Vector[Task] = {
+    def toTasks(stage: Stage): List[Task] = List(HeatTask(stage), RestTask(stage))
+    recipe.stages.flatMap(toTasks).toVector
+  }
+  var taskIndex: Int = 0
+
+  def currentTask: Option[Task] = if (taskIndex >= allTasks.size) None else Some(allTasks(taskIndex))
+  def isActive: Boolean = taskIndex < allTasks.size
 
   @tailrec
   final def step(clock: Clock): Unit = {
-    tasks.headOption match {
+    currentTask match {
       case None =>
+      // Already done
       case Some(t) => {
-        if (!t.step(clock)) {
+        if (t.step(clock, heater, potTemperature)) {
+          // Task is not done yet
+        } else {
           // Advance and call step on next item immediately
-          tasks = tasks.tail
+          taskIndex += 1
           step(clock)
         }
       }
     }
   }
 
-  private def buildTaskSeq(): Seq[Task] = {
-    def toTasks(stage: Stage): Seq[Task] = {
-      List(HeatTask(stage), RestTask(stage))
-    }
-    recipe.stages.flatMap(toTasks)
-  }
-
-  case class HeatTask(stage: Stage) extends Task {
-    var startTime: Option[Instant] = None
-
-    override def step(clock: Clock): Boolean = {
-      if (startTime.isEmpty) startTime = Some(clock.now())
-      heater() = potTemperature() < stage.temperature
-      potTemperature() < stage.temperature
-    }
-  }
-
-  case class RestTask(stage: Stage) extends Task {
-    var startTime: Option[Instant] = None
-
-    override def step(clock: Clock): Boolean = {
-      if (startTime.isEmpty) startTime = Some(clock.now())
-      val timeUp = clock.now().isAfter(startTime.get.plus(stage.duration))
-      heater() = !timeUp && potTemperature() < stage.temperature
-      !timeUp
-    }
-  }
+  def toJs: Js.Obj =
+    Js.Obj(("tasks", writeJs(allTasks.toList)))
 }
