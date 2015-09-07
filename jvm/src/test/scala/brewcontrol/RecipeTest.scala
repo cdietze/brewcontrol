@@ -29,7 +29,7 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new MashControlSync(Recipe(List(Stage(64d, (30 minutes).toMillis))), heater, potTemperature)
+    val process = new MashControlSync(Recipe(List(HeatStep(64d), RestStep((30 minutes).toMillis))), heater, potTemperature)
 
     assert(process.isActive === true)
     process.step(clock)
@@ -64,14 +64,14 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new MashControlSync(Recipe(
-      Stage(64d, (30 minutes).toMillis) :: Stage(72d, (45 minutes).toMillis) :: Nil
-    ), heater, potTemperature)
+    val mashControl = new MashControlSync(Recipe(List(
+      HeatStep(64d), RestStep((30 minutes).toMillis), HeatStep(72d), RestStep((45 minutes).toMillis)
+    )), heater, potTemperature)
 
-    val t: HeatTask = HeatTask(Stage(64d, (32 minutes).toMillis))
+    val t: HeatTask = HeatTask(64d)
     t.startTime = Some(17)
     println(s"task: ${write(t)}")
-    println(s"process: ${process.toJs}")
+    println(s"mashControl: ${mashControl.toJs}")
   }
 
   case class MockClock(var instant: Instant) extends Clock {

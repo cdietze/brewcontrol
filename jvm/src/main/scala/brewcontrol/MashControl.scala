@@ -9,34 +9,30 @@ import upickle.default._
 
 import scala.annotation.tailrec
 
-case class Recipe(stages: List[Stage])
-
-case class Stage(temperature: Double, durationInMillis: Double)
+case class Recipe(steps: List[Step])
 
 sealed trait Step
 case class HeatStep(temperature: Double) extends Step
-case class RestStep(duration: Double) extends Step
+case class RestStep(durationInMillis: Double) extends Step
 
 sealed trait Task {
   /** @return whether this task wants to continue */
   def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean
 }
 
-case class HeatTask(stage: Stage, var startTime: Option[Double] = None) extends Task {
-
+case class HeatTask(temperature: Double, var startTime: Option[Double] = None) extends Task {
   override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
     if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
-    heater() = potTemperature() < stage.temperature
-    potTemperature() < stage.temperature
+    heater() = potTemperature() < temperature
+    potTemperature() < temperature
   }
 }
 
-case class RestTask(stage: Stage, var startTime: Option[Double] = None) extends Task {
-
+case class RestTask(temperature: Double, durationInMillis: Double, var startTime: Option[Double] = None) extends Task {
   override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
     if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
-    val timeUp = clock.now().isAfter(Instant.ofEpochMilli((startTime.get + stage.durationInMillis).asInstanceOf[Long]))
-    heater() = !timeUp && potTemperature() < stage.temperature
+    val timeUp = clock.now().isAfter(Instant.ofEpochMilli((startTime.get + durationInMillis).asInstanceOf[Long]))
+    heater() = !timeUp && potTemperature() < temperature
     !timeUp
   }
 }
@@ -67,8 +63,15 @@ object MashControlActor {
 class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) {
 
   val allTasks: Vector[Task] = {
-    def toTasks(stage: Stage): List[Task] = List(HeatTask(stage), RestTask(stage))
-    recipe.stages.flatMap(toTasks).toVector
+    var lastTemperature: Option[Double] = None
+    def toTask(step: Step): Task = step match {
+      case HeatStep(t) => {
+        lastTemperature = Some(t);
+        HeatTask(t)
+      }
+      case RestStep(d) => RestTask(lastTemperature.get, d)
+    }
+    recipe.steps.map(toTask).toVector
   }
   var taskIndex: Int = 0
 
