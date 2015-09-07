@@ -16,7 +16,7 @@ class RelayManager()(implicit gpio: Gpio) extends LazyLogging {
 
   case object Cooler extends Relay(7, "Kühlung")
   case object Heater extends Relay(8, "Heizung")
-  //  case object Relay3 extends Relay(25)
+  case object PotHeater extends Relay(25, "Kessel")
   //  case object Relay4 extends Relay(24)
 
   val relays = List(Cooler, Heater)

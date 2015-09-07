@@ -15,96 +15,103 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
-
         .relayLabel {
-            padding: 5px;
-            margin: 5px;
+        padding: 5px;
+        margin: 5px;
         }
 
         .relayLabel.active {
-            border: solid 2px #F44336;
-            background-color: #E57373;
+        border: solid 2px #F44336;
+        background-color: #E57373;
         }
 
         .relayLabel.inactive {
-            border: solid 2px #9E9E9E;
-            background-color: #E0E0E0;
+        border: solid 2px #9E9E9E;
+        background-color: #E0E0E0;
         }
 
         #chartContainer {
         }
 
         #chart {
-            width: auto;
-            overflow: hidden;
+        width: auto;
+        overflow: hidden;
         }
 
         #yAxis {
-            float: left;
-            width: 40px;
+        float: left;
+        width: 40px;
         }
 
         #legend {
-            margin: 15px;
+        margin: 15px;
         }
-
-
     </style>
 </head>
 
 <body ng-app="brewControl" layout="column">
 
-<md-toolbar>
-    <div class="md-toolbar-tools">
-        <md-button class="md-icon-button">
-            <md-icon>menu</md-icon>
-        </md-button>
 
-        <h2>
-            <span>Kühlschrank Steuerung</span>
-        </h2>
-    </div>
-</md-toolbar>
-<md-content layout="column" ng-controller="FridgeCtrl">
-    <md-whiteframe class="md-whiteframe-z2">
-        <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung freigegeben
-        </md-switch>
-        <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung freigegeben
-        </md-switch>
-    </md-whiteframe>
+<md-tabs md-dynamic-height md-border-bottom>
+    <md-tab label="Kühler">
+        <md-content layout="column" ng-controller="FridgeCtrl">
+            <md-whiteframe class="md-whiteframe-z2">
+                <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
+                    freigegeben
+                </md-switch>
+                <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
+                    freigegeben
+                </md-switch>
+            </md-whiteframe>
 
-    <md-whiteframe class="md-whiteframe-z2 md-padding">
-        <div layout="row" layout-wrap>
-            <div flex>Zieltemperatur</div>
-            <input flex="25" type="number" ng-model="data.targetTemperature">
+            <md-whiteframe class="md-whiteframe-z2 md-padding">
+                <div layout="row" layout-wrap>
+                    <div flex>Zieltemperatur</div>
+                    <input flex="25" type="number" ng-model="data.targetTemperature">
 
-            <div flex="25">°C</div>
-        </div>
-        <div layout="row">
-            <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
-        </div>
-    </md-whiteframe>
+                    <div flex="25">°C</div>
+                </div>
+                <div layout="row">
+                    <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
+                </div>
+            </md-whiteframe>
 
-    <md-whiteframe class="md-whiteframe-z2 md-padding">
-        <div ng-repeat="t in temperatures">
-            <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
-        </div>
-    </md-whiteframe>
-    <md-whiteframe class="md-whiteframe-z2 md-padding">
-        <div ng-repeat="e in relays">
-            <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
+            <md-whiteframe class="md-whiteframe-z2 md-padding">
+                <div ng-repeat="t in temperatures">
+                    <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
+                </div>
+            </md-whiteframe>
+            <md-whiteframe class="md-whiteframe-z2 md-padding">
+                <div ng-repeat="e in relays">
+                    <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
+                    </div>
+                </div>
+            </md-whiteframe>
+
+            <div ng-controller="GraphCtrl">
+                <div id="chartContainer">
+                    <div id="yAxis"></div>
+                    <div id="chart"></div>
+                    <div id="legend"></div>
+                </div>
             </div>
-        </div>
-    </md-whiteframe>
+        </md-content>
+    </md-tab>
 
-    <div ng-controller="GraphCtrl">
-        <div id="chartContainer">
-            <div id="yAxis"></div>
-            <div id="chart"></div>
-            <div id="legend"></div>
-        </div>
-    </div>
-</md-content>
+    <md-tab label="Maisch-Steuerung">
+        <md-content layout="column" ng-controller="MashCtrl">
+
+            <md-whiteframe class="md-whiteframe-z2 md-padding">
+                Rezept
+            </md-whiteframe>
+
+            <md-whiteframe class="md-whiteframe-z2 md-padding">
+                Brauvorgang
+            </md-whiteframe>
+        </md-content>
+    </md-tab>
+</md-tabs>
+
 
 <script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>

@@ -2,7 +2,7 @@ package brewcontrol
 
 import java.io.File
 
-import akka.actor.Actor
+import akka.actor.{Props, ActorRef, Actor}
 import com.typesafe.scalalogging.LazyLogging
 import rx._
 import spray.http.MediaTypes._
@@ -12,12 +12,18 @@ import upickle.default._
 class WebActor(
                 val temperatureReader: TemperatureManager,
                 val relayController: RelayManager,
-                val db: DB)
-  extends Actor with BrewHttpService with TemperatureService with RelayService with HistoryService with ConfigService {
+                val db: DB,
+                val mashActor: ActorRef)
+  extends Actor with TemperatureService with RelayService with HistoryService with ConfigService with MashService with StaticContentService {
 
   def actorRefFactory = context
 
-  def receive = runRoute(temperaturesRoute ~ relayRoute ~ historyRoute ~ configRoute ~ staticContentRoute)
+  def receive = runRoute(temperaturesRoute ~ relayRoute ~ historyRoute ~ configRoute ~ mashRoute ~ staticContentRoute)
+}
+
+object WebActor {
+  def props(temperatureReader: TemperatureManager, relayController: RelayManager, db: DB, mashActor: ActorRef): Props =
+    Props(classOf[WebActor], temperatureReader, relayController, db, mashActor)
 }
 
 object SprayUtils {
@@ -39,7 +45,7 @@ object SprayUtils {
   }
 }
 
-trait BrewHttpService extends HttpService {
+trait StaticContentService extends HttpService {
 
   val staticContentRoute: Route =
     pathSingleSlash {
@@ -107,4 +113,14 @@ trait RelayService extends HttpService with LazyLogging {
         }
       }
     }
+}
+
+trait MashService extends HttpService {
+  def mashActor: ActorRef
+
+  val mashRoute: Route = pathPrefix("mash") {
+    complete {
+      "TODO not implemented"
+    }
+  }
 }

@@ -30,6 +30,7 @@ trait TemperatureManager {
   case object Bucket extends Sensor("28-031462078cff", "Gäreimer")
   case object Cooler extends Sensor("28-0214638301ff", "Kühlschrank")
   case object Outside extends Sensor("28-011463e799ff", "Außen")
+  case object Pot extends Sensor("TODO", "Kessel")
 
   val sensors = List(Bucket, Cooler, Outside)
   def sensorName(sensorId: String): String = sensors.find(_.id == sensorId).map(_.name).getOrElse(s"Sensor($sensorId)")

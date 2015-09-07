@@ -13,6 +13,10 @@ case class Recipe(stages: List[Stage])
 
 case class Stage(temperature: Double, durationInMillis: Double)
 
+sealed trait Step
+case class HeatStep(temperature: Double) extends Step
+case class RestStep(duration: Double) extends Step
+
 sealed trait Task {
   /** @return whether this task wants to continue */
   def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean
@@ -37,12 +41,12 @@ case class RestTask(stage: Stage, var startTime: Option[Double] = None) extends 
   }
 }
 
-/** Wraps an Actor around [[BrewProcessSync]] */
-class BrewProcessActor(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor {
+/** Wraps an Actor around [[MashControlSync]] */
+class MashControlActor(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor {
 
-  import BrewProcessActor._
+  import MashControlActor._
 
-  val impl = new BrewProcessSync(recipe, heater, potTemperature)
+  val impl = new MashControlSync(recipe, heater, potTemperature)
 
   override def receive = {
     case GetStateAsJson => {
@@ -54,13 +58,13 @@ class BrewProcessActor(val recipe: Recipe, val heater: Var[Boolean], val potTemp
 
 }
 
-object BrewProcessActor {
-  def props(recipe: Recipe, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new BrewProcessActor(recipe, heater, potTemperature))
+object MashControlActor {
+  def props(recipe: Recipe, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new MashControlActor(recipe, heater, potTemperature))
   case class GetStateAsJson()
   case class Step(var clock: Clock)
 }
 
-class BrewProcessSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) {
+class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) {
 
   val allTasks: Vector[Task] = {
     def toTasks(stage: Stage): List[Task] = List(HeatTask(stage), RestTask(stage))

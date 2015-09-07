@@ -16,7 +16,7 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new BrewProcessSync(Recipe(List()), heater, potTemperature)
+    val process = new MashControlSync(Recipe(List()), heater, potTemperature)
 
     assert(process.isActive === false)
     process.step(clock)
@@ -29,7 +29,7 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new BrewProcessSync(Recipe(List(Stage(64d, (30 minutes).toMillis))), heater, potTemperature)
+    val process = new MashControlSync(Recipe(List(Stage(64d, (30 minutes).toMillis))), heater, potTemperature)
 
     assert(process.isActive === true)
     process.step(clock)
@@ -64,7 +64,7 @@ class RecipeTest extends FlatSpec with Matchers {
 
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new BrewProcessSync(Recipe(
+    val process = new MashControlSync(Recipe(
       Stage(64d, (30 minutes).toMillis) :: Stage(72d, (45 minutes).toMillis) :: Nil
     ), heater, potTemperature)
 

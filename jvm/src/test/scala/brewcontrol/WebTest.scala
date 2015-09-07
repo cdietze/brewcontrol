@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
-class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with BrewHttpService with TemperatureService with LazyLogging {
+class WebTest extends FlatSpec with Matchers with ScalatestRouteTest with StaticContentService with TemperatureService with LazyLogging {
   def actorRefFactory = system
 
   implicit val gpio = new MockGpio

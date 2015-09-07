@@ -57,6 +57,14 @@ trait AbstractBrewApp extends App with LazyLogging {
     relayController.Heater.value() = db.PropsDao.heaterEnabled() && output > temperatureTolerance
   } :: observers
 
+  val recipe : Recipe = Recipe(List(
+    Stage(61d, (10 minutes).toMillis),
+    Stage(62d, (45 minutes).toMillis),
+    Stage(71d, (30 minutes).toMillis),
+    Stage(78d, (999 minutes).toMillis)
+  ))
+  val mashControlActor = system.actorOf(MashControlActor.props(recipe, relayController.PotHeater.value, temperatureReader.Pot.temperature))
+
   startWebServer()
   logger.info("Startup complete")
   // No need to do anything else - the daemon threads are loose!
@@ -74,7 +82,7 @@ trait AbstractBrewApp extends App with LazyLogging {
   }
 
   def startWebServer() = {
-    val webActorRef: ActorRef = system.actorOf(Props(classOf[WebActor], temperatureReader, relayController, db), "webActor")
+    val webActorRef: ActorRef = system.actorOf(WebActor.props(temperatureReader, relayController, db, mashControlActor), "webActor")
     implicit val timeout = Timeout(5 seconds)
     IO(Http) ? Http.Bind(webActorRef, interface = host, port = port)
   }
