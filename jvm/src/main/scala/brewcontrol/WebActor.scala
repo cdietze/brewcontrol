@@ -2,12 +2,18 @@ package brewcontrol
 
 import java.io.File
 
-import akka.actor.{Props, ActorRef, Actor}
+import akka.actor.{Actor, ActorRef, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import rx._
 import spray.http.MediaTypes._
 import spray.routing._
+import upickle.Js
 import upickle.default._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 class WebActor(
                 val temperatureReader: TemperatureManager,
@@ -51,8 +57,7 @@ trait StaticContentService extends HttpService {
     pathSingleSlash {
       println(". is: " + new File(".").getAbsolutePath)
       getFromResource("ng/index.html")
-    } ~
-      getFromResourceDirectory("ng/")
+    } ~ getFromResourceDirectory("ng/")
 }
 
 trait ConfigService extends HttpService with LazyLogging {
@@ -62,13 +67,11 @@ trait ConfigService extends HttpService with LazyLogging {
   val configRoute: Route =
     path("targetTemperature") {
       SprayUtils.modifiableVar(db.PropsDao.targetTemperature)
-    } ~
-      path("heaterEnabled") {
-        SprayUtils.modifiableVar(db.PropsDao.heaterEnabled)
-      } ~
-      path("coolerEnabled") {
-        SprayUtils.modifiableVar(db.PropsDao.coolerEnabled)
-      }
+    } ~ path("heaterEnabled") {
+      SprayUtils.modifiableVar(db.PropsDao.heaterEnabled)
+    } ~ path("coolerEnabled") {
+      SprayUtils.modifiableVar(db.PropsDao.coolerEnabled)
+    }
 }
 
 trait HistoryService extends HttpService with LazyLogging {
@@ -118,9 +121,22 @@ trait RelayService extends HttpService with LazyLogging {
 trait MashService extends HttpService {
   def mashActor: ActorRef
 
-  val mashRoute: Route = pathPrefix("mash") {
-    complete {
-      "TODO not implemented"
+  val mashRoute: Route =
+    pathPrefix("mash") {
+      path("recipe") {
+        ctx => {
+          implicit val timeout = Timeout(2 seconds)
+          (mashActor ? MashControlActor.GetRecipe).mapTo[Recipe].map(recipe =>
+            ctx.complete(write(recipe))
+          )
+        }
+      } ~ path("state") {
+        ctx => {
+          implicit val timeout = Timeout(2 seconds)
+          (mashActor ? MashControlActor.GetStateAsJson).mapTo[Js.Value].map(json =>
+            ctx.complete(upickle.json.write(json))
+          )
+        }
+      }
     }
-  }
 }

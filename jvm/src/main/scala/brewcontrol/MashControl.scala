@@ -45,6 +45,7 @@ class MashControlActor(val recipe: Recipe, val heater: Var[Boolean], val potTemp
   val impl = new MashControlSync(recipe, heater, potTemperature)
 
   override def receive = {
+    case GetRecipe => sender ! recipe
     case GetStateAsJson => {
       val js: Js.Value = impl.toJs
       sender ! js
@@ -56,7 +57,8 @@ class MashControlActor(val recipe: Recipe, val heater: Var[Boolean], val potTemp
 
 object MashControlActor {
   def props(recipe: Recipe, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new MashControlActor(recipe, heater, potTemperature))
-  case class GetStateAsJson()
+  case object GetStateAsJson
+  case object GetRecipe
   case class Step(var clock: Clock)
 }
 
@@ -96,5 +98,8 @@ class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTempe
   }
 
   def toJs: Js.Obj =
-    Js.Obj(("tasks", writeJs(allTasks.toList)))
+    Js.Obj(
+      "tasks" -> writeJs(allTasks.toList),
+      "currentTaskIndex" -> writeJs(taskIndex)
+    )
 }
