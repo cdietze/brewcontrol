@@ -3,11 +3,14 @@ package brewcontrol
 import java.time.Instant
 
 import akka.actor.{Actor, Props}
+import com.typesafe.scalalogging.LazyLogging
 import rx.core.{Rx, Var}
 import upickle.Js
 import upickle.default._
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 case class Recipe(steps: List[Step])
 
@@ -38,10 +41,11 @@ case class RestTask(temperature: Double, durationInMillis: Double, var startTime
 }
 
 /** Wraps an Actor around [[MashControlSync]] */
-class MashControlActor(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor {
+class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor with LazyLogging {
 
   import MashControlActor._
 
+  var running = false
   val impl = new MashControlSync(recipe, heater, potTemperature)
 
   override def receive = {
@@ -50,19 +54,34 @@ class MashControlActor(val recipe: Recipe, val heater: Var[Boolean], val potTemp
       val js: Js.Value = impl.toJs
       sender ! js
     }
-    case Step(clock) => impl.step(clock)
+    case Start => if (running) {
+      logger.warn("Trying to start, but already running")
+    } else {
+      logger.info("Starting")
+      running = true
+      self ! Step
+    }
+    case Step => {
+      if (running) {
+        impl.step(clock)
+        context.system.scheduler.scheduleOnce(5 seconds) {
+          self ! Step
+        }
+      }
+    }
   }
 
 }
 
 object MashControlActor {
-  def props(recipe: Recipe, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new MashControlActor(recipe, heater, potTemperature))
+  def props(recipe: Recipe, clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Props = Props(new MashControlActor(recipe, clock, heater, potTemperature))
   case object GetStateAsJson
   case object GetRecipe
-  case class Step(var clock: Clock)
+  case object Start
+  case object Step
 }
 
-class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) {
+class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends LazyLogging {
 
   val allTasks: Vector[Task] = {
     var lastTemperature: Option[Double] = None
@@ -82,6 +101,7 @@ class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTempe
 
   @tailrec
   final def step(clock: Clock): Unit = {
+    logger.debug(s"Stepping, currentTask: $currentTask, clock: $clock")
     currentTask match {
       case None =>
       // Already done

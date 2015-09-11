@@ -7,6 +7,7 @@ angular
             .accentPalette('red');
 
     });
+
 angular
     .module('brewControl')
     .controller('FridgeCtrl', function ($scope, $http) {
@@ -91,6 +92,18 @@ angular
                 graph: graph
             });
         });
-
     });
 
+angular
+    .module('brewControl')
+    .controller('MashCtrl', function ($scope, $http) {
+        $http.get('/mash/recipe').then(function(response) {
+           $scope.recipe = response.data;
+        });
+        $http.get('/mash/state').then(function(response) {
+            $scope.state = response.data;
+        });
+        $scope.start = function() {
+            $http.post('/mash/start');
+        }
+    });

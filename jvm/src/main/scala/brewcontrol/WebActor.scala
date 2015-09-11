@@ -137,6 +137,13 @@ trait MashService extends HttpService {
             ctx.complete(upickle.json.write(json))
           )
         }
+      } ~path("start") {
+        post {
+          complete {
+            mashActor ! MashControlActor.Start
+            "Starting"
+          }
+        }
       }
     }
 }

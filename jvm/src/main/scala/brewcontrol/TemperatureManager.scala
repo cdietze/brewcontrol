@@ -23,16 +23,16 @@ trait TemperatureManager {
   sealed abstract class Sensor(val id: String,
                                val name: String) {
     lazy val temperature: Rx[Double] = Rx {
-      currentReadings().find(_.sensorId == id).get.value
+      currentReadings().find(_.sensorId == id).getOrElse(throw new RuntimeException(s"No reading found for $id - $name") ).value
     }
   }
 
   case object Bucket extends Sensor("28-031462078cff", "Gäreimer")
   case object Cooler extends Sensor("28-0214638301ff", "Kühlschrank")
   case object Outside extends Sensor("28-011463e799ff", "Außen")
-  case object Pot extends Sensor("TODO", "Kessel")
+  case object Pot extends Sensor("28-02146345f4ff", "Kessel")
 
-  val sensors = List(Bucket, Cooler, Outside)
+  val sensors = List(Bucket, Cooler, Outside, Pot)
   def sensorName(sensorId: String): String = sensors.find(_.id == sensorId).map(_.name).getOrElse(s"Sensor($sensorId)")
 }
 

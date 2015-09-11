@@ -66,7 +66,7 @@ trait AbstractBrewApp extends App with LazyLogging {
     RestStep((30 minutes).toMillis),
     HeatStep(78d)
   ))
-  val mashControlActor = system.actorOf(MashControlActor.props(recipe, relayController.PotHeater.value, temperatureReader.Pot.temperature))
+  val mashControlActor = system.actorOf(MashControlActor.props(recipe, clock, relayController.PotHeater.value, temperatureReader.Pot.temperature))
 
   startWebServer()
   logger.info("Startup complete")
