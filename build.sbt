@@ -4,7 +4,7 @@ lazy val jvm = (project in file("jvm"))
   .settings(Revolver.enableDebugging(port = 5050, suspend = false))
   .settings(
     name := "brewcontrol",
-    version := "0.2-SNAPSHOT",
+    version := "0.3-SNAPSHOT",
     scalaVersion := "2.11.7",
     scalacOptions += "-target:jvm-1.8",
     libraryDependencies ++= {
