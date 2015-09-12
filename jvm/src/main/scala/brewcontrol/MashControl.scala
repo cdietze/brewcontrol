@@ -72,9 +72,6 @@ class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boo
     }
     case Step => {
       impl.step()
-      context.system.scheduler.scheduleOnce(5 seconds) {
-        self ! Step
-      }
     }
     case Skip => {
       impl.skip()
@@ -85,6 +82,7 @@ class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boo
       logger.info(s"Resetting")
       cancellable.foreach(_.cancel())
       cancellable = None
+      heater() = false
       impl = new MashControlSync(recipe, clock, heater, potTemperature)
     }
   }
