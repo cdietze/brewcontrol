@@ -10,52 +10,34 @@ import scala.concurrent.duration._
 
 class RecipeTest extends FlatSpec with Matchers {
 
-  "Empty recipe" should "be inactive and do nothing" in {
-
-    val clock = MockClock(Instant.now)
-    val heater = Var[Boolean](false)
-    val potTemperature = Var[Double](10d)
-    val process = new MashControlSync(Recipe(List()), clock, heater, potTemperature)
-
-    assert(process.isActive === false)
-    process.step()
-    assert(process.isActive === false)
-  }
-
   "Recipe with single stage" should "heat up and rest accordingly" in {
 
     val clock = MockClock(Instant.now)
     val heater = Var[Boolean](false)
     val potTemperature = Var[Double](10d)
-    val process = new MashControlSync(Recipe(List(HeatStep(64d), RestStep((30 minutes).toMillis))), clock, heater, potTemperature)
+    val process = new MashControlSync(Recipe(List(HeatStep(64d), RestStep((30 minutes).toMillis), HoldStep)), clock, heater, potTemperature)
 
-    assert(process.isActive === true)
     process.step()
-    assert(process.isActive === true)
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(10))
     process.step()
-    assert(process.isActive === true)
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(10))
     potTemperature() = 65d
     process.step()
-    assert(process.isActive === true)
     assert(process.heater() === false)
 
     clock.add(Duration.ofMinutes(16))
     potTemperature() = 63d
     process.step()
-    assert(process.isActive === true)
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(16))
     potTemperature() = 63d
     process.step()
-    assert(process.isActive === false)
-    assert(process.heater() === false)
+    assert(process.heater() === true)
   }
 
   "BrewProcess" should "serialize" in {

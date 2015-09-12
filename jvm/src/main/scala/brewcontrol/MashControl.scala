@@ -76,7 +76,7 @@ class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boo
     case Skip => {
       impl.skip()
       // When running, step immediately to start the next task
-      if(cancellable.isDefined) impl.step()
+      if (cancellable.isDefined) impl.step()
     }
     case Reset => {
       logger.info(s"Resetting")
@@ -101,6 +101,7 @@ object MashControlActor {
 }
 
 class MashControlSync(val recipe: Recipe, val clock: Clock, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends LazyLogging {
+  require(!recipe.steps.isEmpty)
 
   val allTasks: Vector[Task] = {
     var lastTemperature: Option[Double] = None
@@ -116,31 +117,29 @@ class MashControlSync(val recipe: Recipe, val clock: Clock, val heater: Var[Bool
   }
   var taskIndex: Int = 0
 
-  def currentTask: Option[Task] = if (taskIndex >= allTasks.size) None else Some(allTasks(taskIndex))
-  def isActive: Boolean = taskIndex < allTasks.size
+  def currentTask: Task = allTasks(taskIndex)
 
   @tailrec
   final def step(): Unit = {
     logger.debug(s"Stepping, currentTask: $currentTask, clock: $clock")
-    currentTask match {
-      case None =>
-      // Already done
-      case Some(t) => {
-        if (t.step(clock, heater, potTemperature)) {
-          // Task is not done yet
-        } else {
-          // Advance and call step on next item immediately
-          taskIndex += 1
-          step()
-        }
-      }
+    if (currentTask.step(clock, heater, potTemperature)) {
+      // Task is not done yet
+    } else {
+      // Advance and call step on next item immediately
+      logger.debug(s"Task $currentTask is done, moving to next task: ${allTasks(taskIndex + 1)}")
+      taskIndex += 1
+      step()
     }
   }
 
   /** Skips over the current task. */
   def skip(): Unit = {
-    logger.info(s"Skipping, currentTask: $currentTask")
-    taskIndex += 1
+    if (taskIndex + 1 >= allTasks.size) {
+      logger.info(s"Cannot skip beyond last task, currentTask: $currentTask")
+    } else {
+      logger.info(s"Skipping, old task: $currentTask, new task: ${allTasks(taskIndex + 1)}")
+      taskIndex += 1
+    }
   }
 
   def toJs: Js.Obj =
