@@ -56,79 +56,75 @@
 
 <body ng-app="brewControl" layout="column">
 
+<div ng-controller="FridgeCtrl" class="FridgeCtrl">
+    <md-content layout="column">
+        <md-whiteframe class="md-whiteframe-z2">
+            <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
+                freigegeben
+            </md-switch>
+            <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
+                freigegeben
+            </md-switch>
+        </md-whiteframe>
 
-<md-tabs md-dynamic-height md-border-bottom>
-    <md-tab label="Kühler" class="FridgeCtrl">
-        <md-content layout="column" ng-controller="FridgeCtrl">
-            <md-whiteframe class="md-whiteframe-z2">
-                <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
-                    freigegeben
-                </md-switch>
-                <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
-                    freigegeben
-                </md-switch>
-            </md-whiteframe>
+        <md-whiteframe class="md-whiteframe-z2 md-padding">
+            <div layout="row" layout-wrap>
+                <div flex>Zieltemperatur</div>
+                <input flex="25" type="number" ng-model="data.targetTemperature">
 
-            <md-whiteframe class="md-whiteframe-z2 md-padding">
-                <div layout="row" layout-wrap>
-                    <div flex>Zieltemperatur</div>
-                    <input flex="25" type="number" ng-model="data.targetTemperature">
+                <div flex="25">°C</div>
+            </div>
+            <div layout="row">
+                <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
+            </div>
+        </md-whiteframe>
 
-                    <div flex="25">°C</div>
-                </div>
-                <div layout="row">
-                    <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
-                </div>
-            </md-whiteframe>
-
-            <md-whiteframe class="md-whiteframe-z2 md-padding">
-                <div ng-repeat="t in temperatures">
-                    <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
-                </div>
-            </md-whiteframe>
-            <md-whiteframe class="md-whiteframe-z2 md-padding">
-                <div ng-repeat="e in relays">
-                    <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
-                    </div>
-                </div>
-            </md-whiteframe>
-
-            <div ng-controller="GraphCtrl">
-                <div id="chartContainer">
-                    <div id="yAxis"></div>
-                    <div id="chart"></div>
-                    <div id="legend"></div>
+        <md-whiteframe class="md-whiteframe-z2 md-padding">
+            <div ng-repeat="t in temperatures">
+                <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
+            </div>
+        </md-whiteframe>
+        <md-whiteframe class="md-whiteframe-z2 md-padding">
+            <div ng-repeat="e in relays">
+                <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
                 </div>
             </div>
-        </md-content>
-    </md-tab>
+        </md-whiteframe>
 
-    <md-tab label="Maische-Steuerung">
-        <md-content layout="column" ng-controller="MashCtrl" class="MashCtrl">
+    </md-content>
+</div>
 
-            <md-whiteframe class="md-whiteframe-z2 md-padding">
-                <div>Brauvorgang</div>
-                <div ng-repeat="task in state.tasks">
-                    <div ng-class="{'selected' : $index === state.currentTaskIndex}">
+<div ng-controller="MashCtrl" class="MashCtrl">
+    <md-content layout="column">
+        <md-whiteframe class="md-whiteframe-z2 md-padding">
+            <div>Brauvorgang</div>
+            <div ng-repeat="task in state.tasks">
+                <div ng-class="{'selected' : $index === state.currentTaskIndex}">
                     <span ng-switch="task.$type">
                         <span ng-switch-when="brewcontrol.HeatTask">{{ $index+1 }}. Heizen auf {{ task.temperature }}°C</span>
                         <span ng-switch-when="brewcontrol.RestTask">{{ $index+1 }}. Rasten für {{ (task.durationInMillis / 1000 / 60) | number }} Minuten</span>
                         <span ng-switch-when="brewcontrol.HoldTask">{{ $index+1 }}. Halten bis Überspringen {{ task.temperature }}°C</span>
                         <span ng-switch-default>Unbekannter Typ: {{ task.$type }}</span>
                     </span>
-                        <span ng-if="task.startTime[0]">(Gestartet um {{ task.startTime[0] | date : 'mediumTime'}})</span>
-                    </div>
+                    <span ng-if="task.startTime[0]">(Gestartet um {{ task.startTime[0] | date : 'mediumTime'}})</span>
                 </div>
-            </md-whiteframe>
+            </div>
             <section layout="row" layout-sm="column" layout-align="center center" layout-wrap>
                 <md-button class="md-raised" ng-click="start()">Start</md-button>
                 <md-button class="md-raised" ng-click="skip()">Schritt überspringen</md-button>
                 <md-button class="md-raised" ng-click="reset()">Zurücksetzen</md-button>
             </section>
-        </md-content>
-    </md-tab>
-</md-tabs>
+        </md-whiteframe>
+    </md-content>
+</div>
 
+<div ng-controller="GraphCtrl" class="GraphCtrl">
+    <div id="chartContainer">
+        <div id="yAxis"></div>
+        <div id="chart"></div>
+        <div id="legend"></div>
+    </div>
+</div>
 
 <script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>

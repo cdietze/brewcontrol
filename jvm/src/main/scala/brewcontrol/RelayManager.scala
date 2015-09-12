@@ -19,7 +19,7 @@ class RelayManager()(implicit gpio: Gpio) extends LazyLogging {
   case object PotHeater extends Relay(25, "Kessel")
   //  case object Relay4 extends Relay(24)
 
-  val relays = List(Cooler, Heater)
+  val relays = List(Cooler, Heater, PotHeater)
 
   val relayMap: Map[String, Relay] = Map("Kühlung" -> Cooler, "Heizung" -> Heater)
 
