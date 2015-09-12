@@ -2,7 +2,7 @@ package brewcontrol
 
 import java.time.Instant
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, Cancellable, Props}
 import com.typesafe.scalalogging.LazyLogging
 import rx.core.{Rx, Var}
 import upickle.Js
@@ -17,6 +17,7 @@ case class Recipe(steps: List[Step])
 sealed trait Step
 case class HeatStep(temperature: Double) extends Step
 case class RestStep(durationInMillis: Double) extends Step
+case object HoldStep extends Step
 
 sealed trait Task {
   /** @return whether this task wants to continue */
@@ -40,13 +41,21 @@ case class RestTask(temperature: Double, durationInMillis: Double, var startTime
   }
 }
 
+case class HoldTask(temperature: Double, var startTime: Option[Double] = None) extends Task {
+  override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
+    if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
+    heater() = potTemperature() < temperature
+    true
+  }
+}
+
 /** Wraps an Actor around [[MashControlSync]] */
 class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends Actor with LazyLogging {
 
   import MashControlActor._
 
-  var running = false
-  val impl = new MashControlSync(recipe, heater, potTemperature)
+  var cancellable: Option[Cancellable] = None
+  var impl = new MashControlSync(recipe, clock, heater, potTemperature)
 
   override def receive = {
     case GetRecipe => sender ! recipe
@@ -54,23 +63,33 @@ class MashControlActor(val recipe: Recipe, val clock: Clock, val heater: Var[Boo
       val js: Js.Value = impl.toJs
       sender ! js
     }
-    case Start => if (running) {
-      logger.warn("Trying to start, but already running")
-    } else {
-      logger.info("Starting")
-      running = true
-      self ! Step
+    case Start => cancellable match {
+      case Some(c) => logger.warn("Trying to start, but already running")
+      case None => {
+        logger.info("Starting")
+        cancellable = Some(context.system.scheduler.schedule(0 seconds, 5 seconds, self, Step))
+      }
     }
     case Step => {
-      if (running) {
-        impl.step(clock)
-        context.system.scheduler.scheduleOnce(5 seconds) {
-          self ! Step
-        }
+      impl.step()
+      context.system.scheduler.scheduleOnce(5 seconds) {
+        self ! Step
       }
+    }
+    case Skip => {
+      impl.skip()
+      // When running, step immediately to start the next task
+      if(cancellable.isDefined) impl.step()
+    }
+    case Reset => {
+      logger.info(s"Resetting")
+      cancellable.foreach(_.cancel())
+      cancellable = None
+      impl = new MashControlSync(recipe, clock, heater, potTemperature)
     }
   }
 
+  override def postStop() = cancellable.foreach(_.cancel())
 }
 
 object MashControlActor {
@@ -79,18 +98,21 @@ object MashControlActor {
   case object GetRecipe
   case object Start
   case object Step
+  case object Skip
+  case object Reset
 }
 
-class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends LazyLogging {
+class MashControlSync(val recipe: Recipe, val clock: Clock, val heater: Var[Boolean], val potTemperature: Rx[Double]) extends LazyLogging {
 
   val allTasks: Vector[Task] = {
     var lastTemperature: Option[Double] = None
     def toTask(step: Step): Task = step match {
       case HeatStep(t) => {
-        lastTemperature = Some(t);
+        lastTemperature = Some(t)
         HeatTask(t)
       }
       case RestStep(d) => RestTask(lastTemperature.get, d)
+      case HoldStep => HoldTask(lastTemperature.get)
     }
     recipe.steps.map(toTask).toVector
   }
@@ -100,7 +122,7 @@ class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTempe
   def isActive: Boolean = taskIndex < allTasks.size
 
   @tailrec
-  final def step(clock: Clock): Unit = {
+  final def step(): Unit = {
     logger.debug(s"Stepping, currentTask: $currentTask, clock: $clock")
     currentTask match {
       case None =>
@@ -111,10 +133,16 @@ class MashControlSync(val recipe: Recipe, val heater: Var[Boolean], val potTempe
         } else {
           // Advance and call step on next item immediately
           taskIndex += 1
-          step(clock)
+          step()
         }
       }
     }
+  }
+
+  /** Skips over the current task. */
+  def skip(): Unit = {
+    logger.info(s"Skipping, currentTask: $currentTask")
+    taskIndex += 1
   }
 
   def toJs: Js.Obj =

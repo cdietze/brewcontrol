@@ -46,6 +46,11 @@
         #legend {
             margin: 15px;
         }
+
+        .MashCtrl .selected {
+            background-color: #E57373;
+            padding: 6px 0;
+        }
     </style>
 </head>
 
@@ -53,7 +58,7 @@
 
 
 <md-tabs md-dynamic-height md-border-bottom>
-    <md-tab label="Kühler">
+    <md-tab label="Kühler" class="FridgeCtrl">
         <md-content layout="column" ng-controller="FridgeCtrl">
             <md-whiteframe class="md-whiteframe-z2">
                 <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
@@ -98,37 +103,27 @@
         </md-content>
     </md-tab>
 
-    <md-tab label="Maisch-Steuerung">
-        <md-content layout="column" ng-controller="MashCtrl">
-
-            <md-whiteframe class="md-whiteframe-z2 md-padding">
-                <div class="label">Rezept</div>
-                <div ng-repeat="step in recipe.steps">
-                    <div ng-switch="step.$type">
-                        <div ng-switch-when="brewcontrol.HeatStep">{{ $index+1 }}. Heizen auf {{ step.temperature }}°C
-                        </div>
-                        <div ng-switch-when="brewcontrol.RestStep">{{ $index+1 }}. Rasten für {{ (step.durationInMillis
-                            / 1000 / 60) | number }} Minuten
-                        </div>
-                        <div ng-switch-default>Unbekannter Schritt-Typ: {{ recipe.$type }}</div>
-                    </div>
-                </div>
-            </md-whiteframe>
+    <md-tab label="Maische-Steuerung">
+        <md-content layout="column" ng-controller="MashCtrl" class="MashCtrl">
 
             <md-whiteframe class="md-whiteframe-z2 md-padding">
                 <div>Brauvorgang</div>
-                <div>Aktueller Schritt: {{ state.currentTaskIndex+1 }}</div>
                 <div ng-repeat="task in state.tasks">
+                    <div ng-class="{'selected' : $index === state.currentTaskIndex}">
                     <span ng-switch="task.$type">
                         <span ng-switch-when="brewcontrol.HeatTask">{{ $index+1 }}. Heizen auf {{ task.temperature }}°C</span>
                         <span ng-switch-when="brewcontrol.RestTask">{{ $index+1 }}. Rasten für {{ (task.durationInMillis / 1000 / 60) | number }} Minuten</span>
+                        <span ng-switch-when="brewcontrol.HoldTask">{{ $index+1 }}. Halten bis Überspringen {{ task.temperature }}°C</span>
                         <span ng-switch-default>Unbekannter Typ: {{ task.$type }}</span>
                     </span>
-                    <span ng-if="task.startTime[0]">(Gestartet um {{ task.startTime[0] | date : 'mediumTime'}})</span>
+                        <span ng-if="task.startTime[0]">(Gestartet um {{ task.startTime[0] | date : 'mediumTime'}})</span>
+                    </div>
                 </div>
             </md-whiteframe>
             <section layout="row" layout-sm="column" layout-align="center center" layout-wrap>
                 <md-button class="md-raised" ng-click="start()">Start</md-button>
+                <md-button class="md-raised" ng-click="skip()">Schritt überspringen</md-button>
+                <md-button class="md-raised" ng-click="reset()">Zurücksetzen</md-button>
             </section>
         </md-content>
     </md-tab>

@@ -96,14 +96,40 @@ angular
 
 angular
     .module('brewControl')
-    .controller('MashCtrl', function ($scope, $http) {
-        $http.get('/mash/recipe').then(function(response) {
-           $scope.recipe = response.data;
+    .controller('MashCtrl', function ($scope, $http, $timeout) {
+
+        var currentStateUpdate = undefined;
+        var updateState = function () {
+            if (currentStateUpdate) {
+                $timeout.cancel(currentStateUpdate);
+            }
+            $http.get('/mash/state').then(function (response) {
+                $scope.state = response.data;
+                currentStateUpdate = $timeout(updateState, 5000);
+            });
+        };
+
+        $scope.start = function () {
+            $http.post('/mash/start').then(function() {
+                updateState();
+            });
+        };
+        $scope.skip = function () {
+            $http.post('/mash/skip').then(function() {
+                updateState();
+            });
+        };
+        $scope.reset = function () {
+            $http.post('/mash/reset').then(function() {
+                updateState();
+            });
+        };
+
+
+        $scope.$on('$destroy', function () {
+            if (currentStateUpdate) {
+                $timeout.cancel(currentStateUpdate);
+            }
         });
-        $http.get('/mash/state').then(function(response) {
-            $scope.state = response.data;
-        });
-        $scope.start = function() {
-            $http.post('/mash/start');
-        }
+        updateState();
     });

@@ -59,6 +59,7 @@ trait AbstractBrewApp extends App with LazyLogging {
 
   val recipe: Recipe = Recipe(List(
     HeatStep(61d),
+    HoldStep,
     RestStep((10 minutes).toMillis),
     HeatStep(62d),
     RestStep((45 minutes).toMillis),
