@@ -100,13 +100,15 @@
             <div>Brauvorgang</div>
             <div ng-repeat="task in state.tasks">
                 <div ng-class="{'selected' : $index === state.currentTaskIndex}">
+                    <span>{{ $index+1 }}. </span>
+                    <span ng-if="task.startTime[0]">{{ task.startTime[0] | date : 'mediumTime'}} </span>
                     <span ng-switch="task.$type">
-                        <span ng-switch-when="brewcontrol.HeatTask">{{ $index+1 }}. Heizen auf {{ task.temperature }}°C</span>
-                        <span ng-switch-when="brewcontrol.RestTask">{{ $index+1 }}. Rasten für {{ (task.durationInMillis / 1000 / 60) | number }} Minuten</span>
-                        <span ng-switch-when="brewcontrol.HoldTask">{{ $index+1 }}. Halten bis Überspringen {{ task.temperature }}°C</span>
+                        <span ng-switch-when="brewcontrol.HeatTask">Heizen auf {{ task.temperature }}°C</span>
+                        <span ng-switch-when="brewcontrol.RestTask">Rasten für {{ (task.durationInMillis / 1000 / 60) | number }} Minuten</span>
+                        <span ng-switch-when="brewcontrol.HoldTask">Halten auf {{ task.temperature }}°C bis Überspringen</span>
                         <span ng-switch-default>Unbekannter Typ: {{ task.$type }}</span>
                     </span>
-                    <span ng-if="task.startTime[0]">(Gestartet um {{ task.startTime[0] | date : 'mediumTime'}})</span>
+                    <span>{{ tryPrintTaskEndTime(task) }}</span>
                 </div>
             </div>
             <section layout="row" layout-sm="column" layout-align="center center" layout-wrap>

@@ -125,13 +125,20 @@
 
     angular
         .module('brewControl')
-        .controller('MashCtrl', function ($scope, $http, $timeout) {
+        .controller('MashCtrl', function ($scope, $http, $timeout, $filter) {
 
             var updateState = pollFactory($scope, $timeout, function () {
                 return $http.get('/mash/state').then(function (response) {
                     $scope.state = response.data;
                 });
             });
+
+            $scope.tryPrintTaskEndTime = function(task) {
+                if(task.startTime && task.startTime[0] && task.durationInMillis) {
+                    return " (bis " + $filter('date')(task.startTime[0]  + task.durationInMillis, 'mediumTime')+")";
+                }
+                return "";
+            }
 
             $scope.start = function () {
                 $http.post('/mash/start').then(function () {
