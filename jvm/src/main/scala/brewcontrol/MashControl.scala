@@ -20,6 +20,8 @@ case class RestStep(durationInMillis: Double) extends Step
 case object HoldStep extends Step
 
 sealed trait Task {
+  /** Cheap way to compensate against overshooting */
+  val temperatureTolerance = 1d
   /** @return whether this task wants to continue */
   def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean
 }
@@ -27,7 +29,7 @@ sealed trait Task {
 case class HeatTask(temperature: Double, var startTime: Option[Double] = None) extends Task {
   override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
     if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
-    heater() = potTemperature() < temperature
+    heater() = potTemperature() < temperature - temperatureTolerance
     potTemperature() < temperature
   }
 }
@@ -36,7 +38,7 @@ case class RestTask(temperature: Double, durationInMillis: Double, var startTime
   override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
     if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
     val timeUp = clock.now().isAfter(Instant.ofEpochMilli((startTime.get + durationInMillis).asInstanceOf[Long]))
-    heater() = !timeUp && potTemperature() < temperature
+    heater() = !timeUp && potTemperature() < temperature - temperatureTolerance
     !timeUp
   }
 }
@@ -44,7 +46,7 @@ case class RestTask(temperature: Double, durationInMillis: Double, var startTime
 case class HoldTask(temperature: Double, var startTime: Option[Double] = None) extends Task {
   override def step(clock: Clock, heater: Var[Boolean], potTemperature: Rx[Double]): Boolean = {
     if (startTime.isEmpty) startTime = Some(clock.now().toEpochMilli)
-    heater() = potTemperature() < temperature
+    heater() = potTemperature() < temperature - temperatureTolerance
     true
   }
 }
