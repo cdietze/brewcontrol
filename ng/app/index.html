@@ -50,6 +50,7 @@
         .MashCtrl .task {
             padding: 0 6px;
         }
+
         .MashCtrl .task.selected {
             padding: 6px;
             background-color: #E57373;
@@ -62,28 +63,6 @@
 
 <div ng-controller="FridgeCtrl" class="FridgeCtrl">
     <md-content layout="column">
-        <md-whiteframe class="md-whiteframe-z2">
-            <div layout="column" layout-align="center center">
-                <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
-                    freigegeben
-                </md-switch>
-                <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
-                    freigegeben
-                </md-switch>
-            </div>
-        </md-whiteframe>
-
-        <md-whiteframe class="md-whiteframe-z2 md-padding">
-            <div layout="row" layout-align="space-around center">
-                <div>Zieltemperatur {{ data.targetTemperature }}°C</div>
-                <md-button class="md-raised"
-                           ng-click="data.showEditTargetTemperature = !data.showEditTargetTemperature">Ändern
-                </md-button>
-            </div>
-            <div layout="row" ng-show="data.showEditTargetTemperature">
-                <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
-            </div>
-        </md-whiteframe>
 
         <md-whiteframe class="md-whiteframe-z2 md-padding">
             <div layout="column" layout-align="center center">
@@ -104,6 +83,25 @@
             </div>
         </md-whiteframe>
 
+        <md-whiteframe class="md-whiteframe-z2">
+            <div layout="row" layout-align="space-around center">
+                <div>Zieltemperatur {{ data.targetTemperature }}°C</div>
+                <md-button class="md-raised"
+                           ng-click="data.showEditTargetTemperature = !data.showEditTargetTemperature">Ändern
+                </md-button>
+            </div>
+            <div layout="row" ng-show="data.showEditTargetTemperature">
+                <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
+            </div>
+            <div layout="column" layout-align="center center">
+                <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
+                    freigegeben
+                </md-switch>
+                <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
+                    freigegeben
+                </md-switch>
+            </div>
+        </md-whiteframe>
     </md-content>
 </div>
 
