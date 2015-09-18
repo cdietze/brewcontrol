@@ -31,7 +31,9 @@
     angular
         .module('brewControl')
         .controller('FridgeCtrl', function ($scope, $http, $timeout) {
-            $scope.data = {}
+            $scope.data = {
+                showEditTargetTemperature: false
+            }
 
             _.each(['coolerEnabled', 'heaterEnabled', 'targetTemperature'], function (e) {
                 var url = "/" + e;
