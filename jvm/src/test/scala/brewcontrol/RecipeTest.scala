@@ -24,18 +24,20 @@ class RecipeTest extends FlatSpec with Matchers {
     process.step()
     assert(process.heater() === true)
 
+    // finish heat task
     clock.add(Duration.ofMinutes(10))
     potTemperature() = 65d
     process.step()
     assert(process.heater() === false)
 
+    // rest task is active
     clock.add(Duration.ofMinutes(16))
-    potTemperature() = 63d
+    potTemperature() = 61d
     process.step()
     assert(process.heater() === true)
 
     clock.add(Duration.ofMinutes(16))
-    potTemperature() = 63d
+    potTemperature() = 61d
     process.step()
     assert(process.heater() === true)
   }
