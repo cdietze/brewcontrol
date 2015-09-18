@@ -55,7 +55,6 @@ trait StaticContentService extends HttpService {
 
   val staticContentRoute: Route =
     pathSingleSlash {
-      println(". is: " + new File(".").getAbsolutePath)
       getFromResource("ng/index.html")
     } ~ getFromResourceDirectory("ng/")
 }
