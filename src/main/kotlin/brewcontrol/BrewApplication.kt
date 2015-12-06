@@ -18,16 +18,6 @@ class BrewConfiguration : Configuration()
 class BrewApplication : Application<BrewConfiguration>() {
     override fun run(configuration: BrewConfiguration?, environment: Environment?) {
         println("Hi from BrewApplication")
-        checkNotNull(environment).jersey().register(RelayResource::class.java)
-    }
-}
-
-@Path("/relays")
-@Produces(MediaType.APPLICATION_JSON)
-class RelayResource {
-
-    @GET
-    fun hi(): String {
-        return "Hi from relays"
+        checkNotNull(environment).jersey().register(WebResource::class.java)
     }
 }
