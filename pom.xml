@@ -10,7 +10,7 @@
 
   <properties>
     <kotlin.version>1.0.0-beta-3594</kotlin.version>
-    <dropwizard.version>0.8.2</dropwizard.version>
+    <dropwizard.version>0.9.1</dropwizard.version>
   </properties>
 
   <dependencies>
