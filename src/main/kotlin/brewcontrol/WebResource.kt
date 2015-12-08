@@ -7,10 +7,13 @@ import javax.ws.rs.core.MediaType
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
-class WebResource {
+class WebResource(val temperatureSystem: TemperatureSystem) {
 
     @GET
-    fun hi(): String {
-        return "Hi from Brewcontrol"
+    fun hi(): Map<String, Double>? {
+        val t = UpdateThread.executor.run {
+            return temperatureSystem.temperatures.get()
+        }
+        return t
     }
 }
