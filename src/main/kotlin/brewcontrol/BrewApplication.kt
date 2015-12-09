@@ -1,5 +1,6 @@
 package brewcontrol
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Application
 
 import io.dropwizard.Configuration
@@ -14,20 +15,25 @@ fun main(args: Array<String>) {
     BrewApplication().run(*args)
 }
 
-class BrewConfiguration : Configuration()
+class BrewConfiguration : Configuration() {
+    @JsonProperty
+    var gpioEnabled: Boolean = true
+}
 
 class BrewApplication : Application<BrewConfiguration>() {
-    override fun run(configuration: BrewConfiguration?, environment: Environment?) {
+    override fun run(configuration: BrewConfiguration, environment: Environment) {
         log.info("Running BrewApplication")
         val t = TemperatureSystem()
         val r = RelaySystem()
+        if (configuration.gpioEnabled) r.wireToGpio(gpioImpl)
         t.startUpdateScheduler(RandomTemperatureReader())
 
         val targetTemperature = Value(30.0)
         val error = pidController(t.temperatureView(TemperatureSystem.Sensor.Cooler), targetTemperature)
-        error.connectNotify { e -> log.debug("Temperature error is $e") }
-        //error.map { it > .5 }.connectNotify(r.relayView(RelaySystem.Relay.Cooler)
-
-        checkNotNull(environment).jersey().register(WebResource(t))
+        error.connectNotify { e ->
+            log.debug("Temperature error is $e")
+            r.cooler.value.update(e > 0)
+        }
+        environment.jersey().register(WebResource(t))
     }
 }
