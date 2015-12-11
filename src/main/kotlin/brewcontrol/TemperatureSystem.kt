@@ -34,9 +34,9 @@ class TemperatureSystem {
         log.info("Starting update scheduler")
         Executors.newSingleThreadScheduledExecutor(tf).scheduleWithFixedDelay({
             val readings = reader.readings()
-            log.debug("Finished reading temperatures: ${readings}")
+            log.trace("Finished reading temperatures: ${readings}")
             UpdateThread.executor.submit {
-                log.debug("Updating temperatures: ${readings}")
+                log.trace("Updating temperatures: ${readings}")
                 temperatures.update(readings)
             }
         }, 0, 1, TimeUnit.SECONDS)
