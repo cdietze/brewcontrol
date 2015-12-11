@@ -42,10 +42,12 @@ class BrewApplication : Application<BrewConfiguration>() {
         }
         val configSystem = ConfigSystem(configDao)
 
+        val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)
         error.connectNotify { e ->
             log.debug("Temperature error is $e")
-            relaySystem.cooler.value.update(e > 0)
+            relaySystem.cooler.value.update(configSystem.coolerEnabled.get() && e < -temperatureTolerance)
+            relaySystem.heater.value.update(configSystem.heaterEnabled.get() && e > temperatureTolerance)
         }
 
         environment.jersey().register(WebResource(temperatureSystem, relaySystem, configSystem))
