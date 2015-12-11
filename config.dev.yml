@@ -7,3 +7,7 @@ logging:
   appenders:
     - type: console
       logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n"
+
+database:
+  driverClass: org.sqlite.JDBC
+  url: jdbc:sqlite:./data.sqlite
