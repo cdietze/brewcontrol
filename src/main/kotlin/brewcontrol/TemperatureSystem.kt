@@ -21,6 +21,8 @@ class TemperatureSystem {
 
     val temperatures = Value<Map<String, Double>>(Collections.emptyMap())
 
+    fun getLabel(sensorId: String): String = Sensor.values.find({ it.id == sensorId })?.label ?: sensorId
+
     fun temperatureView(sensorId: String): ValueView<Double?> {
         return temperatures.map({ it.get(sensorId) })
     }

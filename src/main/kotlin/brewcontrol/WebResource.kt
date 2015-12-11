@@ -14,7 +14,6 @@ class WebResource(
         val relaySystem: RelaySystem,
         val configSystem: ConfigSystem) {
 
-
     data class StateResponse(
             val temperatures: Map<String, Double>,
             val relays: Map<String, Boolean>,
@@ -34,7 +33,7 @@ class WebResource(
     @Path("state")
     fun state(): StateResponse {
         val f: Future<StateResponse> = UpdateThread.executor.submit(Callable { ->
-            val t = temperatureSystem.temperatures.get()
+            val t = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
             val r = relaySystem.relays.toMap({ it.label }, { it.value.get() })
             val c = StateResponse.Config(configSystem)
             StateResponse(t, r, c)
