@@ -45,14 +45,23 @@ class WebResource(
     @Path("config/{key}")
     fun putConfig(@PathParam("key") key: String, value: String) {
         when (key) {
-            "coolerEnabled" -> configSystem.coolerEnabled.update(value.toBoolean())
-            "heaterEnabled" -> configSystem.heaterEnabled.update(value.toBoolean())
-            "targetTemperature" -> configSystem.targetTemperature.update(try {
-                value.toDouble()
-            } catch (e: NumberFormatException) {
-                throw WebApplicationException("Malformed double: '$value'", Response.Status.BAD_REQUEST)
-            })
-            else -> throw WebApplicationException("Unknown config key: $key", Response.Status.BAD_REQUEST)
+            "coolerEnabled" -> UpdateThread.executor.submit {
+                configSystem.coolerEnabled.update(value.toBoolean())
+            }
+            "heaterEnabled" -> UpdateThread.executor.submit {
+                configSystem.heaterEnabled.update(value.toBoolean())
+            }
+            "targetTemperature" -> {
+                val t = try {
+                    value.toDouble()
+                } catch (e: NumberFormatException) {
+                    throw WebApplicationException("Malformed double: '$value'", Response.Status.BAD_REQUEST)
+                }
+                UpdateThread.executor.submit {
+                    configSystem.targetTemperature.update(t)
+                }
+            }
         }
     }
 }
+
