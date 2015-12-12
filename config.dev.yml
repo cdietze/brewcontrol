@@ -11,3 +11,6 @@ logging:
 database:
   driverClass: org.sqlite.JDBC
   url: jdbc:sqlite:./data.sqlite
+
+server:
+  rootPath: /api/

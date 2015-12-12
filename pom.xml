@@ -30,6 +30,11 @@
       <version>${dropwizard.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-assets</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.threerings</groupId>
       <artifactId>react</artifactId>
       <version>1.5.2</version>

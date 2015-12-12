@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Application
 
 import io.dropwizard.Configuration
+import io.dropwizard.assets.AssetsBundle
 import io.dropwizard.db.DataSourceFactory
 import io.dropwizard.jdbi.DBIFactory
+import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
 import javax.validation.Valid
@@ -28,6 +30,10 @@ class BrewConfiguration : Configuration() {
 }
 
 class BrewApplication : Application<BrewConfiguration>() {
+    override fun initialize(bootstrap: Bootstrap<BrewConfiguration>) {
+        bootstrap.addBundle(AssetsBundle("/assets/", "/", "index.html"))
+    }
+
     override fun run(configuration: BrewConfiguration, environment: Environment) {
         log.info("Running BrewApplication")
         val temperatureSystem = TemperatureSystem()
