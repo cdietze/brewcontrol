@@ -33,36 +33,30 @@
         .controller('FridgeCtrl', function ($scope, $http, $timeout) {
             $scope.data = {
                 showEditTargetTemperature: false
-            }
+            };
 
-            _.each(['coolerEnabled', 'heaterEnabled', 'targetTemperature'], function (e) {
-                var url = "/" + e;
-                $http.get(url).then(function (response) {
-                    $scope.data[e] = eval(response.data);
+            pollFactory($scope, $timeout, function () {
+                return $http.get("/api/state").then(function (response) {
+                    console.log("got state: " + JSON.stringify(response.data));
+                    $scope.state = response.data;
+                    if (!$scope.config) {
+                        // Should make sure that config values have not changed server side ...
+                        $scope.config = angular.copy($scope.state.config);
+                        watchConfig();
+                    }
+                });
+            })();
 
-                    $scope.$watch('data.' + e, function (newValue, oldValue) {
+            /* Watch all config values and post if anything is changed */
+            var watchConfig = function () {
+                _.each(['coolerEnabled', 'heaterEnabled', 'targetTemperature'], function (key) {
+                    var url = "/api/config/" + key;
+                    $scope.$watch('config.' + key, function (newValue, oldValue) {
                         if (newValue === oldValue) return;
-                        $http.post(url, newValue);
+                        $http.put(url, newValue);
                     });
                 });
-            });
-            //
-            //$http.get("/relays").then(function (response) {
-            //    $scope.relays = response.data;
-            //});
-
-            pollFactory($scope, $timeout, function () {
-                return $http.get("/temperatures").then(function (response) {
-                    $scope.temperatures = response.data;
-                });
-            })();
-
-            pollFactory($scope, $timeout, function () {
-                return $http.get("/relays").then(function (response) {
-                    $scope.relays = response.data;
-                });
-            })();
-
+            };
         });
 
     angular
@@ -75,9 +69,9 @@
                 });
             });
 
-            $scope.tryPrintTaskEndTime = function(task) {
-                if(task.startTime && task.startTime[0] && task.durationInMillis) {
-                    return " (bis " + $filter('date')(task.startTime[0]  + task.durationInMillis, 'mediumTime')+")";
+            $scope.tryPrintTaskEndTime = function (task) {
+                if (task.startTime && task.startTime[0] && task.durationInMillis) {
+                    return " (bis " + $filter('date')(task.startTime[0] + task.durationInMillis, 'mediumTime') + ")";
                 }
                 return "";
             }

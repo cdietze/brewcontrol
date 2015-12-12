@@ -54,8 +54,8 @@
         <md-whiteframe class="md-whiteframe-z2 md-padding">
             <div layout="column" layout-align="center center">
                 <div>
-                    <div ng-repeat="t in temperatures">
-                        <div>{{ t.value | number : 2 }}°C {{ t.name }}</div>
+                    <div ng-repeat="(key, value) in state.temperatures">
+                        <div>{{ value | number : 2 }}°C {{ key }}</div>
                     </div>
                 </div>
             </div>
@@ -63,8 +63,8 @@
 
         <md-whiteframe class="md-whiteframe-z2 md-padding">
             <div layout="row" layout-align="center">
-                <div ng-repeat="e in relays">
-                    <div ng-class="{'relayLabel': true, 'active': e.value, 'inactive': !e.value}">{{ e.name }}
+                <div ng-repeat="(key, value) in state.relays">
+                    <div ng-class="{'relayLabel': true, 'active': value, 'inactive': !value}">{{ key }}
                     </div>
                 </div>
             </div>
@@ -72,25 +72,27 @@
 
         <md-whiteframe class="md-whiteframe-z2">
             <div layout="row" layout-align="space-around center">
-                <div>Zieltemperatur {{ data.targetTemperature }}°C</div>
+                <div>Zieltemperatur {{ config.targetTemperature }}°C</div>
                 <md-button class="md-raised"
                            ng-click="data.showEditTargetTemperature = !data.showEditTargetTemperature">Ändern
                 </md-button>
             </div>
             <div layout="row" ng-show="data.showEditTargetTemperature">
-                <md-slider flex min="0" max="25" ng-model="data.targetTemperature"></md-slider>
+                <md-slider flex min="0" max="25" ng-model="config.targetTemperature"></md-slider>
             </div>
             <div layout="column" layout-align="center center">
-                <md-switch ng-model="data.coolerEnabled" ng-disabled="data.coolerEnabled === undefined">Kühlung
+                <md-switch ng-model="config.coolerEnabled" ng-disabled="config.coolerEnabled === undefined">Kühlung
                     freigegeben
                 </md-switch>
-                <md-switch ng-model="data.heaterEnabled" ng-disabled="data.heaterEnabled === undefined">Heizung
+                <md-switch ng-model="config.heaterEnabled" ng-disabled="config.heaterEnabled === undefined">Heizung
                     freigegeben
                 </md-switch>
             </div>
         </md-whiteframe>
     </md-content>
 </div>
+
+<!--
 
 <div ng-controller="MashCtrl" class="MashCtrl">
     <md-content layout="column">
@@ -121,6 +123,7 @@
         </md-whiteframe>
     </md-content>
 </div>
+-->
 
 <script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>
