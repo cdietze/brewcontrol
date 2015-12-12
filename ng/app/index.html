@@ -15,7 +15,6 @@
 
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic'>
     <link rel="stylesheet" href="./bower_components/angular-material/angular-material.css"/>
-    <link rel="stylesheet" href="./bower_components/rickshaw/rickshaw.min.css">
     <link rel="stylesheet" href="assets/app.css"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
@@ -33,23 +32,6 @@
         .relayLabel.inactive {
             border: solid 2px #9E9E9E;
             background-color: #E0E0E0;
-        }
-
-        #chartContainer {
-        }
-
-        #chart {
-            width: auto;
-            overflow: hidden;
-        }
-
-        #yAxis {
-            float: left;
-            width: 40px;
-        }
-
-        #legend {
-            margin: 15px;
         }
 
         .MashCtrl .task {
@@ -140,22 +122,11 @@
     </md-content>
 </div>
 
-<div ng-controller="GraphCtrl" class="GraphCtrl">
-    <div id="chartContainer">
-        <div id="yAxis"></div>
-        <div id="chart"></div>
-        <div id="legend"></div>
-    </div>
-</div>
-
 <script src="./bower_components/underscore/underscore-min.js"></script>
 <script src="./bower_components/angular/angular.js"></script>
 <script src="./bower_components/angular-animate/angular-animate.js"></script>
 <script src="./bower_components/angular-aria/angular-aria.js"></script>
 <script src="./bower_components/angular-material/angular-material.js"></script>
-<script src="./bower_components/rickshaw/vendor/d3.min.js"></script>
-<script src="./bower_components/rickshaw/vendor/d3.layout.min.js"></script>
-<script src="./bower_components/rickshaw/rickshaw.min.js"></script>
 <script src="./BrewControl.js"></script>
 
 </body>
