@@ -1,18 +1,31 @@
 (function () {
 
-    var pollFactory = function ($scope, $timeout, pollFunc) {
-        var currentTimeout = undefined;
+    var pollFactory = function ($scope, $interval, pollFunc, progressFunc) {
+        var totalTime = 2000;
+        var totalSteps = 100;
+
+        var currentPromise = undefined;
+        var step = 0;
+        var progress = function () {
+            step += 1;
+            progressFunc((100 * step) / totalSteps);
+            if (step === totalSteps) {
+                step = 0;
+                update();
+            }
+        };
+
         var update = function () {
-            if (currentTimeout) {
-                $timeout.cancel(currentTimeout);
+            if (currentPromise) {
+                $interval.cancel(currentPromise);
             }
             pollFunc().then(function () {
-                currentTimeout = $timeout(update, 5000);
+                currentPromise = $interval(progress, totalTime / totalSteps, totalSteps);
             });
         };
         $scope.$on('$destroy', function () {
-            if (currentTimeout) {
-                $timeout.cancel(currentTimeout);
+            if (currentPromise) {
+                $interval.cancel(currentPromise);
             }
         });
         return update;
@@ -23,21 +36,20 @@
         .config(function ($mdThemingProvider) {
 
             $mdThemingProvider.theme('default')
-                .primaryPalette('brown')
+                .primaryPalette('indigo')
                 .accentPalette('red');
 
         });
 
     angular
         .module('brewControl')
-        .controller('FridgeCtrl', function ($scope, $http, $timeout) {
+        .controller('FridgeCtrl', function ($scope, $http, $interval) {
             $scope.data = {
                 showEditTargetTemperature: false
             };
 
-            pollFactory($scope, $timeout, function () {
+            pollFactory($scope, $interval, function () {
                 return $http.get("/api/state").then(function (response) {
-                    console.log("got state: " + JSON.stringify(response.data));
                     $scope.state = response.data;
                     if (!$scope.config) {
                         // Should make sure that config values have not changed server side ...
@@ -45,6 +57,8 @@
                         watchConfig();
                     }
                 });
+            }, function (progress) {
+                $scope.data.pollProgress = progress;
             })();
 
             /* Watch all config values and post if anything is changed */
@@ -74,7 +88,7 @@
                     return " (bis " + $filter('date')(task.startTime[0] + task.durationInMillis, 'mediumTime') + ")";
                 }
                 return "";
-            }
+            };
 
             $scope.start = function () {
                 $http.post('/mash/start').then(function () {

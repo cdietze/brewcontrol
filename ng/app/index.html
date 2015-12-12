@@ -52,8 +52,11 @@
     <md-content layout="column">
 
         <md-whiteframe class="md-whiteframe-z2 md-padding">
-            <div layout="column" layout-align="center center">
+            <div layout="row" layout-align="center center">
                 <div>
+                    <md-progress-circular md-mode="determinate" md-diameter="25" value="{{ data.pollProgress }}"></md-progress-circular>
+                </div>
+                <div layout="column">
                     <div ng-repeat="(key, value) in state.temperatures">
                         <div>{{ value | number : 2 }}°C {{ key }}</div>
                     </div>
