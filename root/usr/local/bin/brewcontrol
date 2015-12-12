@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec java -agentlib:jdwp=transport=dt_socket,server=y,address=8787,suspend=n -jar /usr/local/lib/brewcontrol-2.0-SNAPSHOT.jar server /etc/brewcontrol.yml >> /mnt/lfs/brewcontrol/log.stdout.txt 2>> /mnt/lfs/brewcontrol/log.stderr.txt

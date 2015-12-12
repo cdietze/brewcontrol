@@ -1,0 +1,16 @@
+gpioEnabled: true
+
+logging:
+  level: INFO
+  loggers:
+    brewcontrol: INFO
+  appenders:
+    - type: console
+      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n"
+
+database:
+  driverClass: org.sqlite.JDBC
+  url: jdbc:sqlite:/mnt/lfs/brewcontrol/data2.sqlite
+
+server:
+  rootPath: /api/
