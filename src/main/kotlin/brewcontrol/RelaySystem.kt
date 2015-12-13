@@ -49,7 +49,8 @@ object gpioImpl : Gpio {
         }
 
         override fun set(value: Boolean) {
-            Paths.value(pinNumber).writeText(if (value) "1" else "0")
+            // Do note that up (1) is off an down (0) is on
+            Paths.value(pinNumber).writeText(if (value) "0" else "1")
         }
     }
 
