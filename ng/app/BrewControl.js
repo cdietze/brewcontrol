@@ -21,6 +21,9 @@
             }
             pollFunc().then(function () {
                 currentPromise = $interval(progress, totalTime / totalSteps, totalSteps);
+            }, function (err) {
+                console.error("Error while polling: " + err);
+                currentPromise = $interval(progress, totalTime / totalSteps, totalSteps);
             });
         };
         $scope.$on('$destroy', function () {
