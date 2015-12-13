@@ -1,14 +1,14 @@
 (function () {
 
     var pollFactory = function ($scope, $interval, pollFunc, progressFunc) {
-        var totalTime = 2000;
-        var totalSteps = 100;
+        var totalTime = 3000;
+        var totalSteps = 30;
 
         var currentPromise = undefined;
         var step = 0;
         var progress = function () {
             step += 1;
-            progressFunc((100 * step) / totalSteps);
+            progressFunc(Math.round((100 * step) / totalSteps));
             if (step === totalSteps) {
                 step = 0;
                 update();
@@ -58,6 +58,7 @@
                     }
                 });
             }, function (progress) {
+                console.log("progress is: " + progress)
                 $scope.data.pollProgress = progress;
             })();
 
