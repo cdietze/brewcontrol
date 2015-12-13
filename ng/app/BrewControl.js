@@ -58,7 +58,6 @@
                     }
                 });
             }, function (progress) {
-                console.log("progress is: " + progress)
                 $scope.data.pollProgress = progress;
             })();
 
