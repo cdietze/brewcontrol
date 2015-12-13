@@ -23,6 +23,8 @@ fun main(args: Array<String>) {
 class BrewConfiguration : Configuration() {
     @JsonProperty
     var gpioEnabled: Boolean = true
+    @JsonProperty
+    var mockTemperatures: Boolean = false
 
     @Valid
     @NotNull
@@ -39,7 +41,10 @@ class BrewApplication : Application<BrewConfiguration>() {
         val temperatureSystem = TemperatureSystem()
         val relaySystem = RelaySystem()
         if (configuration.gpioEnabled) relaySystem.wireToGpio(gpioImpl)
-        temperatureSystem.startUpdateScheduler(RandomTemperatureReader())
+
+        val temperatureReader = if (configuration.mockTemperatures) RandomTemperatureReader() else RealTemperatureReader()
+
+        temperatureSystem.startUpdateScheduler(temperatureReader)
 
         val factory = DBIFactory()
         val jdbi = factory.build(environment, configuration.database, "SQLite")

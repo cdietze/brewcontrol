@@ -1,4 +1,5 @@
 gpioEnabled: false
+mockTemperatures: true
 
 logging:
   level: INFO
