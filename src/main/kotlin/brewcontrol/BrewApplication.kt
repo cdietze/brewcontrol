@@ -9,6 +9,7 @@ import io.dropwizard.jdbi.DBIFactory
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
+import react.Values
 import java.util.*
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
@@ -55,11 +56,8 @@ class BrewApplication : Application<BrewConfiguration>() {
 
         val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)
-        error.connectNotify { e ->
-            log.debug("Temperature error is $e")
-            relaySystem.cooler.value.update(configSystem.coolerEnabled.get() && e < -temperatureTolerance)
-            relaySystem.heater.value.update(configSystem.heaterEnabled.get() && e > temperatureTolerance)
-        }
+        Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
+        Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
         environment.jersey().register(WebResource(temperatureSystem, relaySystem, configSystem))
     }
