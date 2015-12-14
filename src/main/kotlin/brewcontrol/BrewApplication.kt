@@ -2,7 +2,6 @@ package brewcontrol
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Application
-
 import io.dropwizard.Configuration
 import io.dropwizard.assets.AssetsBundle
 import io.dropwizard.db.DataSourceFactory
@@ -10,13 +9,14 @@ import io.dropwizard.jdbi.DBIFactory
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
+import java.util.*
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 
 val log = LoggerFactory.getLogger("brewcontrol")
 
 fun main(args: Array<String>) {
-    println("Starting BrewControl")
+    println("[${Date()}] Starting BrewControl")
     BrewApplication().run(*args)
 }
 

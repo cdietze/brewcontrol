@@ -5,8 +5,13 @@ logging:
   loggers:
     brewcontrol: INFO
   appenders:
-    - type: console
-      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n"
+    - type: file
+      currentLogFilename: /mnt/lfs/brewcontrol/brewcontrol.log
+      logFormat: '%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n'
+      threshold: ALL
+      archive: true
+      archivedLogFilenamePattern: /mnt/lfs/brewcontrol/brewcontrol.%d.log
+      archivedFileCount: 14
 
 database:
   driverClass: org.sqlite.JDBC
@@ -14,3 +19,12 @@ database:
 
 server:
   rootPath: /api/
+
+  requestLog:
+    appenders:
+      - type: file
+        currentLogFilename: /mnt/lfs/brewcontrol/access.log
+        threshold: ALL
+        archive: true
+        archivedLogFilenamePattern: /mnt/lfs/brewcontrol/access.%d.log
+        archivedFileCount: 14

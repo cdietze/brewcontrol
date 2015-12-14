@@ -22,7 +22,7 @@
             pollFunc().then(function () {
                 currentPromise = $interval(progress, totalTime / totalSteps, totalSteps);
             }, function (err) {
-                console.error("Error while polling: " + err);
+                console.error("Error while polling: " + JSON.stringify(err));
                 currentPromise = $interval(progress, totalTime / totalSteps, totalSteps);
             });
         };
