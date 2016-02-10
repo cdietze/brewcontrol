@@ -58,14 +58,16 @@ trait AbstractBrewApp extends App with LazyLogging {
   } :: observers
 
   val recipe: Recipe = Recipe(List(
-    HeatStep(57),
+    HeatStep(55),
     HoldStep,
-    RestStep((10 minutes).toMillis),
+    RestStep((15 minutes).toMillis),
     HeatStep(62),
-    RestStep((45 minutes).toMillis),
-    HeatStep(71),
-    RestStep((45 minutes).toMillis),
-    HeatStep(78),
+    RestStep((30 minutes).toMillis),
+    HeatStep(66),
+    RestStep((20 minutes).toMillis),
+    HeatStep(70),
+    RestStep((30 minutes).toMillis),
+    HeatStep(76),
     HoldStep
   ))
   val mashControlActor = system.actorOf(MashControlActor.props(recipe, clock, relayController.PotHeater.value, temperatureReader.Pot.temperature))
