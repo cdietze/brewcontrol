@@ -4,7 +4,6 @@ import org.slf4j.LoggerFactory
 import react.Value
 import java.io.File
 import java.io.IOException
-import kotlin.test.fail
 
 class RelaySystem {
     val log = LoggerFactory.getLogger(RelaySystem::class.java)
@@ -73,7 +72,7 @@ object gpioImpl : Gpio {
         var maxTries = 10
         // Wait until the pin has become writable
         while (!Paths.direction(pinNumber).canWrite()) {
-            if (--maxTries < 0) fail("Failed to export pin $pinNumber, ${Paths.direction(pinNumber)} never became writable")
+            if (--maxTries < 0) error("Failed to export pin $pinNumber, ${Paths.direction(pinNumber)} never became writable")
             log.debug("Waiting for pin $pinNumber to become writable")
             Thread.sleep(500)
         }

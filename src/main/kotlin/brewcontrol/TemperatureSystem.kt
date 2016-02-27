@@ -22,7 +22,7 @@ class TemperatureSystem {
 
     val temperatures = Value<Map<String, Double>>(Collections.emptyMap())
 
-    fun getLabel(sensorId: String): String = Sensor.values.find({ it.id == sensorId })?.label ?: sensorId
+    fun getLabel(sensorId: String): String = Sensor.values().find({ it.id == sensorId })?.label ?: sensorId
 
     fun temperatureView(sensorId: String): ValueView<Double?> {
         return temperatures.map({ it.get(sensorId) })
@@ -65,7 +65,7 @@ class RealTemperatureReader : TemperatureReader {
     }
 
     override fun readings(): Map<String, Double> {
-        return sensorIds().toMap({ it }, { temperature(it) })
+        return sensorIds().map{it -> Pair(it, temperature(it))}.toMap()
     }
 
     private fun sensorIds(): List<String> {
