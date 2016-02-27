@@ -60,7 +60,7 @@ class Main extends React.Component {
         );
 
         const relayStyle = {display: 'inline-block', margin: '10px', padding: '10px'};
-        const relayStyleOn = Object.assign({}, relayStyle, {'background-color': 'dark-red'});
+        const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': 'red'});
 
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
@@ -78,9 +78,7 @@ class Main extends React.Component {
                     </Paper>
 
                     <Paper>
-                        <span>Zieltemperatur: 13°C</span>
-                        <RaisedButton label="Ändern" primary={true} />
-                        <Slider step={1} min={-5} max={25} defaultValue={10} />
+                        <TargetTemperatureSelector />
                     </Paper>
 
                     <Dialog
@@ -100,6 +98,54 @@ class Main extends React.Component {
                     />
                 </div>
             </MuiThemeProvider>
+        );
+    }
+}
+
+class TargetTemperatureSelector extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.handleRequestClose = this.handleRequestClose.bind(this);
+        this.handleTouchTap = this.handleTouchTap.bind(this);
+        this.state = {
+            open: false
+        };
+    }
+
+    handleRequestClose() {
+        this.setState({
+            open: false
+        });
+    }
+
+    handleTouchTap() {
+        this.setState({
+            open: true
+        });
+    }
+
+    render() {
+        const standardActions = (
+            <FlatButton
+                label="Okey"
+                secondary={true}
+                onTouchTap={this.handleRequestClose}
+            />
+        );
+        return (
+            <div>
+                <Paper>
+                    <span>Zieltemperatur: 13°C</span>
+                    <RaisedButton label="Ändern" primary={true} onTouchTap={this.handleTouchTap} />
+                </Paper>
+                <Dialog open={this.state.open}
+                    title="Zieltemperatur setzen"
+                    actions={standardActions}
+                    onRequestClose={this.handleRequestClose}
+                >
+                    <Slider step={1} min={-5} max={25} defaultValue={10} />
+                </Dialog>
+            </div>
         );
     }
 }
