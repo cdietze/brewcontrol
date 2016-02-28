@@ -1,5 +1,10 @@
 import React from 'react';
+import { Router, Route, IndexRoute, Link, hashHistory, browserHistory } from 'react-router';
 import RaisedButton from 'material-ui/lib/raised-button';
+import AppBar from 'material-ui/lib/app-bar';
+import Toggle from 'material-ui/lib/toggle';
+import IconButton from 'material-ui/lib/icon-button';
+import NavigationArrowBack from 'material-ui/lib/svg-icons/navigation/arrow-back';
 import Dialog from 'material-ui/lib/dialog';
 import Paper from 'material-ui/lib/paper';
 import Slider from 'material-ui/lib/slider';
@@ -23,6 +28,17 @@ const muiTheme = getMuiTheme({
 
 export default
 class Main extends React.Component {
+    render() {
+        return (
+            <Router history={hashHistory}>
+                <Route path="/" component={MainScene}/>
+                <Route path="/editRecipe" component={EditRecipeScene}/>
+            </Router>
+        );
+    }
+}
+
+class MainScene extends React.Component {
     constructor(props, context) {
         super(props, context);
         this.handleRequestClose = this.handleRequestClose.bind(this);
@@ -53,6 +69,7 @@ class Main extends React.Component {
         const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': '#ffaaaa'});
 
         const recipeButtonStyle = {margin: '10px'};
+
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={styles.container}>
@@ -64,6 +81,12 @@ class Main extends React.Component {
 
                     <Paper className="panel">
                         <TargetTemperatureSelector />
+                        <div style={{textAlign: 'center'}}>
+                            <div style={{maxWidth: 250, display: 'inline-block'}}>
+                                <Toggle label="Heizung freigegeben" />
+                                <Toggle label="Kühlung freigegeben" />
+                            </div>
+                        </div>
                     </Paper>
 
                     <Paper className="panel">
@@ -83,9 +106,11 @@ class Main extends React.Component {
                             3. Heizen auf 72°C
                         </Paper>
                         <RaisedButton style={recipeButtonStyle} label="Starten" primary={true} />
-                        <RaisedButton style={recipeButtonStyle} label="Schritt Überspringen" />
+                        <RaisedButton style={recipeButtonStyle} label="Schritt überspringen" />
                         <RaisedButton style={recipeButtonStyle} label="Zurücksetzen" />
-                        <RaisedButton style={recipeButtonStyle} label="Rezept Bearbeiten" />
+                        <Link to="/editRecipe">
+                            <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten" />
+                        </Link>
                     </Paper>
                 </div>
             </MuiThemeProvider>
@@ -142,3 +167,22 @@ class TargetTemperatureSelector extends React.Component {
         );
     }
 }
+
+const EditRecipeScene = React.createClass({
+    render() {
+        return (
+            <div>
+                <AppBar
+                    title={<span>Rezept bearbeiten</span>}
+                    iconElementLeft={<Link to="/">
+                        <IconButton>
+                            <NavigationArrowBack />
+                        </IconButton>
+                    </Link>}
+                    iconElementRight={<FlatButton label="Speichern" />}
+                />
+                TODO: allow to add / remove / edit / move recipe steps
+            </div>
+        );
+    }
+});
