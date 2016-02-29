@@ -80,6 +80,12 @@ class MainScene extends React.Component {
                     </Paper>
 
                     <Paper className="panel">
+                        <Paper style={relayStyle}>Kühlung</Paper>
+                        <Paper style={relayStyleOn}>Heizung</Paper>
+                        <Paper style={relayStyle}>Kessel</Paper>
+                    </Paper>
+
+                    <Paper className="panel">
                         <TargetTemperatureSelector />
                         <div style={{textAlign: 'center'}}>
                             <div style={{maxWidth: 250, display: 'inline-block'}}>
@@ -87,12 +93,6 @@ class MainScene extends React.Component {
                                 <Toggle label="Kühlung freigegeben" />
                             </div>
                         </div>
-                    </Paper>
-
-                    <Paper className="panel">
-                        <Paper style={relayStyle}>Kühlung</Paper>
-                        <Paper style={relayStyleOn}>Heizung</Paper>
-                        <Paper style={relayStyle}>Kessel</Paper>
                     </Paper>
 
                     <Paper className="panel">
@@ -155,7 +155,7 @@ class TargetTemperatureSelector extends React.Component {
         return (
             <div>
                 <span>Zieltemperatur: 13°C</span>
-                <RaisedButton label="Ändern" style={buttonStyle} secondary={true} onTouchTap={this.handleTouchTap} />
+                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.handleTouchTap} />
                 <Dialog open={this.state.open}
                     title="Zieltemperatur setzen"
                     actions={standardActions}
