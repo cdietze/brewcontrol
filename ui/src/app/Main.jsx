@@ -17,7 +17,9 @@ import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
 const styles = {
     container: {
         textAlign: 'center',
-        paddingTop: 0
+        paddingTop: 0,
+        maxWidth: 768,
+        margin: 'auto'
     }
 };
 
@@ -193,18 +195,13 @@ class TargetTemperatureSelector extends React.Component {
 const EditRecipeScene = React.createClass({
     render() {
         return (
-            <div>
-                <AppBar
-                    title={<span>Rezept bearbeiten</span>}
-                    iconElementLeft={<Link to="/recipe">
-                        <IconButton>
-                            <NavigationArrowBack />
-                        </IconButton>
-                    </Link>}
-                    iconElementRight={<FlatButton label="Speichern" />}
-                />
-                TODO: allow to add / remove / edit / move recipe steps
-            </div>
+            <Paper className="panel">
+                <h3>Rezept bearbeiten</h3>
+                <p>TODO: allow to add / remove / edit / move recipe steps</p>
+                <div style={{textAlign: "right"}}>
+                    <FlatButton label="Speichern" secondary={true} />
+                </div>
+            </Paper>
         );
     }
 });
