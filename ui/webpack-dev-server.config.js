@@ -22,7 +22,13 @@ var config = {
         devtool: 'eval',
         hot: true,        //Live-reload
         inline: true,
-        port: 3000        //Port Number
+        port: 3000,
+        proxy: {
+            '/api/*': {
+                target: 'http://localhost:8080/',
+                secure: false
+            }
+        }
     },
     devtool: 'eval',
     output: {
