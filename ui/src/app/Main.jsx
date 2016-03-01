@@ -77,10 +77,10 @@ const MainScene = React.createClass({
         clearInterval(this.intervalHandle);
     },
     createConfigToggler(key) {
-        return (event) => {
+        return (event, value) => {
             fetch("/api/config/" + key, {
                 method: "put",
-                body: event.target.checked.toString()
+                body: value.toString()
             });
         };
     },
@@ -187,7 +187,8 @@ class TargetTemperatureSelector extends React.Component {
         this.handleRequestClose = this.handleRequestClose.bind(this);
         this.handleTouchTap = this.handleTouchTap.bind(this);
         this.state = {
-            open: false
+            open: false,
+            targetTemp: 13
         };
     }
 
@@ -214,16 +215,23 @@ class TargetTemperatureSelector extends React.Component {
         const buttonStyle = {
             marginLeft: 10
         };
+        const onChange = (event, value) => {
+            console.log("onchange: " + event + ", value: " + value);
+            this.setState({
+                targetTemp: value
+            });
+        };
+
         return (
             <div>
                 <span>Zieltemperatur: 13°C</span>
                 <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.handleTouchTap} />
                 <Dialog open={this.state.open}
-                    title="Zieltemperatur setzen"
+                    title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
                     actions={standardActions}
                     onRequestClose={this.handleRequestClose}
                 >
-                    <Slider step={1} min={-5} max={25} defaultValue={10} />
+                    <Slider step={1} min={-5} max={25} defaultValue={10} onChange={onChange}/>
                 </Dialog>
             </div>
         );
