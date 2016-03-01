@@ -49,31 +49,73 @@ class Main extends React.Component {
     }
 }
 
-class MainScene extends React.Component {
+const MainScene = React.createClass({
+    getInitialState() {
+        return {
+            temperatures: {},
+            relays: {},
+            config: {}
+        };
+    },
+    componentDidMount() {
+        this.intervalHandle = setInterval(() => {
+            /* Example for state response:
+             {
+             "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
+             "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
+             "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
+             }
+             */
+            fetch("/api/state").then(response => {
+                response.json().then(json => {
+                    this.setState(json);
+                });
+            });
+        }, 3000);
+    },
+    componentWillUnmount() {
+        clearInterval(this.intervalHandle);
+    },
+    createConfigToggler(key) {
+        return (event) => {
+            fetch("/api/config/" + key, {
+                method: "put",
+                body: event.target.checked.toString()
+            });
+        };
+    },
     render() {
-        const relayStyle = {display: 'inline-block', padding: '10px'};
-        const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
-
+        const relayStyleOff = {display: 'inline-block', padding: '10px'};
+        const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
         return (
             <div>
                 <Paper className="panel">
-                    <div>12.50°C Kühlschrank</div>
-                    <div>2.25°C Außen</div>
-                    <Paper style={relayStyle}>Kühlung</Paper>
-                    <Paper style={relayStyleOn}>Heizung</Paper>
+                        {Object.keys(this.state.temperatures).map(sensor => {
+                            return <div key={sensor}>{this.state.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
+                        })}
+
+                        {Object.keys(this.state.relays).map(relay => {
+                            return <Paper key={relay} style={this.state.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
+                        })}
                 </Paper>
 
                 <Paper className="panel">
                     <TargetTemperatureSelector />
                     <div style={{maxWidth: 250}}>
-                        <Toggle label="Heizung freigegeben" />
-                        <Toggle label="Kühlung freigegeben" />
+                        <Toggle label="Heizung freigegeben"
+                            disabled={this.state.config.heaterEnabled === undefined}
+                            defaultToggled={this.state.config.heaterEnabled}
+                            onToggle={this.createConfigToggler("heaterEnabled")} />
+                        <Toggle label="Kühlung freigegeben"
+                            disabled={this.state.config.coolerEnabled === undefined}
+                            defaultToggled={this.state.config.coolerEnabled}
+                            onToggle={this.createConfigToggler("coolerEnabled")} />
                     </div>
                 </Paper>
             </div>
         );
     }
-}
+});
 
 class RecipeScene extends React.Component {
     render() {
@@ -147,10 +189,6 @@ class TargetTemperatureSelector extends React.Component {
         this.state = {
             open: false
         };
-    }
-
-    componentDidMount() {
-        console.log("componentDidMount: TargetTemperatureSelector")
     }
 
     handleRequestClose() {
