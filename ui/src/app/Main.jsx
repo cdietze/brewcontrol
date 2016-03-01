@@ -170,7 +170,7 @@ class TabComponent extends React.Component {
         return (
             <div>
                 <Tabs value={this.props.tab}>
-                    <Tab value="main" label="Kühlschrank" onActive={this.goMain}>
+                    <Tab value="main" label="Übersicht" onActive={this.goMain}>
                     </Tab>
                     <Tab value="recipe" label="Maischen" onActive={this.goRecipe}>
                     </Tab>
