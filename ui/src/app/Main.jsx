@@ -125,7 +125,7 @@ const MainScene = React.createClass({
                 </Paper>
 
                 <Paper className="panel">
-                    <TargetTemperatureSelector />
+                    <TargetTemperatureComponent targetTemp={this.state.config.targetTemperature}/>
                     <div style={{maxWidth: 250}}>
                         <Toggle label="Heizung freigegeben"
                                 disabled={this.state.config.heaterEnabled === undefined}
@@ -142,40 +142,57 @@ const MainScene = React.createClass({
     }
 });
 
+const TargetTemperatureComponent = React.createClass({
+    render() {
+        return (
+            <div>
+                <span>Zieltemperatur: {this.props.targetTemp}°C</span>
+                <SelectTargetTemperatureButton oldTargetTemp={this.props.targetTemp}/>
+            </div>
+        );
+    }
+});
 
-const TargetTemperatureSelector = React.createClass({
+const SelectTargetTemperatureButton = React.createClass({
     getInitialState() {
         return {
             open: false,
-            targetTemp: 13
+            targetTemp: undefined
         };
     },
-
-    handleRequestClose() {
+    open() {
+        this.setState({
+            open: true,
+            targetTemp: this.props.oldTargetTemp
+        });
+    },
+    close() {
         this.setState({
             open: false
         });
     },
-
-    handleTouchTap() {
+    saveAndClose() {
+        console.log("TODO: PUT targetTemp: " + this.state.targetTemp);
+        fetch("/api/config/targetTemperature", {
+            method: "put",
+            body: this.state.targetTemp.toString()
+        });
         this.setState({
-            open: true
+            open: false
         });
     },
-
     render() {
         const standardActions = (
             <FlatButton
                 label="OK"
                 secondary={true}
-                onTouchTap={this.handleRequestClose}
+                onTouchTap={this.saveAndClose}
             />
         );
         const buttonStyle = {
             marginLeft: 10
         };
         const onChange = (event, value) => {
-            console.log("onchange: " + event + ", value: " + value);
             this.setState({
                 targetTemp: value
             });
@@ -183,14 +200,13 @@ const TargetTemperatureSelector = React.createClass({
 
         return (
             <div>
-                <span>Zieltemperatur: 13°C</span>
-                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.handleTouchTap}/>
+                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.open}/>
                 <Dialog open={this.state.open}
                         title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
                         actions={standardActions}
-                        onRequestClose={this.handleRequestClose}
+                        onRequestClose={this.close}
                 >
-                    <Slider step={1} min={-5} max={25} defaultValue={10} onChange={onChange}/>
+                    <Slider step={1} min={-5} max={25} defaultValue={this.state.targetTemp} onChange={onChange}/>
                 </Dialog>
             </div>
         );
