@@ -13,6 +13,9 @@ import {deepOrange500} from 'material-ui/lib/styles/colors';
 import FlatButton from 'material-ui/lib/flat-button';
 import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
+import RefreshIndicator from 'material-ui/lib/refresh-indicator';
+import mobx from 'mobx';
+import mobxReact from 'mobx-react';
 
 const styles = {
     container: {
@@ -28,6 +31,23 @@ const muiTheme = getMuiTheme({
         accent1Color: deepOrange500
     }
 });
+
+const store = mobx.observable({serverState: {}});
+
+setInterval(() => {
+    /* Example for state response:
+     {
+     "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
+     "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
+     "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
+     }
+     */
+    fetch("/api/state").then(response => {
+        response.json().then(json => {
+            store.serverState = json;
+        });
+    });
+}, 3000);
 
 export default class Main extends React.Component {
     render() {
@@ -73,33 +93,7 @@ const TabComponent = React.createClass({
     }
 });
 
-const MainScene = React.createClass({
-    getInitialState() {
-        return {
-            temperatures: {},
-            relays: {},
-            config: {}
-        };
-    },
-    componentDidMount() {
-        this.intervalHandle = setInterval(() => {
-            /* Example for state response:
-             {
-             "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
-             "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
-             "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
-             }
-             */
-            fetch("/api/state").then(response => {
-                response.json().then(json => {
-                    this.setState(json);
-                });
-            });
-        }, 3000);
-    },
-    componentWillUnmount() {
-        clearInterval(this.intervalHandle);
-    },
+const MainScene = mobxReact.observer(React.createClass({
     createConfigToggler(key) {
         return (event, value) => {
             fetch("/api/config/" + key, {
@@ -109,38 +103,40 @@ const MainScene = React.createClass({
         };
     },
     render() {
+        const serverState = store.serverState;
+        if (!serverState.temperatures) return null;
         const relayStyleOff = {display: 'inline-block', padding: '10px'};
         const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
         return (
             <div>
                 <Paper className="panel">
-                    {Object.keys(this.state.temperatures).map(sensor => {
-                        return <div key={sensor}>{this.state.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
+                    {Object.keys(serverState.temperatures).map(sensor => {
+                        return <div key={sensor}>{serverState.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
                     })}
 
-                    {Object.keys(this.state.relays).map(relay => {
+                    {Object.keys(serverState.relays).map(relay => {
                         return <Paper key={relay}
-                                      style={this.state.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
+                                      style={serverState.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
                     })}
                 </Paper>
 
                 <Paper className="panel">
-                    <TargetTemperatureComponent targetTemp={this.state.config.targetTemperature}/>
+                    <TargetTemperatureComponent targetTemp={serverState.config.targetTemperature}/>
                     <div style={{maxWidth: 250}}>
                         <Toggle label="Heizung freigegeben"
-                                disabled={this.state.config.heaterEnabled === undefined}
-                                defaultToggled={this.state.config.heaterEnabled}
+                                disabled={serverState.config.heaterEnabled === undefined}
+                                defaultToggled={serverState.config.heaterEnabled}
                                 onToggle={this.createConfigToggler("heaterEnabled")}/>
                         <Toggle label="Kühlung freigegeben"
-                                disabled={this.state.config.coolerEnabled === undefined}
-                                defaultToggled={this.state.config.coolerEnabled}
+                                disabled={serverState.config.coolerEnabled === undefined}
+                                defaultToggled={serverState.config.coolerEnabled}
                                 onToggle={this.createConfigToggler("coolerEnabled")}/>
                     </div>
                 </Paper>
             </div>
         );
     }
-});
+}));
 
 const TargetTemperatureComponent = React.createClass({
     render() {

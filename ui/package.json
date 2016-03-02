@@ -29,6 +29,8 @@
   },
   "dependencies": {
     "material-ui": "^0.14.4",
+    "mobx": "^2.0.0",
+    "mobx-react": "^3.0.0",
     "react": "^0.14.3",
     "react-dom": "^0.14.3",
     "react-router": "^2.0.0",
