@@ -37,14 +37,39 @@ class Main extends React.Component {
                 <div style={styles.container}>
                     <Router history={hashHistory}>
                         <Route path="/" component={TabComponent}>
-                            <IndexRoute component={MainScene} tab="main" />
-                            <Route path="recipe" component={RecipeScene} tab="recipe" />
-                            <Route path="/recipe/edit" component={EditRecipeScene} />
+                            <IndexRoute component={MainScene} tab="main"/>
+                            <Route path="recipe" component={RecipeScene} tab="recipe"/>
+                            <Route path="/recipe/edit" component={EditRecipeScene}/>
                         </Route>
 
                     </Router>
                 </div>
             </MuiThemeProvider>
+        );
+    }
+}
+
+class TabComponent extends React.Component {
+
+    goMain() {
+        hashHistory.push('/');
+    }
+
+    goRecipe() {
+        hashHistory.push('/recipe');
+    }
+
+    render() {
+        return (
+            <div>
+                <Tabs value={this.props.tab}>
+                    <Tab value="main" label="Übersicht" onActive={this.goMain}>
+                    </Tab>
+                    <Tab value="recipe" label="Maischen" onActive={this.goRecipe}>
+                    </Tab>
+                </Tabs>
+                {this.props.children}
+            </div>
         );
     }
 }
@@ -90,26 +115,27 @@ const MainScene = React.createClass({
         return (
             <div>
                 <Paper className="panel">
-                        {Object.keys(this.state.temperatures).map(sensor => {
-                            return <div key={sensor}>{this.state.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
-                        })}
+                    {Object.keys(this.state.temperatures).map(sensor => {
+                        return <div key={sensor}>{this.state.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
+                    })}
 
-                        {Object.keys(this.state.relays).map(relay => {
-                            return <Paper key={relay} style={this.state.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
-                        })}
+                    {Object.keys(this.state.relays).map(relay => {
+                        return <Paper key={relay}
+                                      style={this.state.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
+                    })}
                 </Paper>
 
                 <Paper className="panel">
                     <TargetTemperatureSelector />
                     <div style={{maxWidth: 250}}>
                         <Toggle label="Heizung freigegeben"
-                            disabled={this.state.config.heaterEnabled === undefined}
-                            defaultToggled={this.state.config.heaterEnabled}
-                            onToggle={this.createConfigToggler("heaterEnabled")} />
+                                disabled={this.state.config.heaterEnabled === undefined}
+                                defaultToggled={this.state.config.heaterEnabled}
+                                onToggle={this.createConfigToggler("heaterEnabled")}/>
                         <Toggle label="Kühlung freigegeben"
-                            disabled={this.state.config.coolerEnabled === undefined}
-                            defaultToggled={this.state.config.coolerEnabled}
-                            onToggle={this.createConfigToggler("coolerEnabled")} />
+                                disabled={this.state.config.coolerEnabled === undefined}
+                                defaultToggled={this.state.config.coolerEnabled}
+                                onToggle={this.createConfigToggler("coolerEnabled")}/>
                     </div>
                 </Paper>
             </div>
@@ -117,69 +143,6 @@ const MainScene = React.createClass({
     }
 });
 
-class RecipeScene extends React.Component {
-    render() {
-        const relayStyle = {display: 'inline-block', padding: '10px'};
-        const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
-
-        const recipeStepStyle = {padding: '10px'};
-        const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': '#ffaaaa'});
-
-        const recipeButtonStyle = {margin: '10px'};
-
-        return (
-            <div>
-                <Paper className="panel">
-                    <Paper style={relayStyle}>45.25°C Kessel</Paper>
-                </Paper>
-
-                <Paper className="panel">
-                    <Paper style={recipeStepStyle}>
-                        1. Heizen auf 64°C
-                    </Paper>
-                    <Paper style={recipeStepActiveStyle}>
-                        2. Halten für 15 Minuten
-                    </Paper>
-                    <Paper style={recipeStepStyle}>
-                        3. Heizen auf 72°C
-                    </Paper>
-                    <RaisedButton style={recipeButtonStyle} label="Starten" primary={true} />
-                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen" />
-                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen" />
-                    <Link to="/recipe/edit">
-                        <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten" />
-                    </Link>
-                </Paper>
-            </div>
-        );
-    }
-}
-
-
-class TabComponent extends React.Component {
-
-    goMain() {
-        hashHistory.push('/');
-    }
-
-    goRecipe() {
-        hashHistory.push('/recipe');
-    }
-
-    render() {
-        return (
-            <div>
-                <Tabs value={this.props.tab}>
-                    <Tab value="main" label="Übersicht" onActive={this.goMain}>
-                    </Tab>
-                    <Tab value="recipe" label="Maischen" onActive={this.goRecipe}>
-                    </Tab>
-                </Tabs>
-        {this.props.children}
-            </div>
-        );
-    }
-}
 
 class TargetTemperatureSelector extends React.Component {
     constructor(props, context) {
@@ -225,14 +188,52 @@ class TargetTemperatureSelector extends React.Component {
         return (
             <div>
                 <span>Zieltemperatur: 13°C</span>
-                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.handleTouchTap} />
+                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.handleTouchTap}/>
                 <Dialog open={this.state.open}
-                    title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
-                    actions={standardActions}
-                    onRequestClose={this.handleRequestClose}
+                        title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
+                        actions={standardActions}
+                        onRequestClose={this.handleRequestClose}
                 >
                     <Slider step={1} min={-5} max={25} defaultValue={10} onChange={onChange}/>
                 </Dialog>
+            </div>
+        );
+    }
+}
+
+class RecipeScene extends React.Component {
+    render() {
+        const relayStyle = {display: 'inline-block', padding: '10px'};
+        const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
+
+        const recipeStepStyle = {padding: '10px'};
+        const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': '#ffaaaa'});
+
+        const recipeButtonStyle = {margin: '10px'};
+
+        return (
+            <div>
+                <Paper className="panel">
+                    <Paper style={relayStyle}>45.25°C Kessel</Paper>
+                </Paper>
+
+                <Paper className="panel">
+                    <Paper style={recipeStepStyle}>
+                        1. Heizen auf 64°C
+                    </Paper>
+                    <Paper style={recipeStepActiveStyle}>
+                        2. Halten für 15 Minuten
+                    </Paper>
+                    <Paper style={recipeStepStyle}>
+                        3. Heizen auf 72°C
+                    </Paper>
+                    <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}/>
+                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen"/>
+                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen"/>
+                    <Link to="/recipe/edit">
+                        <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten"/>
+                    </Link>
+                </Paper>
             </div>
         );
     }
@@ -245,7 +246,7 @@ const EditRecipeScene = React.createClass({
                 <h3>Rezept bearbeiten</h3>
                 <p>TODO: allow to add / remove / edit / move recipe steps</p>
                 <div style={{textAlign: "right"}}>
-                    <FlatButton label="Speichern" secondary={true} />
+                    <FlatButton label="Speichern" secondary={true}/>
                 </div>
             </Paper>
         );
