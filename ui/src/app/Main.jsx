@@ -29,8 +29,7 @@ const muiTheme = getMuiTheme({
     }
 });
 
-export default
-class Main extends React.Component {
+export default class Main extends React.Component {
     render() {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
@@ -49,15 +48,15 @@ class Main extends React.Component {
     }
 }
 
-class TabComponent extends React.Component {
+const TabComponent = React.createClass({
 
     goMain() {
         hashHistory.push('/');
-    }
+    },
 
     goRecipe() {
         hashHistory.push('/recipe');
-    }
+    },
 
     render() {
         return (
@@ -72,7 +71,7 @@ class TabComponent extends React.Component {
             </div>
         );
     }
-}
+});
 
 const MainScene = React.createClass({
     getInitialState() {
@@ -144,28 +143,25 @@ const MainScene = React.createClass({
 });
 
 
-class TargetTemperatureSelector extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-        this.handleRequestClose = this.handleRequestClose.bind(this);
-        this.handleTouchTap = this.handleTouchTap.bind(this);
-        this.state = {
+const TargetTemperatureSelector = React.createClass({
+    getInitialState() {
+        return {
             open: false,
             targetTemp: 13
         };
-    }
+    },
 
     handleRequestClose() {
         this.setState({
             open: false
         });
-    }
+    },
 
     handleTouchTap() {
         this.setState({
             open: true
         });
-    }
+    },
 
     render() {
         const standardActions = (
@@ -199,9 +195,9 @@ class TargetTemperatureSelector extends React.Component {
             </div>
         );
     }
-}
+});
 
-class RecipeScene extends React.Component {
+const RecipeScene = React.createClass({
     render() {
         const relayStyle = {display: 'inline-block', padding: '10px'};
         const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
@@ -237,7 +233,7 @@ class RecipeScene extends React.Component {
             </div>
         );
     }
-}
+});
 
 const EditRecipeScene = React.createClass({
     render() {
