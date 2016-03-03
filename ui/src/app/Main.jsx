@@ -32,7 +32,7 @@ const muiTheme = getMuiTheme({
     }
 });
 
-const store = mobx.observable({serverState: {}});
+const store = mobx.observable({serverState: {notReady: true}});
 
 setInterval(() => {
     /* Example for state response:
@@ -54,6 +54,7 @@ export default class Main extends React.Component {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={styles.container}>
+                    <LoadingComponent />
                     <Router history={hashHistory}>
                         <Route path="/" component={TabComponent}>
                             <IndexRoute component={MainScene} tab="main"/>
@@ -68,17 +69,22 @@ export default class Main extends React.Component {
     }
 }
 
-const TabComponent = React.createClass({
+const LoadingComponent = mobxReact.observer(React.createClass({
+    render() {
+        if (store.serverState.notReady) return <div>Loading...</div>;
+        return null;
+    }
+}));
 
+const TabComponent = mobxReact.observer(React.createClass({
     goMain() {
         hashHistory.push('/');
     },
-
     goRecipe() {
         hashHistory.push('/recipe');
     },
-
     render() {
+        if (store.serverState.notReady) return null;
         return (
             <div>
                 <Tabs value={this.props.tab}>
@@ -91,7 +97,7 @@ const TabComponent = React.createClass({
             </div>
         );
     }
-});
+}));
 
 const MainScene = mobxReact.observer(React.createClass({
     createConfigToggler(key) {
@@ -103,8 +109,8 @@ const MainScene = mobxReact.observer(React.createClass({
         };
     },
     render() {
+        if (store.serverState.notReady) return null;
         const serverState = store.serverState;
-        if (!serverState.temperatures) return null;
         const relayStyleOff = {display: 'inline-block', padding: '10px'};
         const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
         return (
@@ -211,6 +217,7 @@ const SelectTargetTemperatureButton = React.createClass({
 
 const RecipeScene = React.createClass({
     render() {
+        if (store.serverState.notReady) return null;
         const relayStyle = {display: 'inline-block', padding: '10px'};
         const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
 
