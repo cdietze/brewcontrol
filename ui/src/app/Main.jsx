@@ -139,7 +139,14 @@ const MainScene = mobxReact.observer(React.createClass({
         const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
         const style = {
             tempContainer: {
-                marginBottom: 10
+                marginBottom: 10,
+                display: 'inline-block',
+                textAlign: 'left'
+            },
+            tempNumber: {
+                minWidth: 65,
+                display: 'inline-block',
+                textAlign: 'right'
             },
             toggleContainer: {
                 maxWidth: 250,
@@ -154,7 +161,10 @@ const MainScene = mobxReact.observer(React.createClass({
                 <Paper className="panel">
                     <div style={style.tempContainer}>
                         {Object.keys(serverState.temperatures).map(sensor => {
-                            return <div key={sensor}>{serverState.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
+                            return <div key={sensor}>
+                                <span style={style.tempNumber}>{serverState.temperatures[sensor].toFixed(2)}°C</span>
+                                <span> {sensor}</span>
+                            </div>;
                         })}
                     </div>
 
