@@ -14,6 +14,7 @@ import FlatButton from 'material-ui/lib/flat-button';
 import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
+import CircularProgress from 'material-ui/lib/circular-progress';
 import mobx from 'mobx';
 import mobxReact from 'mobx-react';
 
@@ -32,22 +33,49 @@ const muiTheme = getMuiTheme({
     }
 });
 
+/* Example for serverState:
+ {
+ "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
+ "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
+ "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
+ }
+ */
 const store = mobx.observable({serverState: {notReady: true}});
 
-setInterval(() => {
-    /* Example for state response:
-     {
-     "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
-     "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
-     "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
-     }
-     */
-    fetch("/api/state").then(response => {
-        response.json().then(json => {
-            store.serverState = json;
+const updateProgress = mobx.observable(0);
+let updateCount = 0;
+
+function startUpdateTimer() {
+    const updateInterval = 3000;
+    const steps = 100;
+    const waitTime = updateInterval / steps;
+    let currentStep = 0;
+
+    const progress = () => {
+        updateProgress.set(currentStep / steps);
+        currentStep++;
+        if (currentStep > steps) {
+            currentStep = 0;
+            updateCount++;
+
+            updateState().then(progress);
+        } else {
+            setTimeout(progress, waitTime);
+        }
+    };
+
+    function updateState() {
+        return fetch("/api/state").then(response => {
+            response.json().then(json => {
+                store.serverState = json;
+            });
         });
-    });
-}, 3000);
+    }
+
+    progress();
+}
+
+startUpdateTimer();
 
 export default class Main extends React.Component {
     render() {
@@ -167,6 +195,8 @@ const MainScene = mobxReact.observer(React.createClass({
                             </div>;
                         })}
                     </div>
+                    <CircularProgress key={updateCount} mode="determinate" value={updateProgress.get()} min={0} max={1}
+                                      size={0.3}/>
 
                     <div>
                         {Object.keys(serverState.relays).map(relay => {
