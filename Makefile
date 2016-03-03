@@ -8,5 +8,5 @@ run-java:
 run-ui:
 	cd ui && npm start
 
-deploy: build-java build-ui
+deploy: build-ui build-java
 	./deploy.sh
