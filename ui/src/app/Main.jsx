@@ -137,27 +137,43 @@ const MainScene = mobxReact.observer(React.createClass({
         const serverState = store.serverState;
         const relayStyleOff = {display: 'inline-block', padding: '10px'};
         const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
+        const style = {
+            tempContainer: {
+                marginBottom: 10
+            },
+            toggleContainer: {
+                maxWidth: 250,
+                display: 'inline-block'
+            },
+            toggle: {
+                marginTop: 10
+            }
+        };
         return (
             <div>
                 <Paper className="panel">
-                    {Object.keys(serverState.temperatures).map(sensor => {
-                        return <div key={sensor}>{serverState.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
-                    })}
+                    <div style={style.tempContainer}>
+                        {Object.keys(serverState.temperatures).map(sensor => {
+                            return <div key={sensor}>{serverState.temperatures[sensor].toFixed(2)}°C {sensor}</div>;
+                        })}
+                    </div>
 
-                    {Object.keys(serverState.relays).map(relay => {
-                        return <Paper key={relay}
-                                      style={serverState.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
-                    })}
+                    <div>
+                        {Object.keys(serverState.relays).map(relay => {
+                            return <Paper key={relay}
+                                          style={serverState.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
+                        })}
+                    </div>
                 </Paper>
 
                 <Paper className="panel">
                     <TargetTemperatureComponent targetTemp={serverState.config.targetTemperature}/>
-                    <div style={{maxWidth: 250}}>
-                        <Toggle label="Heizung freigegeben"
+                    <div style={style.toggleContainer}>
+                        <Toggle label="Heizung freigegeben" style={style.toggle}
                                 disabled={serverState.config.heaterEnabled === undefined}
                                 defaultToggled={serverState.config.heaterEnabled}
                                 onToggle={this.createConfigToggler("heaterEnabled")}/>
-                        <Toggle label="Kühlung freigegeben"
+                        <Toggle label="Kühlung freigegeben" style={style.toggle}
                                 disabled={serverState.config.coolerEnabled === undefined}
                                 defaultToggled={serverState.config.coolerEnabled}
                                 onToggle={this.createConfigToggler("coolerEnabled")}/>
@@ -170,8 +186,11 @@ const MainScene = mobxReact.observer(React.createClass({
 
 const TargetTemperatureComponent = React.createClass({
     render() {
+        const style = {
+            marginBottom: 10
+        };
         return (
-            <div>
+            <div style={style}>
                 <span>Zieltemperatur: {this.props.targetTemp}°C</span>
                 <SelectTargetTemperatureButton oldTargetTemp={this.props.targetTemp}/>
             </div>
@@ -198,7 +217,6 @@ const SelectTargetTemperatureButton = React.createClass({
         });
     },
     saveAndClose() {
-        console.log("TODO: PUT targetTemp: " + this.state.targetTemp);
         fetch("/api/config/targetTemperature", {
             method: "put",
             body: this.state.targetTemp.toString()
@@ -225,7 +243,7 @@ const SelectTargetTemperatureButton = React.createClass({
         };
 
         return (
-            <div>
+            <span>
                 <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.open}/>
                 <Dialog open={this.state.open}
                         title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
@@ -234,7 +252,7 @@ const SelectTargetTemperatureButton = React.createClass({
                 >
                     <Slider step={1} min={-5} max={25} defaultValue={this.state.targetTemp} onChange={onChange}/>
                 </Dialog>
-            </div>
+            </span>
         );
     }
 });
