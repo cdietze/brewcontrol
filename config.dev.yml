@@ -1,0 +1,23 @@
+gpioEnabled: false
+mockTemperatures: true
+
+logging:
+  level: INFO
+  loggers:
+    brewcontrol: DEBUG
+  appenders:
+    - type: console
+      threshold: ALL
+      logFormat: '%-6level [%date] [%thread] %logger{5} - %msg %n'
+
+database:
+  driverClass: org.sqlite.JDBC
+  url: jdbc:sqlite:./data.sqlite
+
+server:
+  rootPath: /api/
+
+  requestLog:
+    appenders:
+      - type: console
+        threshold: ALL

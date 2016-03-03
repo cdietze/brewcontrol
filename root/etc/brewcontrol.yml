@@ -1,0 +1,30 @@
+gpioEnabled: true
+
+logging:
+  level: INFO
+  loggers:
+    brewcontrol: INFO
+  appenders:
+    - type: file
+      currentLogFilename: /mnt/lfs/brewcontrol/brewcontrol.log
+      logFormat: '%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n'
+      threshold: ALL
+      archive: true
+      archivedLogFilenamePattern: /mnt/lfs/brewcontrol/brewcontrol.%d.log
+      archivedFileCount: 14
+
+database:
+  driverClass: org.sqlite.JDBC
+  url: jdbc:sqlite:/mnt/lfs/brewcontrol/data2.sqlite
+
+server:
+  rootPath: /api/
+
+  requestLog:
+    appenders:
+      - type: file
+        currentLogFilename: /mnt/lfs/brewcontrol/access.log
+        threshold: ALL
+        archive: true
+        archivedLogFilenamePattern: /mnt/lfs/brewcontrol/access.%d.log
+        archivedFileCount: 14
