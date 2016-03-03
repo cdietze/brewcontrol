@@ -71,7 +71,31 @@ export default class Main extends React.Component {
 
 const LoadingComponent = mobxReact.observer(React.createClass({
     render() {
-        if (store.serverState.notReady) return <div>Loading...</div>;
+        const style = {
+            container: {
+                display: 'inline-block',
+                position: 'relative'
+            },
+            refresh: {
+                marginTop: 10,
+                marginBottom: 10,
+                display: 'block',
+                position: 'relative'
+            }
+        };
+
+        if (store.serverState.notReady) return <div>
+            <div style={style.container}>
+                <RefreshIndicator
+                    size={40}
+                    left={10}
+                    top={0}
+                    status="loading"
+                    style={style.refresh}
+                />
+                <div>Loading...</div>
+            </div>
+        </div>;
         return null;
     }
 }));
