@@ -45,7 +45,9 @@ const store = mobx.observable({serverState: {notReady: true}});
 const updateProgress = mobx.observable(0);
 let updateCount = 0;
 
-function startUpdateTimer() {
+const updateTimer = function () {
+    let self = {};
+    let timeoutHandle = undefined;
     const updateInterval = 3000;
     const steps = 100;
     const waitTime = updateInterval / steps;
@@ -60,22 +62,32 @@ function startUpdateTimer() {
 
             updateState().then(progress);
         } else {
-            setTimeout(progress, waitTime);
+            timeoutHandle = setTimeout(progress, waitTime);
         }
     };
 
     function updateState() {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+            timeoutHandle = undefined;
+        }
         return fetch("/api/state").then(response => {
             response.json().then(json => {
                 store.serverState = json;
+            }).then(() => {
+                currentStep = 0;
+                updateCount++;
+                progress();
             });
         });
     }
 
-    progress();
-}
+    self.forceUpdate = updateState;
+    self.start = progress;
+    return self;
+}();
 
-startUpdateTimer();
+updateTimer.start();
 
 export default class Main extends React.Component {
     render() {
@@ -157,7 +169,7 @@ const MainScene = mobxReact.observer(React.createClass({
             fetch("/api/config/" + key, {
                 method: "put",
                 body: value.toString()
-            });
+            }).then(updateTimer.forceUpdate);
         };
     },
     render() {
@@ -257,7 +269,7 @@ const SelectTargetTemperatureButton = React.createClass({
         fetch("/api/config/targetTemperature", {
             method: "put",
             body: this.state.targetTemp.toString()
-        });
+        }).then(updateTimer.forceUpdate);
         this.setState({
             open: false
         });
