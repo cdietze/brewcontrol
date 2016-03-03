@@ -153,7 +153,7 @@ const MainScene = mobxReact.observer(React.createClass({
                 display: 'inline-block'
             },
             toggle: {
-                marginTop: 10
+                marginTop: 20
             }
         };
         return (
@@ -196,11 +196,8 @@ const MainScene = mobxReact.observer(React.createClass({
 
 const TargetTemperatureComponent = React.createClass({
     render() {
-        const style = {
-            marginBottom: 10
-        };
         return (
-            <div style={style}>
+            <div>
                 <span>Zieltemperatur: {this.props.targetTemp}°C</span>
                 <SelectTargetTemperatureButton oldTargetTemp={this.props.targetTemp}/>
             </div>
