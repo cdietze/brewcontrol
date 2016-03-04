@@ -341,18 +341,23 @@ const SelectTargetTemperatureButton = React.createClass({
     }
 });
 
-const RecipeScene = React.createClass({
+const RecipeScene = mobxReact.observer(React.createClass({
     render() {
         if (store.serverState.notReady) return null;
+        const serverState = store.serverState;
         const recipeStepStyle = {padding: '10px'};
         const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': Colors.red200});
 
         const recipeButtonStyle = {margin: '10px'};
 
+        const kesselOn = serverState.relays.Kessel === true;
+        const kesselLabel = serverState.temperatures.Kessel ? serverState.temperatures.Kessel.toFixed(2) + '°C ' : '?? ';
+
         return (
             <div>
                 <Paper className="panel">
-                    <Paper style={globalStyles.relayStyleOn}>45.25°C Kessel</Paper>
+                    <Paper style={kesselOn ? globalStyles.relayStyleOn: globalStyles.relayStyleOff}>{kesselLabel}
+                        Kessel</Paper>
                 </Paper>
 
                 <Paper className="panel">
@@ -375,7 +380,7 @@ const RecipeScene = React.createClass({
             </div>
         );
     }
-});
+}));
 
 const EditRecipeScene = React.createClass({
     render() {

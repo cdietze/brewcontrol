@@ -52,8 +52,9 @@ class RandomTemperatureReader : TemperatureReader {
     val random = Random()
     override fun readings(): Map<String, Double> {
         return mapOf(
-                Sensor.Cooler.id to random.nextInt(50).toDouble(),
-                Sensor.Outside.id to random.nextInt(50).toDouble())
+                Sensor.Cooler.id to random.nextInt(20).toDouble(),
+                Sensor.Outside.id to random.nextInt(40).toDouble(),
+                Sensor.Pot.id to random.nextInt(80).toDouble())
     }
 }
 
