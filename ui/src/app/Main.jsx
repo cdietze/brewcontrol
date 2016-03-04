@@ -1,22 +1,20 @@
 import React from 'react';
 import { Router, Route, IndexRoute, Link, hashHistory, browserHistory } from 'react-router';
 import RaisedButton from 'material-ui/lib/raised-button';
-import AppBar from 'material-ui/lib/app-bar';
+import FlatButton from 'material-ui/lib/flat-button';
+import FloatingActionButton from 'material-ui/lib/floating-action-button';
 import Toggle from 'material-ui/lib/toggle';
 import {Tabs, Tab} from 'material-ui/lib/tabs';
-import IconButton from 'material-ui/lib/icon-button';
 import FontIcon from 'material-ui/lib/font-icon';
-import NavigationArrowBack from 'material-ui/lib/svg-icons/navigation/arrow-back';
 import Dialog from 'material-ui/lib/dialog';
 import Paper from 'material-ui/lib/paper';
 import {deepOrange500} from 'material-ui/lib/styles/colors';
-import FlatButton from 'material-ui/lib/flat-button';
-import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
-import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
-import FloatingActionButton from 'material-ui/lib/floating-action-button';
 import ContentAdd from 'material-ui/lib/svg-icons/content/add';
 import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
+import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
+import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
+import Colors from 'material-ui/lib/styles/colors';
 import mobx from 'mobx';
 import mobxReact from 'mobx-react';
 
