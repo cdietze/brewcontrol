@@ -8,7 +8,6 @@ import {Tabs, Tab} from 'material-ui/lib/tabs';
 import FontIcon from 'material-ui/lib/font-icon';
 import Dialog from 'material-ui/lib/dialog';
 import Paper from 'material-ui/lib/paper';
-import {deepOrange500} from 'material-ui/lib/styles/colors';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
 import ContentAdd from 'material-ui/lib/svg-icons/content/add';
 import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
@@ -18,18 +17,20 @@ import Colors from 'material-ui/lib/styles/colors';
 import mobx from 'mobx';
 import mobxReact from 'mobx-react';
 
-const styles = {
+const globalStyles = {
     container: {
         textAlign: 'center',
         paddingTop: 0,
         maxWidth: 768,
         margin: 'auto'
-    }
+    },
+    relayStyleOff: {display: 'inline-block', padding: '10px'},
+    relayStyleOn: {display: 'inline-block', padding: '10px', 'backgroundColor': Colors.red200}
 };
 
 const muiTheme = getMuiTheme({
     palette: {
-        accent1Color: deepOrange500
+        accent1Color: Colors.red500
     }
 });
 
@@ -93,7 +94,7 @@ export default class Main extends React.Component {
     render() {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
-                <div style={styles.container}>
+                <div style={globalStyles.container}>
                     <LoadingComponent />
                     <Router history={hashHistory}>
                         <Route path="/" component={TabComponent}>
@@ -175,8 +176,6 @@ const MainScene = mobxReact.observer(React.createClass({
     render() {
         if (store.serverState.notReady) return null;
         const serverState = store.serverState;
-        const relayStyleOff = {display: 'inline-block', padding: '10px'};
-        const relayStyleOn = Object.assign({}, relayStyleOff, {'backgroundColor': '#ffaaaa'});
         const style = {
             tempContainer: {
                 marginBottom: 10,
@@ -196,7 +195,8 @@ const MainScene = mobxReact.observer(React.createClass({
                 marginTop: 20
             },
             progressOuter: {
-                marginLeft: 10
+                marginLeft: 10,
+                color: Colors.black
             },
             progressInner: {
                 position: 'absolute',
@@ -204,7 +204,7 @@ const MainScene = mobxReact.observer(React.createClass({
                 top: 0,
                 height: (100 - updateProgress.get() * 100).toString() + '%',
                 overflow: 'hidden',
-                color: 'rgb(200,200,200)'
+                color: Colors.grey200
             }
         };
 
@@ -227,7 +227,7 @@ const MainScene = mobxReact.observer(React.createClass({
                     <div>
                         {Object.keys(serverState.relays).map(relay => {
                             return <Paper key={relay}
-                                          style={serverState.relays[relay] ? relayStyleOn : relayStyleOff}>{relay}</Paper>
+                                          style={serverState.relays[relay] ? globalStyles.relayStyleOn : globalStyles.relayStyleOff}>{relay}</Paper>
                         })}
                     </div>
                 </Paper>
@@ -344,18 +344,15 @@ const SelectTargetTemperatureButton = React.createClass({
 const RecipeScene = React.createClass({
     render() {
         if (store.serverState.notReady) return null;
-        const relayStyle = {display: 'inline-block', padding: '10px'};
-        const relayStyleOn = Object.assign({}, relayStyle, {'backgroundColor': '#ffaaaa'});
-
         const recipeStepStyle = {padding: '10px'};
-        const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': '#ffaaaa'});
+        const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': Colors.red200});
 
         const recipeButtonStyle = {margin: '10px'};
 
         return (
             <div>
                 <Paper className="panel">
-                    <Paper style={relayStyle}>45.25°C Kessel</Paper>
+                    <Paper style={globalStyles.relayStyleOn}>45.25°C Kessel</Paper>
                 </Paper>
 
                 <Paper className="panel">
