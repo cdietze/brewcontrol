@@ -322,7 +322,7 @@ const SelectTargetTemperatureButton = React.createClass({
 
         return (
             <span>
-                <RaisedButton label="Ändern" style={openDialogButton} onTouchTap={this.open}/>
+                <RaisedButton label="Ändern" style={style.openDialogButton} onTouchTap={this.open}/>
                 <Dialog open={this.state.open}
                         title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
                         actions={standardActions}
