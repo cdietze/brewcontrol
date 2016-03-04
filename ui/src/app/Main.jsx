@@ -16,6 +16,9 @@ import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
 import CircularProgress from 'material-ui/lib/circular-progress';
+import FloatingActionButton from 'material-ui/lib/floating-action-button';
+import ContentAdd from 'material-ui/lib/svg-icons/content/add';
+import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
 import mobx from 'mobx';
 import mobxReact from 'mobx-react';
 
@@ -289,6 +292,15 @@ const SelectTargetTemperatureButton = React.createClass({
             open: false
         });
     },
+    changeFunc(amount) {
+        return () => {
+            let newTemp = this.state.targetTemp + amount;
+            newTemp = Math.max(newTemp, -5);
+            newTemp = Math.min(newTemp, 25);
+            this.setState({targetTemp: newTemp});
+        };
+    },
+
     render() {
         const standardActions = (
             <FlatButton
@@ -297,24 +309,36 @@ const SelectTargetTemperatureButton = React.createClass({
                 onTouchTap={this.saveAndClose}
             />
         );
-        const buttonStyle = {
-            marginLeft: 10
-        };
-        const onChange = (event, value) => {
-            this.setState({
-                targetTemp: value
-            });
+        const style = {
+            openDialogButton: {
+                marginLeft: 10
+            },
+            content: {
+                textAlign: 'center'
+            },
+            button: {
+                marginLeft: 10,
+                marginRight: 10
+            }
         };
 
         return (
             <span>
-                <RaisedButton label="Ändern" style={buttonStyle} onTouchTap={this.open}/>
+                <RaisedButton label="Ändern" style={openDialogButton} onTouchTap={this.open}/>
                 <Dialog open={this.state.open}
                         title={"Zieltemperatur auf " + this.state.targetTemp + "°C setzen"}
                         actions={standardActions}
                         onRequestClose={this.close}
+                        contentStyle={style.content}
                 >
-                    <Slider step={1} min={-5} max={25} defaultValue={this.state.targetTemp} onChange={onChange}/>
+                    <FloatingActionButton style={style.button} secondary={true} mini={true}
+                                          onTouchTap={this.changeFunc(-1)}>
+                        <ContentRemove />
+                    </FloatingActionButton>
+                    <FloatingActionButton style={style.button} secondary={true} mini={true}
+                                          onTouchTap={this.changeFunc(+1)}>
+                        <ContentAdd />
+                    </FloatingActionButton>
                 </Dialog>
             </span>
         );
