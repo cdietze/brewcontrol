@@ -5,6 +5,7 @@ import AppBar from 'material-ui/lib/app-bar';
 import Toggle from 'material-ui/lib/toggle';
 import {Tabs, Tab} from 'material-ui/lib/tabs';
 import IconButton from 'material-ui/lib/icon-button';
+import FontIcon from 'material-ui/lib/font-icon';
 import NavigationArrowBack from 'material-ui/lib/svg-icons/navigation/arrow-back';
 import Dialog from 'material-ui/lib/dialog';
 import Paper from 'material-ui/lib/paper';
@@ -49,7 +50,7 @@ const updateTimer = function () {
     let self = {};
     let timeoutHandle = undefined;
     const updateInterval = 3000;
-    const steps = 100;
+    const steps = 10;
     const waitTime = updateInterval / steps;
     let currentStep = 0;
 
@@ -83,7 +84,7 @@ const updateTimer = function () {
     }
 
     self.forceUpdate = updateState;
-    self.start = progress;
+    self.start = updateState;
     return self;
 }();
 
@@ -194,8 +195,20 @@ const MainScene = mobxReact.observer(React.createClass({
             },
             toggle: {
                 marginTop: 20
+            },
+            progressOuter: {
+                marginLeft: 10
+            },
+            progressInner: {
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                height: (100 - updateProgress.get() * 100).toString() + '%',
+                overflow: 'hidden',
+                color: 'rgb(200,200,200)'
             }
         };
+
         return (
             <div>
                 <Paper className="panel">
@@ -207,8 +220,10 @@ const MainScene = mobxReact.observer(React.createClass({
                             </div>;
                         })}
                     </div>
-                    <CircularProgress key={updateCount} mode="determinate" value={updateProgress.get()} min={0} max={1}
-                                      size={0.3}/>
+
+                    <FontIcon style={style.progressOuter} className="fa fa-beer">
+                        <FontIcon style={style.progressInner} className="fa fa-beer"/>
+                    </FontIcon>
 
                     <div>
                         {Object.keys(serverState.relays).map(relay => {
