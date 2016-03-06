@@ -17,6 +17,8 @@ import react.Value
 import react.Values
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 
@@ -69,14 +71,19 @@ class BrewApplication : Application<BrewConfiguration>() {
         }
         val configSystem = ConfigSystem(configDao)
 
-        // TODO really update that clock
         val clock = Value(Instant.now())
+        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay({
+            clock.update(Instant.now())
+            log.debug("Updated clock: {}", clock.get())
+        }, 0, 5, TimeUnit.SECONDS);
 
         val mashSystem = MashSystem(
                 updateThread = updateThread,
                 potTemperature = temperatureSystem.temperatureView(TemperatureSystem.Sensor.Pot),
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
+
+        mashSystem.recipe = Recipe(0, listOf(HeatTask(57.0), HeatTask(64.0)))
 
         val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)
