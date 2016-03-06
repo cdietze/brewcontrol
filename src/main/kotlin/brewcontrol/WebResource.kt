@@ -1,6 +1,5 @@
 package brewcontrol
 
-import java.util.concurrent.Callable
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.*
@@ -10,6 +9,7 @@ import javax.ws.rs.core.Response
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 class WebResource(
+        val updateThread: UpdateThread,
         val temperatureSystem: TemperatureSystem,
         val relaySystem: RelaySystem,
         val configSystem: ConfigSystem,
@@ -33,12 +33,12 @@ class WebResource(
     @GET
     @Path("state")
     fun state(): StateResponse {
-        val f: Future<StateResponse> = UpdateThread.executor.submit(Callable { ->
+        val f: Future<StateResponse> = updateThread.runOnUpdateThread {
             val t = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
             val r = relaySystem.relays.map { it -> Pair(it.label, it.value.get()) }.toMap()
             val c = StateResponse.Config(configSystem)
             StateResponse(t, r, c)
-        })
+        }
         return f.get(30, TimeUnit.SECONDS)
     }
 
@@ -46,10 +46,10 @@ class WebResource(
     @Path("config/{key}")
     fun putConfig(@PathParam("key") key: String, value: String) {
         when (key) {
-            "coolerEnabled" -> UpdateThread.executor.submit {
+            "coolerEnabled" -> updateThread.runOnUpdateThread {
                 configSystem.coolerEnabled.update(value.toBoolean())
             }
-            "heaterEnabled" -> UpdateThread.executor.submit {
+            "heaterEnabled" -> updateThread.runOnUpdateThread {
                 configSystem.heaterEnabled.update(value.toBoolean())
             }
             "targetTemperature" -> {
@@ -58,7 +58,7 @@ class WebResource(
                 } catch (e: NumberFormatException) {
                     throw WebApplicationException("Malformed double: '$value'", Response.Status.BAD_REQUEST)
                 }
-                UpdateThread.executor.submit {
+                updateThread.runOnUpdateThread {
                     configSystem.targetTemperature.update(t)
                 }
             }

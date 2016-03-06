@@ -10,7 +10,7 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class TemperatureSystem {
+class TemperatureSystem(val updateThread: UpdateThread) {
     val log = LoggerFactory.getLogger(TemperatureSystem::class.java)
 
     enum class Sensor(val id: String, val label: String) {
@@ -36,7 +36,7 @@ class TemperatureSystem {
         Executors.newSingleThreadScheduledExecutor(tf).scheduleWithFixedDelay({
             val readings = reader.readings()
             log.debug("Finished reading temperatures: ${readings}")
-            UpdateThread.executor.submit {
+            updateThread.runOnUpdateThread {
                 log.trace("Updating temperatures: ${readings}")
                 temperatures.update(readings)
             }
@@ -66,7 +66,7 @@ class RealTemperatureReader : TemperatureReader {
     }
 
     override fun readings(): Map<String, Double> {
-        return sensorIds().map{it -> Pair(it, temperature(it))}.toMap()
+        return sensorIds().map { it -> Pair(it, temperature(it)) }.toMap()
     }
 
     private fun sensorIds(): List<String> {

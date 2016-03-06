@@ -47,13 +47,14 @@ class BrewConfiguration : Configuration() {
 
 class BrewApplication : Application<BrewConfiguration>() {
     override fun initialize(bootstrap: Bootstrap<BrewConfiguration>) {
-        bootstrap.setObjectMapper(createObjectMapper())
+        bootstrap.objectMapper = createObjectMapper()
         bootstrap.addBundle(AssetsBundle("/assets/", "/", "index.html"))
     }
 
     override fun run(configuration: BrewConfiguration, environment: Environment) {
         log.info("Running BrewApplication")
-        val temperatureSystem = TemperatureSystem()
+        val updateThread = UpdateThreadImpl()
+        val temperatureSystem = TemperatureSystem(updateThread)
         val relaySystem = RelaySystem()
         if (configuration.gpioEnabled) relaySystem.wireToGpio(gpioImpl)
 
@@ -81,6 +82,6 @@ class BrewApplication : Application<BrewConfiguration>() {
         Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
         Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
-        environment.jersey().register(WebResource(temperatureSystem, relaySystem, configSystem, mashSystem))
+        environment.jersey().register(WebResource(updateThread, temperatureSystem, relaySystem, configSystem, mashSystem))
     }
 }
