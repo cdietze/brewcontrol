@@ -1,8 +1,9 @@
 # Todo list for BrewControl
 
 ## Up Next
-- Implement Mash/Recipe playback (server + UI)
-- Implement Mash/Recipe editting via UI
+- Display current recipe in UI
+- Allow to start / stop / skip / reset mashing
+- Allow to edit recipe
 
 ## Ideas
 - Use Docker
