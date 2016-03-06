@@ -6,6 +6,8 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate
 import react.Value
 
 /**
+ * DAO for table `config`
+ *
  * SQLite allows to have values of different types in the same column.
  * So we use that to store different types of data (instead of serialization).
  */

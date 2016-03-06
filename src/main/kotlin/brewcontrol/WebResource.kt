@@ -12,7 +12,8 @@ import javax.ws.rs.core.Response
 class WebResource(
         val temperatureSystem: TemperatureSystem,
         val relaySystem: RelaySystem,
-        val configSystem: ConfigSystem) {
+        val configSystem: ConfigSystem,
+        val mashSystem: MashSystem) {
 
     data class StateResponse(
             val temperatures: Map<String, Double>,
@@ -34,7 +35,7 @@ class WebResource(
     fun state(): StateResponse {
         val f: Future<StateResponse> = UpdateThread.executor.submit(Callable { ->
             val t = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
-            val r = relaySystem.relays.map{it -> Pair(it.label, it.value.get())}.toMap()
+            val r = relaySystem.relays.map { it -> Pair(it.label, it.value.get()) }.toMap()
             val c = StateResponse.Config(configSystem)
             StateResponse(t, r, c)
         })
@@ -63,5 +64,10 @@ class WebResource(
             }
         }
     }
-}
 
+    @GET
+    @Path("recipe")
+    fun recipe(): Recipe {
+        return mashSystem.recipe
+    }
+}

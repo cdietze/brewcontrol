@@ -1,15 +1,21 @@
 package brewcontrol
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.assets.AssetsBundle
 import io.dropwizard.db.DataSourceFactory
+import io.dropwizard.jackson.Jackson
 import io.dropwizard.jdbi.DBIFactory
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
+import react.Value
 import react.Values
+import java.time.Instant
 import java.util.*
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
@@ -19,6 +25,13 @@ val log = LoggerFactory.getLogger("brewcontrol")
 fun main(args: Array<String>) {
     println("[${Date()}] Starting BrewControl")
     BrewApplication().run(*args)
+}
+
+fun createObjectMapper(): ObjectMapper {
+    val om = Jackson.newObjectMapper()
+    om.registerModule(JavaTimeModule())
+    om.registerModule(KotlinModule())
+    return om
 }
 
 class BrewConfiguration : Configuration() {
@@ -34,6 +47,7 @@ class BrewConfiguration : Configuration() {
 
 class BrewApplication : Application<BrewConfiguration>() {
     override fun initialize(bootstrap: Bootstrap<BrewConfiguration>) {
+        bootstrap.setObjectMapper(createObjectMapper())
         bootstrap.addBundle(AssetsBundle("/assets/", "/", "index.html"))
     }
 
@@ -54,11 +68,19 @@ class BrewApplication : Application<BrewConfiguration>() {
         }
         val configSystem = ConfigSystem(configDao)
 
+        // TODO really update that clock
+        val clock = Value(Instant.now())
+
+        val mashSystem = MashSystem(
+                potTemperature = temperatureSystem.temperatureView(TemperatureSystem.Sensor.Pot),
+                potHeater = relaySystem.potHeater.value,
+                clock = clock)
+
         val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)
         Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
         Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
-        environment.jersey().register(WebResource(temperatureSystem, relaySystem, configSystem))
+        environment.jersey().register(WebResource(temperatureSystem, relaySystem, configSystem, mashSystem))
     }
 }
