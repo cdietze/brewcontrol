@@ -7,6 +7,7 @@ import react.Value
 import react.ValueView
 import react.Values
 import java.time.Instant
+import java.util.concurrent.Future
 
 /** A recipe can be serialized to and from JSON. Its uses are:
  * - Serialize into config DB
@@ -43,6 +44,7 @@ data class HeatTask(val temperature: Double, var startTime: Instant? = null) : T
 }
 
 class MashSystem(
+        val updateThread: UpdateThread,
         val potTemperature: ValueView<Double?>,
         val potHeater: Value<Boolean>,
         val clock: ValueView<Instant>,
@@ -50,24 +52,32 @@ class MashSystem(
 
     var reactConnection: Connection? = null
 
-    fun start() {
-        if (reactConnection != null) {
-            log.warn("Already running")
-            return
-        }
-        reactConnection = Values.join(clock, potTemperature).connectNotify { t1, t2 ->
-            log.info("Stepping, clock: {}, pot: {}", clock.get(), potTemperature.get())
-            step(clock.get())
+    fun start() : Future<*> {
+        return updateThread.runOnUpdateThread {
+            if (reactConnection != null) {
+                log.warn("Already running")
+            } else {
+                reactConnection = Values.join(clock, potTemperature).connectNotify { t1, t2 ->
+                    log.info("Stepping, clock: {}, pot: {}", clock.get(), potTemperature.get())
+                    step(clock.get())
+                }
+            }
         }
     }
 
-    fun stop() {
-        potHeater.update(false)
-        reactConnection?.close()
-        reactConnection = null
+    fun stop() : Future<*> {
+        return updateThread.runOnUpdateThread {
+            potHeater.update(false)
+            reactConnection?.close()
+            reactConnection = null
+        }
     }
 
-    fun isRunning() = reactConnection != null
+    fun isRunning(): Boolean {
+        return updateThread.runOnUpdateThread {
+            reactConnection != null
+        }.get()
+    }
 
     private fun step(instant: Instant) {
         val potTemp = potTemperature.get()

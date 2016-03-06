@@ -73,6 +73,7 @@ class BrewApplication : Application<BrewConfiguration>() {
         val clock = Value(Instant.now())
 
         val mashSystem = MashSystem(
+                updateThread = updateThread,
                 potTemperature = temperatureSystem.temperatureView(TemperatureSystem.Sensor.Pot),
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
