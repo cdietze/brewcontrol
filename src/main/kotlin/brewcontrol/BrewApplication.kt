@@ -83,7 +83,7 @@ class BrewApplication : Application<BrewConfiguration>() {
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
 
-        mashSystem.recipe = Recipe(0, listOf(HeatTask(57.0), HeatTask(64.0)))
+        mashSystem.recipe = Recipe(-1, listOf(HeatTask(57.0), HeatTask(64.0)))
 
         val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)

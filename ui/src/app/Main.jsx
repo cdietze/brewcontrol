@@ -350,6 +350,12 @@ const RecipeScene = mobxReact.observer(React.createClass({
         const kesselOn = serverState.relays.Kessel === true;
         const kesselLabel = serverState.temperatures.Kessel ? serverState.temperatures.Kessel.toFixed(2) + '°C ' : '?? ';
 
+        const tasks = [];
+        for (let i = 0; i < serverState.recipe.tasks.length; i++) {
+            const task = serverState.recipe.tasks[i];
+            tasks.push(<RecipeTask key={i} active={i === serverState.recipe.activeTaskIndex} index={i} task={task}/>);
+        }
+
         return (
             <div>
                 <Paper className="panel">
@@ -358,15 +364,7 @@ const RecipeScene = mobxReact.observer(React.createClass({
                 </Paper>
 
                 <Paper className="panel">
-                    <Paper style={recipeStepStyle}>
-                        1. Heizen auf 64°C
-                    </Paper>
-                    <Paper style={recipeStepActiveStyle}>
-                        2. Halten für 15 Minuten
-                    </Paper>
-                    <Paper style={recipeStepStyle}>
-                        3. Heizen auf 72°C
-                    </Paper>
+                    {tasks}
                     <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}/>
                     <RaisedButton style={recipeButtonStyle} label="Schritt überspringen"/>
                     <RaisedButton style={recipeButtonStyle} label="Zurücksetzen"/>
@@ -378,6 +376,21 @@ const RecipeScene = mobxReact.observer(React.createClass({
         );
     }
 }));
+
+const RecipeTask = React.createClass({
+
+    render() {
+        const style = {
+            inactiveTask: {padding: 10},
+            activeTask: {
+                padding: 10,
+                backgroundColor: Colors.red200
+            }
+        };
+        return <Paper
+            style={this.props.active?style.activeTask:style.inactiveTask}>{this.props.index + 1}. {JSON.stringify(this.props.task)}</Paper>;
+    }
+});
 
 const EditRecipeScene = React.createClass({
     render() {

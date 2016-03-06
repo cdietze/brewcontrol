@@ -18,6 +18,7 @@ class WebResource(
     data class StateResponse(
             val temperatures: Map<String, Double>,
             val relays: Map<String, Boolean>,
+            val recipe: Recipe,
             val config: StateResponse.Config) {
         data class Config(
                 val coolerEnabled: Boolean,
@@ -34,10 +35,11 @@ class WebResource(
     @Path("state")
     fun state(): StateResponse {
         val f: Future<StateResponse> = updateThread.runOnUpdateThread {
-            val t = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
-            val r = relaySystem.relays.map { it -> Pair(it.label, it.value.get()) }.toMap()
-            val c = StateResponse.Config(configSystem)
-            StateResponse(t, r, c)
+            val temperatures = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
+            val relays = relaySystem.relays.map { it -> Pair(it.label, it.value.get()) }.toMap()
+            val recipe = mashSystem.recipe
+            val config = StateResponse.Config(configSystem)
+            StateResponse(temperatures, relays, recipe, config)
         }
         return f.get(30, TimeUnit.SECONDS)
     }

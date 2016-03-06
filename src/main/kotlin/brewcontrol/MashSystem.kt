@@ -15,7 +15,14 @@ import java.util.concurrent.Future
  * - Serialize via HTTP resource
  * - Deserialize from HTTP request
  */
-data class Recipe(var currentTaskIndex: Int, val tasks: List<Task>)
+data class Recipe(
+        /** The inactive of the currently active task if any.
+         *
+         * - `activeTaskIndex < 0` means the program has not started yet
+         * - `activeTaskIndex == tasks.size` means the program is done
+         */
+        var activeTaskIndex: Int,
+        val tasks: List<Task>)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -48,11 +55,11 @@ class MashSystem(
         val potTemperature: ValueView<Double?>,
         val potHeater: Value<Boolean>,
         val clock: ValueView<Instant>,
-        var recipe: Recipe = Recipe(0, emptyList())) {
+        var recipe: Recipe = Recipe(-1, emptyList())) {
 
     var reactConnection: Connection? = null
 
-    fun start() : Future<*> {
+    fun start(): Future<*> {
         return updateThread.runOnUpdateThread {
             if (reactConnection != null) {
                 log.warn("Already running")
@@ -65,7 +72,7 @@ class MashSystem(
         }
     }
 
-    fun stop() : Future<*> {
+    fun stop(): Future<*> {
         return updateThread.runOnUpdateThread {
             potHeater.update(false)
             reactConnection?.close()
@@ -87,9 +94,11 @@ class MashSystem(
             return
         }
         val ctx = Task.Context(instant, potTemp, potHeater)
+        // Start the recipe if it has not already
+        if (recipe.activeTaskIndex < 0) recipe.activeTaskIndex = 0
 
         tailrec fun impl() {
-            val currentTask = recipe.tasks.getOrElse(recipe.currentTaskIndex, {
+            val currentTask = recipe.tasks.getOrElse(recipe.activeTaskIndex, {
                 log.info("Recipe done")
                 stop()
                 return
@@ -99,7 +108,7 @@ class MashSystem(
                 Task.StepResult.RUNNING -> {
                 }
                 Task.StepResult.DONE -> {
-                    recipe.currentTaskIndex++
+                    recipe.activeTaskIndex++
                     impl() // Run the following task immediately
                 }
             }

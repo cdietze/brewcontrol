@@ -7,7 +7,7 @@ class MashRepresentationTest {
     val om = createObjectMapper()
 
     private val heatTaskJson = "{\"type\":\"HeatTask\",\"temperature\":50.0}"
-    private val recipeJson = "{\"currentTaskIndex\":0,\"tasks\":[{\"type\":\"HeatTask\",\"temperature\":50.0}]}"
+    private val recipeJson = "{\"activeTaskIndex\":0,\"tasks\":[{\"type\":\"HeatTask\",\"temperature\":50.0}]}"
 
     @Test
     fun serializesHeatTask() {
