@@ -13,12 +13,13 @@ class WebResource(
         val temperatureSystem: TemperatureSystem,
         val relaySystem: RelaySystem,
         val configSystem: ConfigSystem,
-        val mashSystem: MashSystem) {
+        val syncMashSystem: SynchronizedMashSystem) {
 
     data class StateResponse(
             val temperatures: Map<String, Double>,
             val relays: Map<String, Boolean>,
             val recipe: Recipe,
+            val recipeProcess: RecipeProcess,
             val config: StateResponse.Config) {
         data class Config(
                 val coolerEnabled: Boolean,
@@ -37,9 +38,10 @@ class WebResource(
         val f: Future<StateResponse> = updateThread.runOnUpdateThread {
             val temperatures = temperatureSystem.temperatures.get().mapKeys { it -> temperatureSystem.getLabel(it.key) }
             val relays = relaySystem.relays.map { it -> Pair(it.label, it.value.get()) }.toMap()
-            val recipe = mashSystem.recipe
+            val recipe = syncMashSystem.mashSystem.recipeProcess.recipe
+            val recipeProcess = syncMashSystem.mashSystem.recipeProcess
             val config = StateResponse.Config(configSystem)
-            StateResponse(temperatures, relays, recipe, config)
+            StateResponse(temperatures, relays, recipe, recipeProcess, config)
         }
         return f.get(30, TimeUnit.SECONDS)
     }
@@ -67,9 +69,31 @@ class WebResource(
         }
     }
 
-    @GET
+    @PUT
     @Path("recipe")
-    fun recipe(): Recipe {
-        return mashSystem.recipe
+    fun updateRecipe() {
+        log.info("Update recipe requested")
+        TODO()
+    }
+
+    @POST
+    @Path("recipe/start")
+    fun startRecipe() {
+        log.info("Start recipe requested")
+        syncMashSystem.start()
+    }
+
+    @POST
+    @Path("recipe/skipTask")
+    fun skipRecipeTask() {
+        log.info("Skip recipe task requested")
+        syncMashSystem.skipTask()
+    }
+
+    @POST
+    @Path("recipe/reset")
+    fun resetRecipe() {
+        log.info("Reset recipe requested")
+        syncMashSystem.reset()
     }
 }

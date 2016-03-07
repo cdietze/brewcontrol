@@ -339,11 +339,17 @@ const SelectTargetTemperatureButton = React.createClass({
 });
 
 const RecipeScene = mobxReact.observer(React.createClass({
+    createAction(action) {
+        return (event, value) => {
+            fetch("/api/recipe/" + action, {
+                method: "post"
+            }).then(updateTimer.forceUpdate);
+        };
+    },
+
     render() {
         if (store.serverState.notReady) return null;
         const serverState = store.serverState;
-        const recipeStepStyle = {padding: '10px'};
-        const recipeStepActiveStyle = Object.assign({}, recipeStepStyle, {'backgroundColor': Colors.red200});
 
         const recipeButtonStyle = {margin: '10px'};
 
@@ -351,9 +357,11 @@ const RecipeScene = mobxReact.observer(React.createClass({
         const kesselLabel = serverState.temperatures.Kessel ? serverState.temperatures.Kessel.toFixed(2) + '°C ' : '?? ';
 
         const tasks = [];
-        for (let i = 0; i < serverState.recipe.tasks.length; i++) {
-            const task = serverState.recipe.tasks[i];
-            tasks.push(<RecipeTask key={i} active={i === serverState.recipe.activeTaskIndex} index={i} task={task}/>);
+        for (let i = 0; i < serverState.recipeProcess.tasks.length; i++) {
+            const task = serverState.recipeProcess.tasks[i];
+            console.log("task " + i + ": " + JSON.stringify(task));
+            tasks.push(<RecipeTask key={i} active={i === serverState.recipeProcess.activeTaskIndex} index={i}
+                                   task={task}/>);
         }
 
         return (
@@ -365,9 +373,12 @@ const RecipeScene = mobxReact.observer(React.createClass({
 
                 <Paper className="panel">
                     {tasks}
-                    <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}/>
-                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen"/>
-                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen"/>
+                    <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}
+                                  onTouchTap={this.createAction("start")}/>
+                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen"
+                                  onTouchTap={this.createAction("skipTask")}/>
+                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen"
+                                  onTouchTap={this.createAction("reset")}/>
                     <Link to="/recipe/edit">
                         <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten"/>
                     </Link>
@@ -387,8 +398,9 @@ const RecipeTask = React.createClass({
                 backgroundColor: Colors.red200
             }
         };
-        return <Paper
-            style={this.props.active?style.activeTask:style.inactiveTask}>{this.props.index + 1}. {JSON.stringify(this.props.task)}</Paper>;
+        return <Paper style={this.props.active ? style.activeTask : style.inactiveTask}>
+            {this.props.index + 1}. {JSON.stringify(this.props.task)}
+        </Paper>;
     }
 });
 

@@ -78,18 +78,18 @@ class BrewApplication : Application<BrewConfiguration>() {
         }, 0, 5, TimeUnit.SECONDS);
 
         val mashSystem = MashSystem(
-                updateThread = updateThread,
                 potTemperature = temperatureSystem.temperatureView(TemperatureSystem.Sensor.Pot),
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
 
-        mashSystem.recipe = Recipe(-1, listOf(HeatTask(57.0), HeatTask(64.0)))
+        mashSystem.setRecipe(Recipe(listOf(HeatStep(57.0), HeatStep(64.0), HeatStep(70.0), HeatStep(73.0), HeatStep(78.0), HeatStep(85.0))))
+        val syncMashSystem = SynchronizedMashSystem(mashSystem, updateThread)
 
         val temperatureTolerance = 0.5
         val error = pidController(temperatureSystem.temperatureView(TemperatureSystem.Sensor.Cooler), configSystem.targetTemperature)
         Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
         Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
-        environment.jersey().register(WebResource(updateThread, temperatureSystem, relaySystem, configSystem, mashSystem))
+        environment.jersey().register(WebResource(updateThread, temperatureSystem, relaySystem, configSystem, syncMashSystem))
     }
 }

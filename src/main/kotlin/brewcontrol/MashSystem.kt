@@ -1,5 +1,6 @@
 package brewcontrol
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import react.Connection
@@ -9,25 +10,41 @@ import react.Values
 import java.time.Instant
 import java.util.concurrent.Future
 
-/** A recipe can be serialized to and from JSON. Its uses are:
- * - Serialize into config DB
- * - Deserialize from config DB
- * - Serialize via HTTP resource
- * - Deserialize from HTTP request
+
+/** A recipe is a immutable list of steps.
  */
-data class Recipe(
-        /** The inactive of the currently active task if any.
-         *
-         * - `activeTaskIndex < 0` means the program has not started yet
-         * - `activeTaskIndex == tasks.size` means the program is done
-         */
-        var activeTaskIndex: Int,
-        val tasks: List<Task>)
+data class Recipe(val steps: List<Step> = emptyList())
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-        JsonSubTypes.Type(value = HeatTask::class, name = "HeatTask")
+        JsonSubTypes.Type(value = HeatStep::class, name = "Heat")
 )
+interface Step {
+}
+
+data class HeatStep(val temperature: Double) : Step
+
+/** A [RecipeProcess] is the run-time representation of [Recipe] */
+@JsonIgnoreProperties("recipe")
+class RecipeProcess(val recipe: Recipe = Recipe()) {
+    /** The index of the currently active task if any.
+     *
+     * - `activeTaskIndex < 0` means the program has not started yet
+     * - `activeTaskIndex == tasks.size` means the program is done
+     */
+    var activeTaskIndex: Int = -1
+    val tasks: List<Task> = recipeToTasks(recipe)
+}
+
+fun recipeToTasks(recipe: Recipe): List<Task> {
+    return recipe.steps.flatMap<Step, Task> { step ->
+        when (step) {
+            is HeatStep -> listOf(HeatTask(step))
+            else -> error("Unknown step type: $step")
+        }
+    }
+}
+
 interface Task {
 
     class Context(val instant: Instant, val potTemperature: Double, val heater: Value<Boolean>)
@@ -41,64 +58,74 @@ interface Task {
 
 private val temperatureTolerance = 1.0
 
-data class HeatTask(val temperature: Double, var startTime: Instant? = null) : Task {
+data class HeatTask(val step: HeatStep, var startTime: Instant? = null) : Task {
     override fun step(ctx: Task.Context): Task.StepResult {
         if (startTime == null) startTime = ctx.instant
-        val shouldHeat = ctx.potTemperature < temperature - temperatureTolerance
+        val shouldHeat = ctx.potTemperature < step.temperature - temperatureTolerance
         ctx.heater.update(shouldHeat)
         return if (shouldHeat) Task.StepResult.RUNNING else Task.StepResult.DONE
     }
 }
 
 class MashSystem(
-        val updateThread: UpdateThread,
         val potTemperature: ValueView<Double?>,
         val potHeater: Value<Boolean>,
-        val clock: ValueView<Instant>,
-        var recipe: Recipe = Recipe(-1, emptyList())) {
+        val clock: ValueView<Instant>
+) {
+    val recipe: Recipe get() = recipeProcess.recipe
+
+    var recipeProcess: RecipeProcess = RecipeProcess()
+
+    fun setRecipe(recipe: Recipe) {
+        recipeProcess = RecipeProcess(recipe)
+    }
 
     var reactConnection: Connection? = null
 
-    fun start(): Future<*> {
-        return updateThread.runOnUpdateThread {
-            if (reactConnection != null) {
-                log.warn("Already running")
-            } else {
-                reactConnection = Values.join(clock, potTemperature).connectNotify { t1, t2 ->
-                    log.info("Stepping, clock: {}, pot: {}", clock.get(), potTemperature.get())
-                    step(clock.get())
-                }
+    fun start() {
+        if (reactConnection != null) {
+            log.warn("Already running")
+        } else {
+            reactConnection = Values.join(clock, potTemperature).connectNotify { t1, t2 ->
+                log.info("Stepping, clock: {}, pot: {}", clock.get(), potTemperature.get())
+                step()
             }
         }
     }
 
-    fun stop(): Future<*> {
-        return updateThread.runOnUpdateThread {
-            potHeater.update(false)
-            reactConnection?.close()
-            reactConnection = null
-        }
+    private fun stop() {
+        potHeater.update(false)
+        reactConnection?.close()
+        reactConnection = null
+    }
+
+    fun reset() {
+        stop()
+        recipeProcess = RecipeProcess(recipeProcess.recipe)
+    }
+
+    fun skipTask() {
+        if (recipeProcess.activeTaskIndex < recipeProcess.tasks.size) recipeProcess.activeTaskIndex++
+        step()
     }
 
     fun isRunning(): Boolean {
-        return updateThread.runOnUpdateThread {
-            reactConnection != null
-        }.get()
+        return reactConnection != null
     }
 
-    private fun step(instant: Instant) {
+    private fun step() {
         val potTemp = potTemperature.get()
         if (potTemp == null) {
             log.error("Pot temperature not available while running recipe, will turn off heater")
             potHeater.update(false)
             return
         }
-        val ctx = Task.Context(instant, potTemp, potHeater)
+        val ctx = Task.Context(clock.get(), potTemp, potHeater)
         // Start the recipe if it has not already
-        if (recipe.activeTaskIndex < 0) recipe.activeTaskIndex = 0
+        if (recipeProcess.activeTaskIndex < 0) recipeProcess.activeTaskIndex = 0
 
         tailrec fun impl() {
-            val currentTask = recipe.tasks.getOrElse(recipe.activeTaskIndex, {
+            val currentTask = recipeProcess.tasks.getOrElse(recipeProcess.activeTaskIndex, {
                 log.info("Recipe done")
                 stop()
                 return
@@ -108,11 +135,26 @@ class MashSystem(
                 Task.StepResult.RUNNING -> {
                 }
                 Task.StepResult.DONE -> {
-                    recipe.activeTaskIndex++
+                    recipeProcess.activeTaskIndex++
                     impl() // Run the following task immediately
                 }
             }
         }
         impl()
+    }
+}
+
+/** Wrapper around [MashSystem] that runs all methods on the [UpdateThread] */
+class SynchronizedMashSystem(val mashSystem: MashSystem, val updateThread: UpdateThread) {
+    fun start(): Future<*> {
+        return updateThread.runOnUpdateThread { mashSystem.start() }
+    }
+
+    fun reset(): Future<*> {
+        return updateThread.runOnUpdateThread { mashSystem.reset() }
+    }
+
+    fun skipTask(): Future<*> {
+        return updateThread.runOnUpdateThread { mashSystem.skipTask() }
     }
 }

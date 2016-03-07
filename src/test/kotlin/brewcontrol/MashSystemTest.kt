@@ -4,19 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import react.Value
 import java.time.Instant
-import java.util.concurrent.Future
-import java.util.concurrent.FutureTask
 
 class MashSystemTest {
-
-    val updateThread = object : UpdateThread {
-        override fun <T> runOnUpdateThread(f: () -> T): Future<T> {
-            // I couldn't find an implementation for a completed future so we use this hack
-            val t = FutureTask(f)
-            t.run()
-            return t
-        }
-    }
 
     @Test
     fun heatsUpTo10Degrees() {
@@ -24,10 +13,11 @@ class MashSystemTest {
         val heater = Value(false)
         val startInstant = Instant.now()
         val clock = Value(startInstant)
-        val recipe = Recipe(0, listOf(HeatTask(10.0)))
-        val mash = MashSystem(updateThread, potTemp, heater, clock, recipe)
+        val recipe = Recipe(listOf(HeatStep(10.0)))
+        val mash = MashSystem(potTemp, heater, clock)
+        mash.setRecipe(recipe)
 
-        mash.start().get()
+        mash.start()
 
         assertThat(heater.get()).isTrue()
         clock.update(startInstant.plusSeconds(5))
