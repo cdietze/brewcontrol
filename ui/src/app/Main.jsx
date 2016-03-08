@@ -359,7 +359,6 @@ const RecipeScene = mobxReact.observer(React.createClass({
         const tasks = [];
         for (let i = 0; i < serverState.recipeProcess.tasks.length; i++) {
             const task = serverState.recipeProcess.tasks[i];
-            console.log("task " + i + ": " + JSON.stringify(task));
             tasks.push(<RecipeTask key={i} active={i === serverState.recipeProcess.activeTaskIndex} index={i}
                                    task={task}/>);
         }
@@ -390,6 +389,20 @@ const RecipeScene = mobxReact.observer(React.createClass({
 
 const RecipeTask = React.createClass({
 
+    buildLabel(task) {
+        let label = "" + (this.props.index + 1) + ". ";
+        if (task.step.type === "Heat") {
+            label += "Aufheizen auf " + task.step.temperature + "°C";
+        } else if (task.step.type === "Rest") {
+            label += "Rasten für " + (task.step.duration / 60).toFixed(0) + " Minuten";
+        } else if (task.step.type === "Hold") {
+            label += "Halten auf " + task.temperature + "°C bis Überspringen";
+        } else {
+            throw new Error("unknown RecipeTask type: " + task.step.type);
+        }
+        return label;
+    },
+
     render() {
         const style = {
             inactiveTask: {padding: 10},
@@ -398,8 +411,24 @@ const RecipeTask = React.createClass({
                 backgroundColor: Colors.red200
             }
         };
+        let content = [];
+
+        const task = this.props.task;
+        content.push(<div key="summary">{this.buildLabel(task)}</div>);
+        if (task.startTime) {
+            const startTime = new Date(task.startTime * 1000);
+            content.push(<div>Start: {startTime.toLocaleTimeString()}</div>);
+            // Render more details if active
+            if (this.props.active && task.step.duration) {
+                const endTime = new Date((task.startTime + task.step.duration) * 1000);
+                content.push(<div>Ende: {endTime.toLocaleTimeString()}</div>);
+
+                const remainingMinutes = (endTime.getTime() - new Date().getTime()) / 1000 / 60;
+                if (remainingMinutes > 0) content.push(<div>Verbleibend: {remainingMinutes.toFixed(1)} Minuten</div>);
+            }
+        }
         return <Paper style={this.props.active ? style.activeTask : style.inactiveTask}>
-            {this.props.index + 1}. {JSON.stringify(this.props.task)}
+            {content}
         </Paper>;
     }
 });
