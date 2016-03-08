@@ -15,6 +15,7 @@ import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
 import react.Value
 import react.Values
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.Executors
@@ -82,7 +83,7 @@ class BrewApplication : Application<BrewConfiguration>() {
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
 
-        mashSystem.setRecipe(Recipe(listOf(HeatStep(57.0), HeatStep(64.0), HeatStep(70.0), HeatStep(73.0), HeatStep(78.0), HeatStep(85.0))))
+        mashSystem.setRecipe(Recipe(listOf(HeatStep(57.0), HoldStep, RestStep(Duration.ofSeconds(20)), HeatStep(78.0), RestStep(Duration.ofSeconds(30)), HoldStep)))
         val syncMashSystem = SynchronizedMashSystem(mashSystem, updateThread)
 
         val temperatureTolerance = 0.5

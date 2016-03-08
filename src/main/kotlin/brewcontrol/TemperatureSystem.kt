@@ -50,9 +50,11 @@ interface TemperatureReader {
 
 class MockTemperatureReader(val relaySystem: RelaySystem) : TemperatureReader {
     val random = Random()
-    var potTemperature = 15.0
+    var potTemperature = 45.0
     override fun readings(): Map<String, Double> {
-        if (relaySystem.potHeater.value.get()) potTemperature += 1.5
+        potTemperature -= .5
+        potTemperature = Math.max(35.0, potTemperature)
+        if (relaySystem.potHeater.value.get()) potTemperature += 2.0
         return mapOf(
                 Sensor.Cooler.id to random.nextInt(20).toDouble(),
                 Sensor.Outside.id to random.nextInt(40).toDouble(),
