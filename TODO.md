@@ -1,8 +1,8 @@
 # Todo list for BrewControl
 
 ## Up Next
-- Display current recipe in UI
-- Allow to start / stop / skip / reset mashing
+- Disable inappropriate mash buttons
+- Fix initial tab selection
 - Allow to edit recipe
 
 ## Ideas
