@@ -60,7 +60,7 @@ class BrewApplication : Application<BrewConfiguration>() {
         val relaySystem = RelaySystem()
         if (configuration.gpioEnabled) relaySystem.wireToGpio(gpioImpl)
 
-        val temperatureReader = if (configuration.mockTemperatures) RandomTemperatureReader() else RealTemperatureReader()
+        val temperatureReader = if (configuration.mockTemperatures) MockTemperatureReader(relaySystem) else RealTemperatureReader()
 
         temperatureSystem.startUpdateScheduler(temperatureReader)
 
