@@ -1,6 +1,7 @@
 package brewcontrol
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -34,6 +35,8 @@ fun createObjectMapper(): ObjectMapper {
     val om = Jackson.newObjectMapper()
     om.registerModule(JavaTimeModule())
     om.registerModule(KotlinModule())
+    // Be lax about unknown properties so the UI needs to do less sanitizing
+    om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     return om
 }
 

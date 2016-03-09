@@ -107,6 +107,7 @@ class MashSystem(
     var recipeProcess: RecipeProcess = RecipeProcess()
 
     fun setRecipe(recipe: Recipe) {
+        stop()
         recipeProcess = RecipeProcess(recipe)
     }
 
@@ -186,5 +187,9 @@ class SynchronizedMashSystem(val mashSystem: MashSystem, val updateThread: Updat
 
     fun skipTask(): Future<*> {
         return updateThread.runOnUpdateThread { mashSystem.skipTask() }
+    }
+
+    fun setRecipe(recipe: Recipe): Future<*> {
+        return updateThread.runOnUpdateThread { mashSystem.setRecipe(recipe) }
     }
 }

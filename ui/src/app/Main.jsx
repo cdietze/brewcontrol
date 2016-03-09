@@ -8,6 +8,9 @@ import {Tabs, Tab} from 'material-ui/lib/tabs';
 import FontIcon from 'material-ui/lib/font-icon';
 import Dialog from 'material-ui/lib/dialog';
 import Paper from 'material-ui/lib/paper';
+import SelectField from 'material-ui/lib/select-field';
+import TextField from 'material-ui/lib/text-field';
+import MenuItem from 'material-ui/lib/menus/menu-item';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
 import ContentAdd from 'material-ui/lib/svg-icons/content/add';
 import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
@@ -434,15 +437,124 @@ const RecipeTask = React.createClass({
 });
 
 const EditRecipeScene = React.createClass({
+    getInitialState() {
+        return {};
+    },
+    componentWillMount() {
+        if (store.serverState.notReady) return;
+        this.state.recipe = store.serverState.recipe;
+    },
+    handleStepChange(stepIndex, prop, value) {
+        // This is simple and not efficient
+        // But just updating that one field is insanely difficult
+        this.state.recipe.steps[stepIndex][prop] = value;
+        this.forceUpdate();
+    },
+    removeStep(stepIndex) {
+        this.state.recipe.steps.splice(stepIndex, 1);
+        this.forceUpdate();
+    },
+    addStep() {
+        this.state.recipe.steps.push({});
+        this.forceUpdate();
+    },
+    save() {
+        fetch("/api/recipe", {
+            method: "put",
+            body: JSON.stringify(this.state.recipe),
+            headers: new Headers({
+                'Content-Type': "application/json"
+            })
+        }).then(function () {
+            hashHistory.push('/recipe');
+        });
+    },
     render() {
+        if (store.serverState.notReady) return null;
+        // console.log("rendering recipe: " + JSON.stringify(this.state.recipe));
+        const recipe = this.state.recipe;
+        const self = this;
         return (
             <Paper className="panel">
                 <h3>Rezept bearbeiten</h3>
-                <p>TODO: allow to add / remove / edit / move recipe steps</p>
+                {recipe.steps.map(function (step, index) {
+                    return <Paper>
+                        <span>{index + 1}. </span>
+                        <EditRecipeStep key={index} step={step} onStepChange={self.handleStepChange.bind(null, index)}/>
+
+                        <FloatingActionButton secondary={true} mini={true}
+                                              onTouchTap={self.removeStep.bind(null, index)}>
+                            <ContentRemove />
+                        </FloatingActionButton>
+                    </Paper>;
+                })}
+                <FloatingActionButton secondary={true} mini={true}
+                                      onTouchTap={this.addStep}>
+                    <ContentAdd />
+                </FloatingActionButton>
                 <div style={{textAlign: "right"}}>
-                    <FlatButton label="Speichern" secondary={true}/>
+                    <FlatButton label="Speichern" secondary={true} onTouchTap={this.save}/>
                 </div>
             </Paper>
         );
+    }
+});
+
+const EditRecipeStep = React.createClass({
+    propTypes: {
+        step: React.PropTypes.object.isRequired,
+        onStepChange: React.PropTypes.func.isRequired
+    },
+    getInitialState() {
+        const state = {
+            temperature: this.props.step.temperature
+        };
+        if (this.props.step.duration !== undefined) state.duration = this.props.step.duration / 60;
+        return state;
+    },
+    handleChange(prop, event, itemIndex, value) {
+        this.props.onStepChange(prop, value);
+    },
+    handleTemperatureChange(event) {
+        const value = parseInt(event.target.value, 10);
+        this.setState({temperature: value});
+        this.props.onStepChange("temperature", value);
+    },
+    handleDurationChange(event) {
+        const value = parseInt(event.target.value, 10);
+        this.setState({duration: value});
+        this.props.onStepChange("duration", value * 60);
+    },
+    render() {
+        const style = {
+            type: {width: "8em", textAlign: "center"},
+            temperature: {width: "3em"},
+            temperatureInput: {textAlign: "right"},
+            duration: {width: "3em"},
+            durationInput: {textAlign: "right"}
+        };
+        const step = this.props.step;
+        const content = [];
+        content.push(<SelectField style={style.type} value={step.type}
+                                  onChange={this.handleChange.bind(null, "type")}>
+            <MenuItem value={"Heat"} primaryText="Aufheizen"/>
+            <MenuItem value={"Rest"} primaryText="Rasten"/>
+            <MenuItem value={"Hold"} primaryText="Halten"/>
+        </SelectField>);
+        if (step.type === "Heat") {
+            content.push(<span> auf <TextField style={style.temperature}
+                                               inputStyle={style.temperatureInput}
+                                               value={this.state.temperature}
+                                               type="number"
+                                               onChange={this.handleTemperatureChange}/>°C</span>);
+        } else if (step.type === "Rest") {
+            content.push(<span> für <TextField
+                style={style.duration}
+                inputStyle={style.durationInput}
+                value={this.state.duration}
+                type="number"
+                onChange={this.handleDurationChange}/> Minuten</span>);
+        }
+        return <span>{content}</span>;
     }
 });

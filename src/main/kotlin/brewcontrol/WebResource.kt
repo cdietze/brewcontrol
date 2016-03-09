@@ -71,9 +71,9 @@ class WebResource(
 
     @PUT
     @Path("recipe")
-    fun updateRecipe() {
-        log.info("Update recipe requested")
-        TODO()
+    fun updateRecipe(recipe: Recipe) {
+        log.info("Update recipe requested, recipe: $recipe")
+        syncMashSystem.setRecipe(recipe)
     }
 
     @POST
