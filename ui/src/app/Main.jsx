@@ -153,9 +153,14 @@ const TabComponent = mobxReact.observer(React.createClass({
     },
     render() {
         if (store.serverState.notReady) return null;
+        const style = {
+            tabs: {
+                marginBottom: 10
+            }
+        };
         return (
             <div>
-                <Tabs value={this.props.tab}>
+                <Tabs style={style.tabs} value={this.props.tab}>
                     <Tab value="main" label="Übersicht" onActive={this.goMain}>
                     </Tab>
                     <Tab value="recipe" label="Maischen" onActive={this.goRecipe}>
@@ -354,6 +359,11 @@ const RecipeScene = mobxReact.observer(React.createClass({
         if (store.serverState.notReady) return null;
         const serverState = store.serverState;
 
+        const style = {
+            taskPanel: {
+                marginTop: 10
+            }
+        };
         const recipeButtonStyle = {margin: '10px'};
 
         const kesselOn = serverState.relays.Kessel === true;
@@ -368,12 +378,9 @@ const RecipeScene = mobxReact.observer(React.createClass({
 
         return (
             <div>
-                <Paper className="panel">
-                    <Paper style={kesselOn ? globalStyles.relayStyleOn: globalStyles.relayStyleOff}>{kesselLabel}
-                        Kessel</Paper>
-                </Paper>
-
-                <Paper className="panel">
+                <Paper style={kesselOn ? globalStyles.relayStyleOn: globalStyles.relayStyleOff}>{kesselLabel}
+                    Kessel</Paper>
+                <div style={style.taskPanel}>
                     {tasks}
                     <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}
                                   onTouchTap={this.createAction("start")}/>
@@ -384,7 +391,7 @@ const RecipeScene = mobxReact.observer(React.createClass({
                     <Link to="/recipe/edit">
                         <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten"/>
                     </Link>
-                </Paper>
+                </div>
             </div>
         );
     }
@@ -475,7 +482,7 @@ const EditRecipeScene = React.createClass({
         const recipe = this.state.recipe;
         const self = this;
         return (
-            <Paper className="panel">
+            <div>
                 <h3>Rezept bearbeiten</h3>
                 {recipe.steps.map(function (step, index) {
                     return <Paper>
@@ -495,8 +502,7 @@ const EditRecipeScene = React.createClass({
                 <div style={{textAlign: "right"}}>
                     <FlatButton label="Speichern" secondary={true} onTouchTap={this.save}/>
                 </div>
-            </Paper>
-        );
+            </div>);
     }
 });
 
