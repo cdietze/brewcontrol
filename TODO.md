@@ -4,6 +4,7 @@
 - Disable inappropriate mash buttons
 - Fix initial tab selection
 - Allow to edit recipe
+- Persist recipe in DB (?)
 - Add favicon
 
 ## Ideas
