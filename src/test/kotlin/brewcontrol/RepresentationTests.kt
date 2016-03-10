@@ -3,7 +3,7 @@ package brewcontrol
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
-val om = createObjectMapper()
+val om = objectMapper
 
 class RepresentationTests {
 
@@ -35,6 +35,12 @@ class RepresentationTests {
             assertThat(om.readTree(om.writeValueAsString(recipe))).isEqualTo(om.readTree(recipeJson));
         }
 
+        @Test
+        fun defaultRecipeReadWrite() {
+            val recipe = Recipe()
+            val recipe2 = om.readValue(om.writeValueAsString(recipe), Recipe::class.java)
+            assertThat(recipe2).isEqualTo(recipe)
+        }
     }
 
     class RecipeProcessTest {

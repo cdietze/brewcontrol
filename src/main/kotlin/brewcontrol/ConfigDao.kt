@@ -39,6 +39,19 @@ interface ConfigDao {
                 connect { v: Double -> dao.put(key, v) }
             }
         }
+
+        fun stringValue(dao: ConfigDao, key: String, init: String): Value<String> {
+            return Value(dao.getString(key) ?: init).apply {
+                connect { v: String -> dao.put(key, v) }
+            }
+        }
+
+        fun <T> mappedStringValue(dao: ConfigDao, key: String, defaultValue: T, readFun: (String) -> T, writeFun: (T) -> String): Value<T> {
+            val init: T = dao.getString(key)?.run(readFun) ?: defaultValue
+            return Value(init).apply {
+                connect { v: T -> dao.put(key, writeFun(v)) }
+            }
+        }
     }
 }
 
@@ -46,4 +59,11 @@ class ConfigSystem(val dao: ConfigDao) {
     val coolerEnabled = ConfigDao.booleanValue(dao, "coolerEnabled")
     val heaterEnabled = ConfigDao.booleanValue(dao, "heaterEnabled")
     val targetTemperature = ConfigDao.doubleValue(dao, "targetTemperature", 10.0)
+    val recipe = makeRecipeValue()
+
+    fun makeRecipeValue(): Value<Recipe> {
+        fun readFun(s: String): Recipe = objectMapper.readValue(s, Recipe::class.java)
+        fun writeFun(r: Recipe): String = objectMapper.writeValueAsString(r)
+        return ConfigDao.mappedStringValue(dao, "recipe", Recipe(), ::readFun, ::writeFun)
+    }
 }

@@ -16,7 +16,6 @@ import io.dropwizard.setup.Environment
 import org.slf4j.LoggerFactory
 import react.Value
 import react.Values
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.Executors
@@ -31,7 +30,7 @@ fun main(args: Array<String>) {
     BrewApplication().run(*args)
 }
 
-fun createObjectMapper(): ObjectMapper {
+private fun createObjectMapper(): ObjectMapper {
     val om = Jackson.newObjectMapper()
     om.registerModule(JavaTimeModule())
     om.registerModule(KotlinModule())
@@ -39,6 +38,9 @@ fun createObjectMapper(): ObjectMapper {
     om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     return om
 }
+
+/** Global [ObjectMapper] instance. I guess global is ok here, since it does not change and it is thread-safe. */
+val objectMapper = createObjectMapper()
 
 class BrewConfiguration : Configuration() {
     @JsonProperty
@@ -53,7 +55,7 @@ class BrewConfiguration : Configuration() {
 
 class BrewApplication : Application<BrewConfiguration>() {
     override fun initialize(bootstrap: Bootstrap<BrewConfiguration>) {
-        bootstrap.objectMapper = createObjectMapper()
+        bootstrap.objectMapper = objectMapper
         bootstrap.addBundle(AssetsBundle("/assets/", "/", "index.html"))
     }
 
@@ -75,6 +77,7 @@ class BrewApplication : Application<BrewConfiguration>() {
         }
         val configSystem = ConfigSystem(configDao)
 
+
         val clock = Value(Instant.now())
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay({
             clock.update(Instant.now())
@@ -86,7 +89,8 @@ class BrewApplication : Application<BrewConfiguration>() {
                 potHeater = relaySystem.potHeater.value,
                 clock = clock)
 
-        mashSystem.setRecipe(Recipe(listOf(HeatStep(57.0), HoldStep, RestStep(Duration.ofSeconds(20)), HeatStep(78.0), RestStep(Duration.ofSeconds(30)), HoldStep)))
+        mashSystem.setRecipe(configSystem.recipe.get())
+
         val syncMashSystem = SynchronizedMashSystem(mashSystem, updateThread)
 
         val temperatureTolerance = 0.5
@@ -94,6 +98,6 @@ class BrewApplication : Application<BrewConfiguration>() {
         Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
         Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
-        environment.jersey().register(WebResource(updateThread, temperatureSystem, relaySystem, configSystem, syncMashSystem))
+        environment.jersey().register(WebResource(environment.objectMapper, updateThread, temperatureSystem, relaySystem, configSystem, syncMashSystem))
     }
 }
