@@ -101,8 +101,8 @@ export default class Main extends React.Component {
                     <LoadingComponent />
                     <Router history={hashHistory}>
                         <Route path="/" component={TabComponent}>
-                            <IndexRoute component={MainScene} tab="main"/>
-                            <Route path="recipe" component={RecipeScene} tab="recipe"/>
+                            <IndexRoute component={MainScene}/>
+                            <Route path="recipe" component={RecipeScene}/>
                             <Route path="/recipe/edit" component={EditRecipeScene}/>
                         </Route>
 
@@ -158,9 +158,11 @@ const TabComponent = mobxReact.observer(React.createClass({
                 marginBottom: 10
             }
         };
+        // I couldn't find a simpler way to detect the current tab index... I blame react-router
+        const tabIndex = this.props.location.pathname.startsWith("/recipe") ? 1 : 0;
         return (
             <div>
-                <Tabs style={style.tabs} value={this.props.tab}>
+                <Tabs style={style.tabs} initialSelectedIndex={tabIndex}>
                     <Tab value="main" label="Übersicht" onActive={this.goMain}>
                     </Tab>
                     <Tab value="recipe" label="Maischen" onActive={this.goRecipe}>
