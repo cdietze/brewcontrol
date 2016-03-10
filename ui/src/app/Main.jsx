@@ -474,7 +474,7 @@ const EditRecipeScene = React.createClass({
             headers: new Headers({
                 'Content-Type': "application/json"
             })
-        }).then(function () {
+        }).then(updateTimer.forceUpdate).then(function () {
             hashHistory.push('/recipe');
         });
     },
