@@ -488,19 +488,23 @@ const EditRecipeScene = React.createClass({
                 <h3>Rezept bearbeiten</h3>
                 {recipe.steps.map(function (step, index) {
                     return <Paper>
-                        <span>{index + 1}. </span>
-                        <EditRecipeStep key={index} step={step} onStepChange={self.handleStepChange.bind(null, index)}/>
+                        <span style={{textAlign:"left", display: "inline-block", width: "80%"}}>
+                            <span>{index + 1}. </span>
+                            <EditRecipeStep key={index} step={step}
+                                            onStepChange={self.handleStepChange.bind(null, index)}/>
+                        </span>
+                        <span style={{width: "20%"}}>
+                            <FlatButton label="Entfernen" secondary={true}
+                                        onTouchTap={self.removeStep.bind(null, index)}/>
+                        </span>
 
-                        <FloatingActionButton secondary={true} mini={true}
-                                              onTouchTap={self.removeStep.bind(null, index)}>
-                            <ContentRemove />
-                        </FloatingActionButton>
                     </Paper>;
                 })}
-                <FloatingActionButton secondary={true} mini={true}
-                                      onTouchTap={this.addStep}>
-                    <ContentAdd />
-                </FloatingActionButton>
+                <span>
+                    <FlatButton label="Schritt hinzufügen" secondary={true}
+                                onTouchTap={this.addStep}/>
+                </span>
+
                 <div style={{textAlign: "right"}}>
                     <FlatButton label="Speichern" secondary={true} onTouchTap={this.save}/>
                 </div>
@@ -535,7 +539,7 @@ const EditRecipeStep = React.createClass({
     },
     render() {
         const style = {
-            type: {width: "8em", textAlign: "center"},
+            type: {width: "8em", textAlign: "right"},
             temperature: {width: "3em"},
             temperatureInput: {textAlign: "right"},
             duration: {width: "3em"},
