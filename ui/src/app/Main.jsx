@@ -371,12 +371,16 @@ const RecipeScene = mobxReact.observer(React.createClass({
         const kesselOn = serverState.relays.Kessel === true;
         const kesselLabel = serverState.temperatures.Kessel ? serverState.temperatures.Kessel.toFixed(2) + '°C ' : '?? ';
 
+        const recipeProcess = serverState.recipeProcess;
         const tasks = [];
-        for (let i = 0; i < serverState.recipeProcess.tasks.length; i++) {
-            const task = serverState.recipeProcess.tasks[i];
-            tasks.push(<RecipeTask key={i} active={i === serverState.recipeProcess.activeTaskIndex} index={i}
+        for (let i = 0; i < recipeProcess.tasks.length; i++) {
+            const task = recipeProcess.tasks[i];
+            tasks.push(<RecipeTask key={i} active={i === recipeProcess.activeTaskIndex} index={i}
                                    task={task}/>);
         }
+
+        const isRunning = recipeProcess.activeTaskIndex >= 0;
+        const isDone = recipeProcess.activeTaskIndex >= recipeProcess.tasks.length;
 
         return (
             <div>
@@ -384,14 +388,14 @@ const RecipeScene = mobxReact.observer(React.createClass({
                     Kessel</Paper>
                 <div style={style.taskPanel}>
                     {tasks}
-                    <RaisedButton style={recipeButtonStyle} label="Starten" primary={true}
-                                  onTouchTap={this.createAction("start")}/>
-                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen"
-                                  onTouchTap={this.createAction("skipTask")}/>
-                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen"
-                                  onTouchTap={this.createAction("reset")}/>
+                    <RaisedButton style={recipeButtonStyle} label="Starten" secondary={true}
+                                  onTouchTap={this.createAction("start")} disabled={isRunning}/>
+                    <RaisedButton style={recipeButtonStyle} label="Schritt überspringen" secondary={true}
+                                  onTouchTap={this.createAction("skipTask")} disabled={!isRunning || isDone}/>
+                    <RaisedButton style={recipeButtonStyle} label="Zurücksetzen" secondary={true}
+                                  onTouchTap={this.createAction("reset")} disabled={!isRunning}/>
                     <Link to="/recipe/edit">
-                        <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten"/>
+                        <RaisedButton style={recipeButtonStyle} label="Rezept bearbeiten" secondary={true}/>
                     </Link>
                 </div>
             </div>
