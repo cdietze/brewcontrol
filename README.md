@@ -20,3 +20,8 @@ My hobby project to automate some tasks when brewing beer. Currently, this proje
     - 1-wire temperature sensors (DS1820)
     - relays attached (I use ones from SainSmart)
 - A fridge that can cool and heat
+
+## Screenshots
+
+![Overview page](https://github.com/cdietze/brewcontrol/raw/master/images/overview.png "Overview page")
+![Mash page](https://github.com/cdietze/brewcontrol/raw/master/images/mash.png "Mash page")
