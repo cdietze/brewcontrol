@@ -174,6 +174,28 @@ const TabComponent = mobxReact.observer(React.createClass({
     }
 }));
 
+const ProgressBeer = mobxReact.observer(React.createClass({
+    render() {
+        const style = {
+            progressOuter: {
+                marginLeft: 10,
+                color: Colors.black
+            },
+            progressInner: {
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                height: (100 - updateProgress.get() * 100).toString() + '%',
+                overflow: 'hidden',
+                color: Colors.grey200
+            }
+        };
+        return <FontIcon style={style.progressOuter} className="fa fa-beer">
+            <FontIcon style={style.progressInner} className="fa fa-beer"/>
+        </FontIcon>;
+    }
+}));
+
 const MainScene = mobxReact.observer(React.createClass({
     createConfigToggler(key) {
         return (event, value) => {
@@ -203,18 +225,6 @@ const MainScene = mobxReact.observer(React.createClass({
             },
             toggle: {
                 marginTop: 20
-            },
-            progressOuter: {
-                marginLeft: 10,
-                color: Colors.black
-            },
-            progressInner: {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                height: (100 - updateProgress.get() * 100).toString() + '%',
-                overflow: 'hidden',
-                color: Colors.grey200
             }
         };
 
@@ -230,9 +240,7 @@ const MainScene = mobxReact.observer(React.createClass({
                         })}
                     </div>
 
-                    <FontIcon style={style.progressOuter} className="fa fa-beer">
-                        <FontIcon style={style.progressInner} className="fa fa-beer"/>
-                    </FontIcon>
+                    <ProgressBeer />
 
                     <div>
                         {Object.keys(serverState.relays).map(relay => {
@@ -386,6 +394,9 @@ const RecipeScene = mobxReact.observer(React.createClass({
             <div>
                 <Paper style={kesselOn ? globalStyles.relayStyleOn: globalStyles.relayStyleOff}>{kesselLabel}
                     Kessel</Paper>
+
+                <ProgressBeer />
+                
                 <div style={style.taskPanel}>
                     {tasks}
                     <RaisedButton style={recipeButtonStyle} label="Starten" secondary={true}
