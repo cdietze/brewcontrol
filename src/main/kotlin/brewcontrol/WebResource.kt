@@ -1,6 +1,5 @@
 package brewcontrol
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.*
@@ -10,7 +9,6 @@ import javax.ws.rs.core.Response
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 class WebResource(
-        val objectMapper: ObjectMapper,
         val updateThread: UpdateThread,
         val temperatureSystem: TemperatureSystem,
         val relaySystem: RelaySystem,

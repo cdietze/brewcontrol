@@ -98,6 +98,6 @@ class BrewApplication : Application<BrewConfiguration>() {
         Values.and(configSystem.coolerEnabled, error.map { it < -temperatureTolerance }).connectNotify(relaySystem.cooler.value.slot())
         Values.and(configSystem.heaterEnabled, error.map { it > temperatureTolerance }).connectNotify(relaySystem.heater.value.slot())
 
-        environment.jersey().register(WebResource(environment.objectMapper, updateThread, temperatureSystem, relaySystem, configSystem, syncMashSystem))
+        environment.jersey().register(WebResource(updateThread, temperatureSystem, relaySystem, configSystem, syncMashSystem))
     }
 }
