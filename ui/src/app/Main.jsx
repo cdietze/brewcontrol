@@ -1,24 +1,24 @@
-import React from 'react';
-import { Router, Route, IndexRoute, Link, hashHistory, browserHistory } from 'react-router';
-import RaisedButton from 'material-ui/lib/raised-button';
-import FlatButton from 'material-ui/lib/flat-button';
-import FloatingActionButton from 'material-ui/lib/floating-action-button';
-import Toggle from 'material-ui/lib/toggle';
-import {Tabs, Tab} from 'material-ui/lib/tabs';
-import FontIcon from 'material-ui/lib/font-icon';
-import Dialog from 'material-ui/lib/dialog';
-import Paper from 'material-ui/lib/paper';
-import SelectField from 'material-ui/lib/select-field';
-import TextField from 'material-ui/lib/text-field';
-import MenuItem from 'material-ui/lib/menus/menu-item';
-import RefreshIndicator from 'material-ui/lib/refresh-indicator';
-import ContentAdd from 'material-ui/lib/svg-icons/content/add';
-import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
-import MuiThemeProvider from 'material-ui/lib/MuiThemeProvider';
-import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
-import Colors from 'material-ui/lib/styles/colors';
-import mobx from 'mobx';
-import mobxReact from 'mobx-react';
+import React from "react";
+import {Router, Route, IndexRoute, Link, hashHistory, browserHistory} from "react-router";
+import RaisedButton from "material-ui/lib/raised-button";
+import FlatButton from "material-ui/lib/flat-button";
+import FloatingActionButton from "material-ui/lib/floating-action-button";
+import Toggle from "material-ui/lib/toggle";
+import {Tabs, Tab} from "material-ui/lib/tabs";
+import FontIcon from "material-ui/lib/font-icon";
+import Dialog from "material-ui/lib/dialog";
+import Paper from "material-ui/lib/paper";
+import SelectField from "material-ui/lib/select-field";
+import TextField from "material-ui/lib/text-field";
+import MenuItem from "material-ui/lib/menus/menu-item";
+import RefreshIndicator from "material-ui/lib/refresh-indicator";
+import ContentAdd from "material-ui/lib/svg-icons/content/add";
+import ContentRemove from "material-ui/lib/svg-icons/content/remove";
+import MuiThemeProvider from "material-ui/lib/MuiThemeProvider";
+import getMuiTheme from "material-ui/lib/styles/getMuiTheme";
+import Colors from "material-ui/lib/styles/colors";
+import mobx from "mobx";
+import mobxReact from "mobx-react";
 
 const globalStyles = {
     container: {
@@ -412,7 +412,7 @@ const RecipeScene = mobxReact.observer(React.createClass({
                     Kessel</Paper>
 
                 <ProgressBeer />
-                
+
                 <div style={style.taskPanel}>
                     {tasks}
                     <RaisedButton style={recipeButtonStyle} label="Starten" secondary={true}
