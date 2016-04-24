@@ -43,9 +43,11 @@ const muiTheme = getMuiTheme({
  "relays": {"Kühlung": false, "Heizung": true, "Kessel": false},
  "recipe": {
      "steps": [
-         {"type": "Heat", "temperature": 50.0}, {"type": "Hold"},
+         {"type": "Heat", "temperature": 50.0},
+         {"type": "Hold"},
          {"type": "Rest", "duration": 60.000000000},
-         {"type": "Heat", "temperature": 80.0}, {"type": "Hold"}
+         {"type": "Heat", "temperature": 80.0},
+         {"type": "Hold"}
      ]
  },
  "recipeProcess": {
