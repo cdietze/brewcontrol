@@ -37,13 +37,29 @@ const muiTheme = getMuiTheme({
     }
 });
 
-/* Example for serverState:
+/** Example for serverState:
  {
- "temperatures": {"Kühlschrank": 13.0, "Außen": 26.0},
- "relays": {"Kühlung": false, "Heizung": false, "Kessel": false},
- "config": {"coolerEnabled": false, "heaterEnabled": false, "targetTemperature": 10.0}
- }
- */
+ "temperatures": {"Kühlschrank": 11.0, "Außen": 17.0, "Kessel": 35.0},
+ "relays": {"Kühlung": false, "Heizung": true, "Kessel": false},
+ "recipe": {
+     "steps": [
+         {"type": "Heat", "temperature": 50.0}, {"type": "Hold"},
+         {"type": "Rest", "duration": 60.000000000},
+         {"type": "Heat", "temperature": 80.0}, {"type": "Hold"}
+     ]
+ },
+ "recipeProcess": {
+     "activeTaskIndex": -1,
+     "tasks": [
+        {"step": {"type": "Heat", "temperature": 50.0}},
+        {"step": {"type": "Hold"}, "temperature": 50.0},
+        {"step": {"type": "Rest", "duration": 60.000000000}, "temperature": 50.0},
+        {"step": {"type": "Heat", "temperature": 80.0}},
+        {"step": {"type": "Hold"}, "temperature": 80.0}
+     ]
+ },
+ "config": {"coolerEnabled": true, "heaterEnabled": true, "targetTemperature": 14.0}
+ } */
 const store = mobx.observable({serverState: {notReady: true}});
 
 const updateProgress = mobx.observable(0);
