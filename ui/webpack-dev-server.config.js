@@ -55,7 +55,7 @@ var config = {
                 loader: 'eslint-loader',
                 include: [path.resolve(__dirname, "src/app")],
                 exclude: [nodeModulesPath]
-            },
+            }
         ],
         loaders: [
             {
