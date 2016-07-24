@@ -26,7 +26,7 @@ var config = {
         host: '0.0.0.0',
         proxy: {
             '/api/*': {
-                target: 'http://localhost:8080/',
+                target: 'http://[::1]:8080',
                 secure: false
             }
         }
