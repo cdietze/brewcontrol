@@ -410,7 +410,7 @@ const RecipeScene = mobxReact.observer(React.createClass({
 
         return (
             <div>
-                <Paper style={kesselOn ? globalStyles.relayStyleOn: globalStyles.relayStyleOff}>{kesselLabel}
+                <Paper style={kesselOn ? globalStyles.relayStyleOn : globalStyles.relayStyleOff}>{kesselLabel}
                     Kessel</Paper>
 
                 <ProgressBeer />
@@ -521,7 +521,7 @@ const EditRecipeScene = React.createClass({
                 <h3>Rezept bearbeiten</h3>
                 {recipe.steps.map(function (step, index) {
                     return <Paper>
-                        <span style={{textAlign:"left", display: "inline-block", width: "80%"}}>
+                        <span style={{textAlign: "left", display: "inline-block", width: "80%"}}>
                             <span>{index + 1}. </span>
                             <EditRecipeStep key={index} step={step}
                                             onStepChange={self.handleStepChange.bind(null, index)}/>
